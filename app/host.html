@@ -1,0 +1,57 @@
+	<div class="page-header header-filter" filter-color="purple" style="background-image: url('assets/img/bg5.jpg'); background-size: cover; background-position: top center;">
+    	<div class="container">
+			<div class="row">
+    			<div class="col-md-10 col-md-offset-1">
+
+					<div class="card card-signup" style="margin-bottom: 0px">
+                        <h2 ng-if="!(players.length > 2)" class="card-title text-center">Waiting for more players...</h2>
+                        <h2 ng-if="(players.length > 2)" class="card-title text-center">Press Continue when ready...</h2>
+                        <h3 class="text-center">Go to {{domain}} on your device and enter <span class="card-title">{{roomCode}}</span> to join this game.</h3>
+                        <div class="row">
+    				<div class="col-md-8 col-md-offset-2 text-center">
+	    				<div class="game-player" ng-repeat="x in players" ng-if="x.type != 'host'">
+	    					<img src="assets/img/faces/avatar.jpg" alt="Raised Image" class="img-rounded img-responsive img-raised" style="max-width: 100px">
+							<p>{{x.name}}</p>
+	    				</div>	    					    				
+    				</div>  
+    				<div class="col-md-8 col-md-offset-2 text-center">
+	    				<button ng-if="players.length && players.length > 2" class="btn btn-success btn-round join-button">Continue <i class="material-icons">navigate_next</i></button>
+    				</div>                        					
+
+                </div>
+            </div>
+    		<div class="text-center">
+				<a ui-sref="start" class="btn btn-white btn-simple">
+					<i class="material-icons">arrow_back</i> Back to Start
+				</a>
+			</div>	
+		</div>
+
+		<footer class="footer footer-bottom-alt">
+	        <div class="container">
+	            <nav class="pull-left">
+					<ul>
+						<li>
+							<a href="https://www.rouic.com">
+								Rouic Ltd
+							</a>
+						</li>
+						<li>
+							<a sref="about">
+								About
+							</a>
+						</li>
+						<li>
+							<a sref="help">
+								Help
+							</a>
+						</li>						
+					</ul>
+	            </nav>
+	            <div class="copyright pull-right">
+	                &copy; 2017, made with <i class="fa fa-heart heart"></i> by <a href="https://www.rouic.com" target="_blank">Rouic</a>
+	            </div>
+	        </div>
+	    </footer>
+
+    </div>
