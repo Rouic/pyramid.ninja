@@ -61,12 +61,10 @@ app.get('/', function(req, res, next) {
 
 //The 404 Route (ALWAYS Keep this as the last route)
 app.get('*', function(req, res){
-	console.error("[ERROR] 404 Not found: "+req.url);
+	console.error("[INFO] 404 Not found: "+req.url);
 	res.status(404);
 	res.sendFile(__dirname +'/app/error/404.html');
 });
-
-
 
 var httpServer = http.createServer(app);
 // var httpsServer = https.createServer(credentials, app);
@@ -74,4 +72,11 @@ var httpServer = http.createServer(app);
 httpServer.listen(webPort);
 app = httpServer;
 console.log("[BOOT] Web server listening on port: "+webPort);
+
+
+io = io(app);
+io.on('connection', function(socket){ //waiting for socket connection, on connection, get socket
+		console.log("[INFO] A user connected to socket.io!");
+		
+});
    
