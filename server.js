@@ -29,7 +29,9 @@ io = require('socket.io'),
 async = require('async'),
 cookieParser = require('cookie-parser'),
 moment = require('moment'),
-bodyParser = require('body-parser');
+bodyParser = require('body-parser'),
+im = require('imagemagick'),
+AvatarGenerator = require('initials-avatar-generator').AvatarGenerator;
 
 console.log("[BOOT] Dependancies loaded...");
 
@@ -53,7 +55,38 @@ app.use('/app', express.static('app'));
 app.get('/*',function(req,res,next){
     res.header('X-Powered-By' , 'Rouic'); //Powered by Rouic of cource!
     next();
-});  
+});
+
+app.get('/avatar/:fullName', function(req, res, next){				
+	var matches = req.params.fullName.match(/\b(\w)/g);
+	var acronym = matches.join('');	
+	var colourName = req.params.fullName;					
+	var stringToColour = function(str) {
+		var hash = 0;
+		for (var i = 0; i < str.length; i++) {
+			hash = str.charCodeAt(i) + ((hash << 5) - hash);
+		}
+		var colour = '#';
+		for (var i = 0; i < 3; i++) {
+		 	var value = (hash >> (i * 8)) & 0xFF;
+		    colour += ('00' + value.toString(16)).substr(-2);
+		}
+		return colour;
+	}
+	var option = {
+	    width: 200,
+	    text: acronym,
+	    font: 'din',
+	    color: stringToColour(colourName)
+	};
+	var avatarGenerator = new AvatarGenerator();
+	avatarGenerator.generate(option, function (image) {
+		res.setHeader("content-type", "image/png");
+	    image.stream('png').pipe(res);   
+    });
+ 
+  
+});
 
 app.get('/', function(req, res, next) {
 	res.sendFile(__dirname +'/app/index.html');
@@ -153,15 +186,14 @@ io.on('connection', function(socket){
 				socket.clientOf = msg.room;
 				socket.name = msg.name;
 				socket.join(msg.room);
-				socket.emit('joinRoomResponce', {validity: true});
-				
+								
 				var gameClients = [];
 				var clients = io.sockets.adapter.rooms[msg.room].sockets;   
 				var numClients = (typeof clients !== 'undefined') ? Object.keys(clients).length : 0;
+				socket.emit('joinRoomResponce', {validity: true, num: numClients});
 				for (var clientId in clients ) {
 				
 				     var clientSocket = io.sockets.connected[clientId];
-// 				     clientSocket.emit('new event', "Updates");
 				
 					gameClients.push({name: clientSocket.name, type: clientSocket.type});
 				

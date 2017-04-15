@@ -1,6 +1,7 @@
-var Rouic = angular.module('Rouic', ['ui.router']);
+var Rouic = angular.module('Rouic', ['ui.router', 'ngCookies']);
 var socket = io();
 var currentGame = null;
+var canContinue = false;
 
 Rouic.run(['$window', '$rootScope', '$state', '$stateParams', function($window, $rootScope, $state, $stateParams){
 	$rootScope.$state = $state;
@@ -78,6 +79,11 @@ Rouic.config(function($stateProvider, $urlRouterProvider) {
  		        templateUrl: 'app/game.html',
 		        controller: 'game'
 		    }
+        },
+        params: {
+          itemList: {
+            showContinue: null
+          }
         }        
     })       
     .state('about', {
@@ -110,6 +116,7 @@ Rouic.controller('start', function($state, $scope, $rootScope, $stateParams){
 	if(currentGame){
 		socket.emit('leave', {room: currentGame});
 		currentGame = null;
+		canContinue = false;
 	}
 	
 });
@@ -134,33 +141,41 @@ Rouic.controller('host', function($state, $scope, $rootScope, $stateParams, $int
 	
 });
 
-Rouic.controller('join', function($state, $scope, $rootScope, $stateParams){
+Rouic.controller('join', ['$cookies', '$state', '$scope','$rootScope', '$stateParams', function($cookies, $state, $scope, $rootScope, $stateParams){
 	$rootScope.pageClass = 'signup-page';
 	$.material.init();	
 	
 	$scope.join = {};
 	
 	$scope.joinGame = function(){
-		socket.emit('joinRoom', {room: $scope.join.roomcode.toLowerCase(), name: 'Boop'});
-		socket.on('joinRoomResponce', function(msg){
-			socket.off('joinRoomResponce');
-			if(msg.validity == true){
-				currentGame = $scope.join.roomcode;
-				$state.go('game', {gameID: $scope.join.roomcode})
-			} else {
-				$scope.joinError = msg.error;
-				console.log(msg.error);
-				$scope.$apply();
-			}
-		});		
+		if($scope.join.roomcode && $scope.join.name){
+			socket.emit('joinRoom', {room: $scope.join.roomcode.toLowerCase(), name: $scope.join.name.toUpperCase()});
+			socket.on('joinRoomResponce', function(msg){
+				socket.off('joinRoomResponce');
+				if(msg.validity == true){
+					currentGame = $scope.join.roomcode;
+					$cookies.put('name', $scope.join.name.toUpperCase());
+					if(msg.num == 3) canContinue = true;
+					$state.go('game', {gameID: $scope.join.roomcode, showContinue: true});
+				} else {
+					$scope.joinError = msg.error;
+					console.log(msg.error);
+					$scope.$apply();
+				}
+			});	
+		} else {
+			$scope.joinError = 'Name or Code cannot be empty.'
+		}	
 	};
 	
-});
+}]);
 
-Rouic.controller('game', function($state, $scope, $rootScope, $stateParams){
+Rouic.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$stateParams', function($cookies, $state, $scope, $rootScope, $stateParams){
 	$rootScope.pageClass = 'signup-page';
 	$.material.init();
-	
+
+	$scope.continueButton = canContinue;
+		
 	if(!$stateParams.gameID){
 		$state.go('start');
 	} else {
@@ -168,19 +183,22 @@ Rouic.controller('game', function($state, $scope, $rootScope, $stateParams){
 		currentGame = $stateParams.gameID;
 		console.log("Loading Game: "+$stateParams.gameID);
 		
-		socket.emit('joinRoom', {room: $stateParams.gameID.toLowerCase(), name: 'Boop'});
-		socket.on('joinRoomResponce', function(msg){
-			socket.off('joinRoomResponce');
-			if(msg.validity == true){
-				currentGame = $stateParams.gameID;
-			} else {
-				$scope.joinError = msg.error;
-				console.log(msg.error);
-				$scope.$apply();
-			}
-		});			
-		
-		
+		if($cookies.get('name')){
+			socket.emit('joinRoom', {room: $stateParams.gameID.toLowerCase(), name: $cookies.get('name')});
+			socket.on('joinRoomResponce', function(msg){
+				socket.off('joinRoomResponce');
+				if(msg.validity == true){
+					if(msg.num == 3) $scope.continueButton = true;
+					currentGame = $stateParams.gameID;
+				} else {
+					$scope.joinError = msg.error;
+					console.log(msg.error);
+					$scope.$apply();
+				}
+			});
+		} else {
+			$state.go('join');
+		}					
 	}
 	
 	socket.on('hostLeft', function(){
@@ -188,7 +206,7 @@ Rouic.controller('game', function($state, $scope, $rootScope, $stateParams){
 	})
 	
 	
-});
+}]);
 
 Rouic.controller('about', function($state, $scope, $rootScope, $stateParams){
 	$rootScope.pageClass = 'about-us';

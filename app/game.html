@@ -5,7 +5,9 @@
 
 					<div class="card card-signup" style="margin-bottom: 0px">
 	                    <h2 class="card-title text-center">Waiting for host to continue...</h2>
-	                    <h3 class="text-center">{{roomCode}}</h3>
+	                    <div class="col-md-8 col-md-offset-2 text-center">
+	                    	<buton ng-show="continueButton" class="btn btn-success btn-round join-button">Continue <i class="material-icons">navigate_next</i></button>
+	                    </div>
 	        		</div>
 		    		<div class="text-center">
 						<a ui-sref="start" class="btn btn-white btn-simple">
