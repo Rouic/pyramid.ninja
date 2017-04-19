@@ -3,12 +3,23 @@
 			<div class="row">
     			<div class="col-md-10 col-md-offset-1">
 
-					<div class="card card-signup" style="margin-bottom: 0px">
+					<!--WAITING CARD START -->
+					<div ng-hide="gameStarted" class="card card-signup" style="margin-bottom: 0px">
 	                    <h2 class="card-title text-center">Waiting for host to continue...</h2>
 	                    <div class="col-md-8 col-md-offset-2 text-center">
-	                    	<buton ng-show="continueButton" class="btn btn-success btn-round join-button">Continue <i class="material-icons">navigate_next</i></button>
+	                    	<buton ng-click="startGame()" ng-show="continueButton" class="btn btn-success btn-round join-button">Continue <i class="material-icons">navigate_next</i></button>
 	                    </div>
 	        		</div>
+	        		<!--WAITING CARD END -->
+	        		
+	        		<!--GAME CARD START -->
+					<div ng-show="gameStarted" class="card card-signup" style="margin-bottom: 0px">
+	                    <div class="col-md-8 col-md-offset-2 text-center">
+	                    	<p>Waiting for Question...</p>
+	                    </div>
+	        		</div>
+	        		<!--GAME CARD END -->     		
+	        		
 		    		<div class="text-center">
 						<a ui-sref="start" class="btn btn-white btn-simple">
 							<i class="material-icons">exit_to_app</i> Exit Game

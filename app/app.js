@@ -135,9 +135,50 @@ Rouic.controller('host', function($state, $scope, $rootScope, $stateParams, $int
 	
 	socket.on('newGameClients', function(msg){
 		$scope.players = msg.data;
-		console.log(msg.data);
 		$scope.$apply();
 	});
+	
+	$scope.startGame = function(){
+		socket.emit('startGame');				
+	};
+	
+	socket.on('gameStarted', function(msg){
+		$scope.gameStarted = true;
+		$scope.$apply();
+		
+		
+		//step 1, start countdown to display 
+		$scope.countdown = 30;
+		$scope.step = 1;
+		
+		$scope.information = 'Welcome to TrendsGame, the game where your knowledge on the current trends of the internet is key! We\'ll show you a search term with some blank spaces, simply fill in the blanks with what you think is the most searched term - the higher the searches, the more points you get!';
+		
+		$interval(function(){
+			if($scope.countdown > 0) $scope.countdown--;
+		}, 1000);
+		
+		
+		
+	    $scope.$watch('countdown', function() {
+	        if($scope.countdown == 0 && $scope.step == 1){
+		        $scope.countdown = 10;
+		        $scope.step = 2;
+		        $scope.information = 'Question 1... coming up!';
+	        }
+	        if($scope.countdown == 0 && $scope.step == 2){
+		        $scope.countdown = 60;
+		        $scope.step = 3;
+		        $scope.information = 'How big should my _____ be?';
+	        }	        	        
+	        
+	    });
+		
+		//request game configuration
+		//setup countdown
+		//display information page
+		
+	});
+	
 	
 });
 
@@ -203,7 +244,16 @@ Rouic.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$statePa
 	
 	socket.on('hostLeft', function(){
 		$state.go('join');
-	})
+	});
+	
+	$scope.startGame = function(){
+		socket.emit('startGame');				
+	};
+	
+	socket.on('gameStarted', function(msg){
+		$scope.gameStarted = true;
+		$scope.$apply();
+	});	
 	
 	
 }]);
@@ -211,39 +261,24 @@ Rouic.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$statePa
 Rouic.controller('about', function($state, $scope, $rootScope, $stateParams){
 	$rootScope.pageClass = 'about-us';
     $.material.init();
-
     window_width = $(window).width();
-
-    //  Activate the Tooltips
     $('[data-toggle="tooltip"], [rel="tooltip"]').tooltip();
-
-    // Activate Datepicker
     if($('.datepicker').length != 0){
         $('.datepicker').datepicker({
              weekStart:1
         });
     }
-
-    //    Activate bootstrap-select
     $(".select").dropdown({ "dropdownClass": "dropdown-menu", "optionClass": "" });
-
-    // Activate Popovers
     $('[data-toggle="popover"]').popover();
-
-    // Active Carousel
 	$('.carousel').carousel({
       interval: 400000
     });
-
-    //Activate tags
     if($(".tagsinput").length != 0){
         $(".tagsinput").tagsInput();
     }
-
     if($('.navbar-color-on-scroll').length != 0){
         $(window).on('scroll', materialKit.checkScrollForTransparentNavbar)
     }
-
     if (window_width >= 768){
         big_image = $('.page-header[data-parallax="active"]');
         if(big_image.length != 0){

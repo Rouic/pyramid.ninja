@@ -6563,3 +6563,23 @@ footer .pull-center {
     font-weight: 700;
     text-transform: uppercase;
 }
+.room-code-holder {
+	position: absolute;
+    top: 10px;
+    left: 10px;
+}
+.room-code-holder > h2 {
+    color: #9c27b0 !important;
+    font-size: 20px;
+    margin: 0px;
+}
+.room-countdown-holder {
+	position: absolute;
+    top: 10px;
+    right: 10px;
+}
+.room-countdown-holder > h2 {
+    color: #9c27b0 !important;
+    font-size: 20px;
+    margin: 0px;
+}

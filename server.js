@@ -155,6 +155,16 @@ io.on('connection', function(socket){
 	   		}
 	   	}
    });
+   
+   socket.on('startGame', function(msg){
+   		if(socket.type == 'host'){
+   			io.to(socket.hostOf).emit('gameStarted');
+   			console.log("[INFO] starting game... "+socket.hostOf);
+   		} else if(socket.type == 'client'){
+	   		io.to(socket.clientOf).emit('gameStarted');
+	   		console.log("[INFO] starting game... "+socket.clientOf);
+	   	}
+   });
 
 
 	socket.on('newRoom', function(msg){

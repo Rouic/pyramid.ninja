@@ -3,28 +3,46 @@
 			<div class="row">
     			<div class="col-md-10 col-md-offset-1">
 
-					<div class="card card-signup" style="margin-bottom: 0px">
+					<!--WAITING CARD START -->
+					<div ng-hide="gameStarted" class="card card-signup" style="margin-bottom: 0px">
                         <h2 ng-if="!(players.length > 2)" class="card-title text-center">Waiting for more players...</h2>
                         <h2 ng-if="(players.length > 2)" class="card-title text-center">Press Continue when ready...</h2>
                         <h3 class="text-center">Open {{domain}} on your devices and enter <span class="card-title">{{roomCode}}</span> to join this game.</h3>
                         <div class="row">
-    				<div class="col-md-8 col-md-offset-2 text-center">
-	    				<div class="game-player" ng-repeat="x in players" ng-if="x.type != 'host'">
-	    					<img ng-src="/avatar/{{x.name}}" alt="Raised Image" class="img-rounded img-responsive img-raised" style="max-width: 100px">
-							<p>{{x.name}}</p>
-	    				</div>	    					    				
-    				</div>  
-    				<div class="col-md-8 col-md-offset-2 text-center">
-	    				<button ng-if="players.length && players.length > 2" class="btn btn-success btn-round join-button">Continue <i class="material-icons">navigate_next</i></button>
-    				</div>                        					
-
-                </div>
-            </div>
-    		<div class="text-center">
-				<a ui-sref="start" class="btn btn-white btn-simple">
-					<i class="material-icons">arrow_back</i> Back to Start
-				</a>
-			</div>	
+		    				<div class="col-md-8 col-md-offset-2 text-center">
+			    				<div class="game-player" ng-repeat="x in players" ng-if="x.type != 'host'">
+			    					<img ng-src="/avatar/{{x.name}}" alt="Raised Image" class="img-rounded img-responsive img-raised" style="max-width: 100px">
+									<p>{{x.name}}</p>
+			    				</div>	    					    				
+		    				</div>  
+		    				<div class="col-md-8 col-md-offset-2 text-center">
+			    				<button ng-click="startGame()" ng-if="players.length && players.length > 2" class="btn btn-success btn-round join-button">Continue <i class="material-icons">navigate_next</i></button>
+		    				</div>                        					
+                		</div>
+            		</div>
+            		<!--WAITING CARD END -->
+            		
+            		<!--GAME CARD START -->
+					<div ng-show="gameStarted" class="card card-signup" style="margin-bottom: 0px">
+						<div class="room-code-holder">
+							<h2 class="title">{{roomCode}}</h2>
+						</div>
+						<div class="room-countdown-holder">
+							<h2 class="title">{{countdown}}</h2>
+						</div>						
+                        <div class="row">
+		    				<div class="col-md-8 col-md-offset-2 text-center">
+								<h3 style="padding: 20px;" class="text-center card-title">{{information}}</h3>    					    				
+		    				</div>                          					
+                		</div>
+            		</div>
+            		<!--GAME CARD END -->            		
+            		
+	    		<div class="text-center">
+					<a ui-sref="start" class="btn btn-white btn-simple">
+						<i class="material-icons">exit_to_app</i> Exit Game
+					</a>
+				</div>	
 		</div>
 
 		<footer class="footer footer-bottom-alt">
