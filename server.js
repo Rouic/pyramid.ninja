@@ -9,14 +9,17 @@
     / _, _/ /_/ / /_/ / / /__
    /_/ |_|\____/\__,_/_/\___/
    
-#####//{  ---trendsGame v1---  }\\#####
+#####//{  ---socketGame v1---  }\\#####
 
 Author/s: Alex Cottenham
 
 Contact: hello@rouic.com
+
+Want something moderatly funny to read? Check the source of any working page or the 404 page...
+
 */
 
-var webPort = 3001;
+var webPort = 3001; //port to run on
 
 
 var fs = require('fs'), 
@@ -35,6 +38,17 @@ AvatarGenerator = require('initials-avatar-generator').AvatarGenerator;
 
 console.log("[BOOT] Dependancies loaded...");
 
+//Find game configuration, don't bother booting without it.
+var gameConfig;
+fs.readFile('game.json', 'utf8', function (err, data) {
+  if (err){
+	  console.log("[ERROR] Missing game configuration! Please supply game.json to continue.");
+	  process.exit(1);
+  } else {
+  	gameConfig = JSON.parse(data);
+  	console.log("[BOOT] Loaded "+gameConfig.questions.length+" questions from game configuration...");
+  }
+});
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -42,7 +56,7 @@ app.use(cookieParser());
 
 app.use(express.static('/assets'));
 app.use(express.static('/bower_components'));
-app.use(express.static('/node_modules'));
+// app.use(express.static('/node_modules'));
 app.use(express.static('/app'));
 
 app.use('/assets', express.static('assets'));
@@ -50,13 +64,12 @@ app.use('/bower_components', express.static('bower_components'));
 app.use('/node_modules', express.static('node_modules'));
 app.use('/app', express.static('app'));
 
-
-//Add any headers you want to send with ALL requests here
 app.get('/*',function(req,res,next){
-    res.header('X-Powered-By' , 'Rouic'); //Powered by Rouic of cource!
+    res.header('X-Powered-By' , 'Rouic'); //Powered by Rouic!
     next();
 });
 
+//Unique(ish) Avatar generator using game name with a hash colour
 app.get('/avatar/:fullName', function(req, res, next){				
 	var matches = req.params.fullName.match(/\b(\w)/g);
 	var acronym = matches.join('');	
@@ -83,9 +96,7 @@ app.get('/avatar/:fullName', function(req, res, next){
 	avatarGenerator.generate(option, function (image) {
 		res.setHeader("content-type", "image/png");
 	    image.stream('png').pipe(res);   
-    });
- 
-  
+    });  
 });
 
 app.get('/', function(req, res, next) {
@@ -100,37 +111,34 @@ app.get('*', function(req, res){
 });
 
 var httpServer = http.createServer(app);
-// var httpsServer = https.createServer(credentials, app);
+// var httpsServer = https.createServer(credentials, app); //uncomment for SSL
 // httpsServer.listen(secureWebPort);
 httpServer.listen(webPort);
 app = httpServer;
-console.log("[BOOT] Web server listening on port: "+webPort);
+console.log("[BOOT] Web server listening on port: "+webPort+"...");
 
-io = io(app);
+io = io(app); //attatch socket to web server
 io.on('connection', function(socket){
 
 	socket.on('leave', function(msg){
-						
-	   		if(socket.clientOf){
-		   		socket.leave(socket.clientOf);	
-	   			if(io.sockets.adapter.rooms[socket.clientOf]){
-					var clients = io.sockets.adapter.rooms[socket.clientOf].sockets;  
-					var gameClients = []; 
-					for (var clientId in clients ) {
-					     var clientSocket = io.sockets.connected[clientId];				
-						gameClients.push({name: clientSocket.name, type: clientSocket.type});
-					
-					}			
-					io.to(socket.clientOf).emit('newGameClients', {data: gameClients});
-					socket.clientOf = null;	
-				}		
-	   		} else if(socket.hostOf){
-		   		socket.leave(socket.hostOf);	
-	   			io.to(socket.hostOf).emit('hostLeft');
-	   			socket.hostOf = null;
-	   		} 
-	   		
-		
+   		if(socket.clientOf){
+	   		socket.leave(socket.clientOf);	
+   			if(io.sockets.adapter.rooms[socket.clientOf]){
+				var clients = io.sockets.adapter.rooms[socket.clientOf].sockets;  
+				var gameClients = []; 
+				for (var clientId in clients ) {
+				     var clientSocket = io.sockets.connected[clientId];				
+					gameClients.push({name: clientSocket.name, type: clientSocket.type});
+				
+				}			
+				io.to(socket.clientOf).emit('newGameClients', {data: gameClients});
+				socket.clientOf = null;	
+			}		
+   		} else if(socket.hostOf){
+	   		socket.leave(socket.hostOf);	
+   			io.to(socket.hostOf).emit('hostLeft');
+   			socket.hostOf = null;
+   		} 		
 	});
 
 
@@ -143,7 +151,6 @@ io.on('connection', function(socket){
 					for (var clientId in clients ) {
 					     var clientSocket = io.sockets.connected[clientId];				
 						gameClients.push({name: clientSocket.name, type: clientSocket.type});
-					
 					}
 					console.log("[INFO] informing host about client changes to "+socket.clientOf);	
 					io.to(socket.clientOf).emit('newGameClients', {data: gameClients});	   
@@ -179,7 +186,6 @@ io.on('connection', function(socket){
 		var roomPIN = emptyString;
 		socket.type = 'host';
 		socket.hostOf = roomPIN;
-		console.log("New Room Pin: "+roomPIN);
 		console.log("[INFO] Creating new host with room code: "+roomPIN);
 		socket.emit('newRoomSuccess', {room: roomPIN});
 		socket.join(roomPIN);

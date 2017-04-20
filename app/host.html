@@ -11,7 +11,7 @@
                         <div class="row">
 		    				<div class="col-md-8 col-md-offset-2 text-center">
 			    				<div class="game-player" ng-repeat="x in players" ng-if="x.type != 'host'">
-			    					<img ng-src="/avatar/{{x.name}}" alt="Raised Image" class="img-rounded img-responsive img-raised" style="max-width: 100px">
+			    					<img ng-src="/avatar/{{x.name}}" alt="Connected User" class="img-rounded img-responsive img-raised" style="max-width: 100px">
 									<p>{{x.name}}</p>
 			    				</div>	    					    				
 		    				</div>  
@@ -35,6 +35,15 @@
 								<h3 style="padding: 20px;" class="text-center card-title">{{information}}</h3>    					    				
 		    				</div>                          					
                 		</div>
+                        <div class="row">
+		    				<div class="col-md-8 col-md-offset-2 text-center">
+			    				<div ng-repeat="x in players" ng-if="x.type != 'host'" class="in-progress-user">
+			    					<img ng-src="/avatar/{{x.name}}" alt="Connected User" class="img-rounded img-responsive img-raised in-progress-avatar">
+			    					<div class="userState"></div>
+									<p style="display: inline-block">{{x.name}}</p>
+			    				</div>	    					    				
+		    				</div>                          					
+                		</div>                		
             		</div>
             		<!--GAME CARD END -->            		
             		

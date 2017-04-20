@@ -1,6 +1,6 @@
 {
-  "name": "trends-game",
-  "description": "A google trends socket game (browser)",
+  "name": "socket-game",
+  "description": "A socket based game in the browser",
   "main": "server.js",
   "authors": [
     "Rouic Ltd"
@@ -14,7 +14,7 @@
     "game",
     "trends"
   ],
-  "homepage": "https://github.com/Rouic/trendsGame",
+  "homepage": "https://github.com/Rouic/socketGame",
   "private": true,
   "ignore": [
     "**/.*",

@@ -1,7 +1,7 @@
 {
-  "name": "trends-game",
+  "name": "socket-game",
   "version": "0.0.1",
-  "description": "A google trends socket game (browser)",
+  "description": "A socket based game in the browser",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Rouic/trendsGame.git"
+    "url": "git+https://github.com/Rouic/socketGame.git"
   },
   "keywords": [
     "google",
@@ -22,9 +22,9 @@
   "author": "Rouic Ltd",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Rouic/trendsGame/issues"
+    "url": "https://github.com/Rouic/socketGame/issues"
   },
-  "homepage": "https://github.com/Rouic/trendsGame#readme",
+  "homepage": "https://github.com/Rouic/socketGame#readme",
   "dependencies": {
     "async": "^2.3.0",
     "body-parser": "^1.17.1",

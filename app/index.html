@@ -1,12 +1,52 @@
+<!—-
+			Oi. Mate.
+
+			You lot are just everywhere, aren't you. Prying open delicate code, 
+			looking for the smallest gag. Maybe a bug too whilst you're at it?
+			What exactly do you want?
+			Well, I'll have you know there is no gag here, or bu...uhhh maybe, yeah maybe there is that.
+			
+			
+			I used to show people a little emoji here... back along... oh wait, look, here's one now!
+			
+			(๑◕︵◕๑)
+			
+			Oh...... something is wrong with it.
+			
+			What did you do?
+			
+			Did you know that little emoji face used to look happy? But, but now look 
+			what you've done. It's upset. I don't understand.
+			
+			How could you?
+			
+			You horrible person.
+			
+			You should be ashamed of yourself.
+			
+			●︿●
+			
+			Oh look, you made another one unhappy. Just go, leave! We don't want your 
+			kind here anymore. Please.
+			
+			It used to be a happy place.
+			
+			Now look.
+			
+			You did this. 
+			
+			You.			
+—->	
+
 <!doctype html>
-<html lang="en">
-<head>
+<html lang="en" ng-app="Rouic">
+<head>	
 	<meta charset="utf-8" />
 	<link rel="apple-touch-icon" sizes="76x76" href="assets/img/apple-icon.png">
 	<link rel="icon" type="image/png" href="assets/img/favicon.png">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 
-	<title>TrendsGame - Start</title>
+	<title ng-bind="'socketGame ' + title">socketGame</title>
 
 	<meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
 
@@ -20,7 +60,7 @@
 </head>
 
 <!-- Main App Body -->
-<body ng-class="pageClass" ng-app="Rouic">
+<body ng-class="pageClass">
 	<div ui-view="header"></div>
 	<ui-view></ui-view>
 </body>

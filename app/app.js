@@ -13,7 +13,11 @@ Rouic.run(['$window', '$rootScope', '$state', '$stateParams', function($window, 
 	
 	socket.on('connect', function(){
 	    $rootScope.socketID = socket.io.engine.id;
-	});		
+	});
+	
+    $rootScope.$on('$stateChangeSuccess', function (event, current, previous) {       
+        $rootScope.title = '| '+$state.current.title || 'Boop';
+    });			
 	
 }]);
 
@@ -43,6 +47,7 @@ Rouic.config(function($stateProvider, $urlRouterProvider) {
 	})	                
     .state('start', {
  	    parent: 'root',
+ 	    title: 'Start',
         url: '/start',
         views: {
 	        'view': {
@@ -53,6 +58,7 @@ Rouic.config(function($stateProvider, $urlRouterProvider) {
     })
     .state('host', {
  	    parent: 'root',
+ 	    title: 'Host',
         url: '/host',
         views: {
 	        'view': {
@@ -63,6 +69,7 @@ Rouic.config(function($stateProvider, $urlRouterProvider) {
     })
     .state('join', {
  	    parent: 'root',
+ 	    title: 'Join',
         url: '/join',
         views: {
 	        'view': {
@@ -80,6 +87,11 @@ Rouic.config(function($stateProvider, $urlRouterProvider) {
 		        controller: 'game'
 		    }
         },
+ 	    resolve: {
+	 	    title: function($stateParams){
+		 	    return 'Game '+$stateParams.gameID.toUpperCase();
+		 	}
+	 	},        
         params: {
           itemList: {
             showContinue: null
@@ -88,6 +100,7 @@ Rouic.config(function($stateProvider, $urlRouterProvider) {
     })       
     .state('about', {
  	    parent: 'root',
+ 	    title: 'About',
         url: '/about',
         views: {
 	        'view': {
@@ -99,8 +112,6 @@ Rouic.config(function($stateProvider, $urlRouterProvider) {
 
   
 });
-
-
 
 Rouic.controller('root', function($state, $scope, $rootScope, $stateParams){
 	
@@ -211,11 +222,13 @@ Rouic.controller('join', ['$cookies', '$state', '$scope','$rootScope', '$statePa
 	
 }]);
 
-Rouic.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$stateParams', function($cookies, $state, $scope, $rootScope, $stateParams){
+Rouic.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$stateParams', 'title', function($cookies, $state, $scope, $rootScope, $stateParams, title){
 	$rootScope.pageClass = 'signup-page';
 	$.material.init();
 
 	$scope.continueButton = canContinue;
+		
+	$rootScope.title = '| '+title+' Loading...';	
 		
 	if(!$stateParams.gameID){
 		$state.go('start');
@@ -231,9 +244,11 @@ Rouic.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$statePa
 				if(msg.validity == true){
 					if(msg.num == 3) $scope.continueButton = true;
 					currentGame = $stateParams.gameID;
+					$rootScope.title = '| '+title+' Waiting...';
 				} else {
 					$scope.joinError = msg.error;
 					console.log(msg.error);
+					$rootScope.title = '| '+title+' Error...';
 					$scope.$apply();
 				}
 			});
@@ -252,6 +267,7 @@ Rouic.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$statePa
 	
 	socket.on('gameStarted', function(msg){
 		$scope.gameStarted = true;
+		$rootScope.title = '| '+title;
 		$scope.$apply();
 	});	
 	
