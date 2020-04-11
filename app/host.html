@@ -1,4 +1,4 @@
-	<div class="page-header header-filter" filter-color="purple" style="background-image: url('assets/img/bg5.jpg'); background-size: cover; background-position: top center;">
+	<div class="page-header header-filter" filter-color="red" style="background-image: url('assets/img/pyramid-of-khafre-in-giza-egypt-L6MV5GX(1).jpg'); background-size: cover; background-position: top center;">
     	<div class="container">
 			<div class="row">
     			<div class="col-md-10 col-md-offset-1">
@@ -27,14 +27,22 @@
 						<div class="room-code-holder">
 							<h2 class="title">{{roomCode}}</h2>
 						</div>
-						<div class="room-countdown-holder">
+						<div ng-if="countdown == 0 && cardsleft" class="room-cards-left-holder">
+							<h2 class="title">{{cardsleft}} Card{{(cardsleft == 1) ? '' : 's'}} Left - {{clients.length}} Player{{(clients.length == 1) ? '' : 's'}}</h2>
+						</div>							
+						<div ng-if="countdown > 0" class="room-countdown-holder">
 							<h2 class="title">{{countdown}}</h2>
-						</div>						
+						</div>					
                         <div class="row">
 		    				<div class="col-md-8 col-md-offset-2 text-center">
-								<h3 style="padding: 20px;" class="text-center card-title">{{information}}</h3>    					    				
-		    				</div>                          					
+								<h3 style="padding: 20px;" class="text-center card-title">{{information}}</h3>					    				
+		    				</div>      
                 		</div>
+						 <div class="row">
+							 <div class="col-md-8 col-md-offset-2 text-center" id="containerparent" style="min-height: 75vh;position: inherit;overflow: hidden;">
+								 <div id="cardcontainer"></div>
+							 </div>
+						 </div>
                         <div class="row">
 		    				<div class="col-md-8 col-md-offset-2 text-center">
 			    				<div ng-repeat="x in players" ng-if="x.type != 'host'" class="in-progress-user">
@@ -54,7 +62,7 @@
 				</div>	
 		</div>
 
-		<footer class="footer footer-bottom-alt">
+		<footer class="footer">
 	        <div class="container">
 	            <nav class="pull-left">
 					<ul>
@@ -76,7 +84,7 @@
 					</ul>
 	            </nav>
 	            <div class="copyright pull-right">
-	                &copy; 2017, made with <i class="fa fa-heart heart"></i> by <a href="https://www.rouic.com" target="_blank">Rouic</a>
+	                &copy; 2020 <a href="https://www.rouic.com" target="_blank">Rouic</a>
 	            </div>
 	        </div>
 	    </footer>

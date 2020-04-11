@@ -1,4 +1,4 @@
-	<div class="page-header header-filter" filter-color="purple" style="background-image: url('assets/img/bg5.jpg'); background-size: cover; background-position: top center;">
+	<div class="page-header header-filter" filter-color="red" style="background-image: url('assets/img/pyramid-of-khafre-in-giza-egypt-L6MV5GX(1).jpg'); background-size: cover; background-position: top center;">
     	<div class="container">
 			<div class="row">
     			<div class="col-md-10 col-md-offset-1">
@@ -14,9 +14,20 @@
 	        		
 	        		<!--GAME CARD START -->
 					<div ng-show="gameStarted" class="card card-signup" style="margin-bottom: 0px">
-	                    <div class="col-md-8 col-md-offset-2 text-center">
-	                    	<p>Waiting for Question...</p>
-	                    </div>
+						<div class="room-code-holder">
+							<h2 class="title">{{roomCode}}</h2>
+						</div>						
+						<div class="row" ng-show="!mycards.length">
+		                    <div class="col-md-8 col-md-offset-2 text-center">
+		                    	<h4>{{instruction}}</h4>
+		                    </div>
+						</div>
+						 <div class="row">
+							<div class="col-md-8 col-md-offset-2 text-center" id="clientcontainerparent" style="min-height: 400px;position: inherit;overflow: hidden;
+}">
+								<div id="clientcardcontainer"></div>
+							</div>
+						</div>						
 	        		</div>
 	        		<!--GAME CARD END -->     		
 	        		
@@ -51,7 +62,7 @@
 					</ul>
 	            </nav>
 	            <div class="copyright pull-right">
-	                &copy; 2017, made with <i class="fa fa-heart heart"></i> by <a href="https://www.rouic.com" target="_blank">Rouic</a>
+	                &copy; 2020 <a href="https://www.rouic.com" target="_blank">Rouic</a>
 	            </div>
 	        </div>
 	    </footer>

@@ -38,17 +38,6 @@ AvatarGenerator = require('initials-avatar-generator').AvatarGenerator;
 
 console.log("[BOOT] Dependancies loaded...");
 
-//Find game configuration, don't bother booting without it.
-var gameConfig;
-fs.readFile('game.json', 'utf8', function (err, data) {
-  if (err){
-	  console.log("[ERROR] Missing game configuration! Please supply game.json to continue.");
-	  process.exit(1);
-  } else {
-  	gameConfig = JSON.parse(data);
-  	console.log("[BOOT] Loaded "+gameConfig.questions.length+" questions from game configuration...");
-  }
-});
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -128,7 +117,7 @@ io.on('connection', function(socket){
 				var gameClients = []; 
 				for (var clientId in clients ) {
 				     var clientSocket = io.sockets.connected[clientId];				
-					gameClients.push({name: clientSocket.name, type: clientSocket.type});
+					gameClients.push({name: clientSocket.name, type: clientSocket.type, cards: clientSocket.cards});
 				
 				}			
 				io.to(socket.clientOf).emit('newGameClients', {data: gameClients});
@@ -150,7 +139,7 @@ io.on('connection', function(socket){
 					var clients = io.sockets.adapter.rooms[socket.clientOf].sockets;   
 					for (var clientId in clients ) {
 					     var clientSocket = io.sockets.connected[clientId];				
-						gameClients.push({name: clientSocket.name, type: clientSocket.type});
+						gameClients.push({name: clientSocket.name, type: clientSocket.type, cards: clientSocket.cards});
 					}
 					console.log("[INFO] informing host about client changes to "+socket.clientOf);	
 					io.to(socket.clientOf).emit('newGameClients', {data: gameClients});	   
@@ -191,6 +180,13 @@ io.on('connection', function(socket){
 		socket.join(roomPIN);
 	});
 	
+	socket.on('playerSetup', function(msg){
+		if(msg.room && msg.players){
+			io.to(msg.room).emit('playerSetupData', {data: msg.players});
+			socket.emit('playerSetupResponse', {validity: true});
+		}
+	});
+	
 	socket.on('joinRoom', function(msg){
 		if(msg.room && msg.name){
 			
@@ -211,7 +207,7 @@ io.on('connection', function(socket){
 				
 				     var clientSocket = io.sockets.connected[clientId];
 				
-					gameClients.push({name: clientSocket.name, type: clientSocket.type});
+					gameClients.push({name: clientSocket.name, type: clientSocket.type, cards: clientSocket.cards});
 				
 				}			
 				console.log("[INFO] informing host about client changes to "+msg.room);
