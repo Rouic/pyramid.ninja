@@ -9,17 +9,17 @@
     / _, _/ /_/ / /_/ / / /__
    /_/ |_|\____/\__,_/_/\___/
    
-#####//{  ---socketGame v1---  }\\#####
+#####//{  ---pyramid.ninja v1---  }\\#####
 
 Author/s: Alex Cottenham
 
 Contact: hello@rouic.com
 
-Want something moderatly funny to read? Check the source of any working page or the 404 page...
+A digital version of the popular drinking game "pyramid". Live version can be found at https://pyramid.ninja.
 
 */
 
-var webPort = 3001; //port to run on
+var webPort = 3001; //dev port to run on, will automatically pick up PORT environment variable instead
 
 
 var fs = require('fs'), 

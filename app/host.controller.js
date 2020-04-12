@@ -36,9 +36,7 @@ Rouic.controller('host', function($state, $scope, $rootScope, $stateParams, $int
 							return obj.i;
 						})
 					}
-					
-					console.log('Current card state:', $scope.playerCards[player.name].cardsState);
-					
+										
 					if(!$scope.playerCards[player.name] || !$scope.playerCards[player.name].cardsState){
 						player.cardsState = [];
 						player.cards.forEach(function (card, i) {
@@ -124,6 +122,17 @@ Rouic.controller('host', function($state, $scope, $rootScope, $stateParams, $int
 			}					
 		};
 		
+		$scope.pyramidRow = function(i){
+			switch(true) {
+				case (i <= 4): return 1;
+				case (i <= 8): return 2;
+				case (i <= 11): return 3;
+				case (i <= 13): return 4;
+				case (i == 14): return 5;
+				default: return 1;
+			}					
+		};		
+		
 		$scope.$watch('countdown', function() {
 			if($scope.countdown == 0 && $scope.step == 1){
 				
@@ -171,6 +180,7 @@ Rouic.controller('host', function($state, $scope, $rootScope, $stateParams, $int
 						
 						$scope.round_number++;
 						$scope.information = '';
+						$scope.round_row = $scope.pyramidRow(x);
 						
 						$scope.showCards = temp_deck.cards.filter(function(obj){
 							return pyramidCards[x].i == obj.i;
@@ -179,6 +189,7 @@ Rouic.controller('host', function($state, $scope, $rootScope, $stateParams, $int
 						console.log("Clicked Card:", pyramidCards[x]);
 						pyramidCards[x].setSide('front');
 						$scope.$apply();
+						
 						$('#roundModal').modal({keyboard: false, backdrop: 'static'});
 						
 						socket.emit('gameRound', {room: $scope.roomCode.toLowerCase(), round: $scope.round_number, card: $scope.showCards[0]});
