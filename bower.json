@@ -1,6 +1,6 @@
 {
-  "name": "socket-game",
-  "description": "A socket based game in the browser",
+  "name": "pyramid.ninja",
+  "description": "A digital version of the popular drinking game 'pyramid'.",
   "main": "server.js",
   "authors": [
     "Rouic Ltd"
@@ -14,7 +14,7 @@
     "game",
     "trends"
   ],
-  "homepage": "https://github.com/Rouic/socketGame",
+  "homepage": "https://github.com/Rouic/pyramid.ninja",
   "private": true,
   "ignore": [
     "**/.*",

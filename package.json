@@ -1,7 +1,7 @@
 {
-  "name": "socket-game",
+  "name": "pyramnid.ninja",
   "version": "0.0.1",
-  "description": "A socket based game in the browser",
+  "description": "A digital version of the popular drinking game 'pyramid'.",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Rouic/socketGame.git"
+    "url": "git+https://github.com/Rouic/pyramid.ninja.git"
   },
   "keywords": [
     "google",
@@ -22,9 +22,9 @@
   "author": "Rouic Ltd",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Rouic/socketGame/issues"
+    "url": "https://github.com/Rouic/pyramid.ninja/issues"
   },
-  "homepage": "https://github.com/Rouic/socketGame#readme",
+  "homepage": "https://github.com/Rouic/pyramid.ninja#readme",
   "dependencies": {
     "async": "^2.3.0",
     "body-parser": "^1.17.1",
