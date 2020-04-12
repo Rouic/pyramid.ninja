@@ -74,7 +74,7 @@ Rouic.controller('host', function($state, $scope, $rootScope, $stateParams, $int
 			}
 		});	
 		$scope.information = 'Once ready, select the first card below to begin the round.';	
-		console.log('Updated Players:', $scope.players);
+		$scope.$apply();
 	});
 	
 	

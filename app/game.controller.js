@@ -43,11 +43,12 @@ Rouic.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$statePa
 			
 		$scope.myCardsCoords = function(i){
 			switch(i) {
-				case 0: return {x:193, y:0};
-				case 1: return {x:49, y:0};
-				case 2: return {x:-89, y:0};
-				case 3: return {x:-226, y:0};
-				default: return {x:143, y:0};
+				case 0: return {x:49, y:-20};
+				case 1: return {x:-89, y:-20};
+				case 2: return {x:49, y:170};
+				case 3: return {x:-89, y:170};
+				default: return {x:49, y:0};			
+				
 			}					
 		};
 		
