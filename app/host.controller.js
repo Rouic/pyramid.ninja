@@ -170,7 +170,7 @@ Rouic.controller('host', function($state, $scope, $rootScope, $stateParams, $int
 					$($('.playingcard')[x]).click(function(){
 						
 						$scope.round_number++;
-						
+						$scope.information = '';
 						
 						$scope.showCards = temp_deck.cards.filter(function(obj){
 							return pyramidCards[x].i == obj.i;
@@ -192,6 +192,7 @@ Rouic.controller('host', function($state, $scope, $rootScope, $stateParams, $int
 					});
 				});	
 				$('#roundModal').on('hidden.bs.modal', function () {
+					$scope.information = 'Select another card from the pyramid to continue...';
 					$scope.showCards[0].unmount($scope.$modalcontainer);
 					socket.emit('gameRound', {room: $scope.roomCode.toLowerCase(), round: null, card: null});
 				})							
