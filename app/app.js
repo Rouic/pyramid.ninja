@@ -1,9 +1,9 @@
-var Rouic = angular.module('Rouic', ['ui.router', 'ngCookies']);
+var Pyramid = angular.module('Pyramid', ['ui.router', 'ngCookies']);
 var socket = io();
 var currentGame = null;
 var canContinue = false;
 
-Rouic.run(['$window', '$rootScope', '$state', '$stateParams', function($window, $rootScope, $state, $stateParams){
+Pyramid.run(['$window', '$rootScope', '$state', '$stateParams', function($window, $rootScope, $state, $stateParams){
 	$rootScope.$state = $state;
 	$rootScope.$stateParams = $stateParams;	
 	
@@ -21,7 +21,7 @@ Rouic.run(['$window', '$rootScope', '$state', '$stateParams', function($window, 
 	
 }]);
 
-Rouic.config(function($stateProvider, $urlRouterProvider) { 
+Pyramid.config(function($stateProvider, $urlRouterProvider) { 
     
     if(/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream){
 	    $urlRouterProvider.otherwise('/join');
@@ -113,15 +113,15 @@ Rouic.config(function($stateProvider, $urlRouterProvider) {
   
 });
 
-Rouic.controller('root', function($state, $scope, $rootScope, $stateParams){
+Pyramid.controller('root', function($state, $scope, $rootScope, $stateParams){
 	
 });
 
-Rouic.controller('header', function($state, $scope, $rootScope, $stateParams){
+Pyramid.controller('header', function($state, $scope, $rootScope, $stateParams){
 
 });
 
-Rouic.controller('start', function($state, $scope, $rootScope, $stateParams){
+Pyramid.controller('start', function($state, $scope, $rootScope, $stateParams){
 	$rootScope.pageClass = 'signup-page';
 	$.material.init();
 	if(currentGame){
@@ -132,7 +132,7 @@ Rouic.controller('start', function($state, $scope, $rootScope, $stateParams){
 	
 });
 
-Rouic.controller('join', ['$cookies', '$state', '$scope','$rootScope', '$stateParams', function($cookies, $state, $scope, $rootScope, $stateParams){
+Pyramid.controller('join', ['$cookies', '$state', '$scope','$rootScope', '$stateParams', function($cookies, $state, $scope, $rootScope, $stateParams){
 	$rootScope.pageClass = 'signup-page';
 	$.material.init();	
 	
@@ -160,7 +160,7 @@ Rouic.controller('join', ['$cookies', '$state', '$scope','$rootScope', '$statePa
 	
 }]);
 
-Rouic.controller('about', function($state, $scope, $rootScope, $stateParams){
+Pyramid.controller('about', function($state, $scope, $rootScope, $stateParams){
 	$rootScope.pageClass = 'about-us';
     $.material.init();
     window_width = $(window).width();
