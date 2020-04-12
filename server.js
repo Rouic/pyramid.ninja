@@ -152,6 +152,19 @@ io.on('connection', function(socket){
 	   	}
    });
    
+   socket.on('seenCards', function(msg){
+		if(socket.type == 'client'){
+			io.to(socket.clientOf).emit('clientCardsSeen', {client: socket.name});
+			console.log("[INFO] Client seen cards: "+socket.name);
+		}
+   });  
+   
+   	socket.on('gameRound', function(msg){
+	   console.log("[INFO] Game round update for "+socket.clientOf);
+	   io.to(msg.room).emit('gameRoundUpdate', msg);
+    });    
+    
+   
    socket.on('startGame', function(msg){
    		if(socket.type == 'host'){
    			io.to(socket.hostOf).emit('gameStarted');
@@ -190,28 +203,42 @@ io.on('connection', function(socket){
 	socket.on('joinRoom', function(msg){
 		if(msg.room && msg.name){
 			
-			
 			console.log("[INFO] joining "+msg.name+" to "+msg.room);
 			
 			if(io.nsps["/"].adapter.rooms[msg.room]){
-				socket.type = 'client';
-				socket.clientOf = msg.room;
-				socket.name = msg.name;
-				socket.join(msg.room);
-								
-				var gameClients = [];
-				var clients = io.sockets.adapter.rooms[msg.room].sockets;   
-				var numClients = (typeof clients !== 'undefined') ? Object.keys(clients).length : 0;
-				socket.emit('joinRoomResponce', {validity: true, num: numClients});
-				for (var clientId in clients ) {
 				
-				     var clientSocket = io.sockets.connected[clientId];
+				var clients = io.sockets.adapter.rooms[msg.room].sockets;
 				
-					gameClients.push({name: clientSocket.name, type: clientSocket.type, cards: clientSocket.cards});
+				var newClientExists = false;
+				for (var existingClient in clients ) {
+					console.log(io.sockets.connected[existingClient].name, msg.name);
+					if(io.sockets.connected[existingClient].name == msg.name) newClientExists = true;
+				}
+				// if((msg.init && msg.init == true) || newClientExists == false){
 				
-				}			
-				console.log("[INFO] informing host about client changes to "+msg.room);
-				io.to(msg.room).emit('newGameClients', {data: gameClients});
+					socket.type = 'client';
+					socket.clientOf = msg.room;
+					socket.name = msg.name;
+					socket.join(msg.room);
+									
+					var gameClients = [];
+					
+					var numClients = (typeof clients !== 'undefined') ? Object.keys(clients).length : 0;
+					socket.emit('joinRoomResponce', {validity: true, num: numClients});
+					for (var clientId in clients ) {
+					
+					     var clientSocket = io.sockets.connected[clientId];
+					
+						gameClients.push({name: clientSocket.name, type: clientSocket.type, cards: clientSocket.cards});
+					
+					}			
+					console.log("[INFO] informing host about client changes to "+msg.room);
+					io.to(msg.room).emit('newGameClients', {data: gameClients});
+					
+				// } else {
+				// 	socket.emit('joinRoomResponce', {validity: false, error: 'duplicate name, pick another!'});
+				// }
+				
 			} else {
 				socket.emit('joinRoomResponce', {validity: false, error: 'unknown game code'});
 			}

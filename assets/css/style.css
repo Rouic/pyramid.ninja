@@ -19,6 +19,18 @@
     left: 46%;
 }
 
+#modalcardcontainer {
+  position: absolute;
+  left: 100px;
+  top: 50px;
+}
+
+#modalcardcontainer .playingcard { 
+  width: 11.875rem;
+  height: 15.5rem;  
+}
+
+
 #topbar {
   position: fixed;
   top: 0;
@@ -442,4 +454,7 @@ bottom: 0px;
 background-color: rgb(153, 150, 159);
 margin-bottom: -15px;
 margin-left: -27px
+}
+.modal-backdrop {
+  z-index: 0 !important;
 }
