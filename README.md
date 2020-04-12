@@ -1,3 +1,5 @@
+![pyramid.ninja logo](https://storage.googleapis.com/rouic-storage/pyramid.ninja/logo_dark%404x.png)
+
 # Pyramid.Ninja
 A digital version of the popular drinking game "pyramid". Live version can be found at https://pyramid.ninja.
 
@@ -13,4 +15,3 @@ Install Intructions:
 * Navigate to http://localhost:3001 to see pretty things.
 
 This thing is still super alpha, so feel free to submit issues and other fun stuff.
- sd
