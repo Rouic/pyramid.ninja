@@ -1,0 +1,140 @@
+	<div class="page-header header-filter" filter-color="red" style="background-image: url('assets/img/pyramid-of-khafre-in-giza-egypt-L6MV5GX(1).jpg'); background-size: cover; background-position: top center;">
+    	<div class="container">
+			<div class="row">
+    			<div class="col-md-10 col-md-offset-1">
+
+					<!--WAITING CARD START -->
+					<div ng-hide="gameStarted" class="card card-signup" style="margin-bottom: 0px">
+	                    <h2 class="card-title text-center">Waiting for host to continue...</h2>
+	                    <div class="col-md-8 col-md-offset-2 text-center">
+	                    	<buton ng-click="startGame()" ng-show="continueButton" class="btn btn-success btn-round join-button">Continue <i class="material-icons">navigate_next</i></button>
+	                    </div>
+	        		</div>
+	        		<!--WAITING CARD END -->
+	        		
+	        		<!--GAME CARD START -->
+					<div ng-show="gameStarted" class="card card-signup" style="margin-bottom: 0px">
+						<div class="room-code-holder">
+							<h2 class="title">{{roomCode}}</h2>
+						</div>		
+						<div ng-if="countdown > 0" class="room-countdown-holder">
+							<h2 class="title">{{countdown}}</h2>
+						</div>											
+						<div class="row" ng-show="!mycards.length">
+		                    <div class="col-xs-8 col-xs-offset-2 text-center">
+		                    	<h4>{{instruction}}</h4>
+								<buton ng-click="showAllMyCards()" ng-show="allowViewAll" class="btn btn-success btn-round join-button">Show My Cards <i class="material-icons">visibility</i></button>
+		                    </div>
+						</div>
+						 <div class="row">
+							<div class="col-md-8 col-md-offset-2 text-center" id="clientcontainerparent" style="min-height: 400px;position: inherit;overflow: hidden;    margin-top: 200px;">
+								<div id="clientcardcontainer"></div>
+							</div>
+						</div>						
+	        		</div>
+	        		<!--GAME CARD END -->     		
+	        		
+		    		<div class="text-center">
+						<a ui-sref="start" class="btn btn-white btn-simple">
+							<i class="material-icons">exit_to_app</i> Exit Game
+						</a>
+					</div>
+    			</div>
+			</div>
+		</div>
+
+		<footer class="footer footer-bottom-alt">
+	        <div class="container">
+	            <nav class="pull-left">
+					<ul>
+						<li>
+							<a href="https://www.rouic.com">
+								Rouic Ltd
+							</a>
+						</li>
+						<li>
+							<a sref="about">
+								About
+							</a>
+						</li>
+						<li>
+							<a sref="help">
+								Help
+							</a>
+						</li>						
+					</ul>
+	            </nav>
+	            <div class="copyright pull-right">
+	                &copy; 2020 <a href="https://www.rouic.com" target="_blank">Rouic</a>
+	            </div>
+	        </div>
+	    </footer>
+
+    </div>
+
+
+<div class="modal fade" id="gameModel" tabindex="-1" role="">
+    <div class="modal-dialog modal-login" role="document">
+        <div class="modal-content">
+            <div class="card card-signup card-plain">
+                <div class="modal-header">
+                  <div class="card-header card-header-primary text-center">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                      <i class="material-icons">clear</i>
+                    </button>
+
+                    <h4 class="card-title">Log in</h4>
+                    <div class="social-line">
+                      <a href="#pablo" class="btn btn-just-icon btn-link btn-white">
+                        <i class="fa fa-facebook-square"></i>
+                      </a>
+                      <a href="#pablo" class="btn btn-just-icon btn-link btn-white">
+                        <i class="fa fa-twitter"></i>
+                      <div class="ripple-container"></div></a>
+                      <a href="#pablo" class="btn btn-just-icon btn-link btn-white">
+                        <i class="fa fa-google-plus"></i>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+                <div class="modal-body">
+                    <form class="form" method="" action="">
+                        <p class="description text-center">Or Be Classical</p>
+                        <div class="card-body">
+
+                            <div class="form-group bmd-form-group">
+                                <div class="input-group">
+                                  <div class="input-group-prepend">
+                                    <div class="input-group-text"><i class="material-icons">face</i></div>
+                                  </div>
+                                  <input type="text" class="form-control" placeholder="First Name...">
+                                </div>
+                            </div>
+
+                            <div class="form-group bmd-form-group">
+                                <div class="input-group">
+                                  <div class="input-group-prepend">
+                                    <div class="input-group-text"><i class="material-icons">email</i></div>
+                                  </div>
+                                  <input type="text" class="form-control" placeholder="Email...">
+                                </div>
+                            </div>
+
+                            <div class="form-group bmd-form-group">
+                                <div class="input-group">
+                                  <div class="input-group-prepend">
+                                    <div class="input-group-text"><i class="material-icons">lock_outline</i></div>
+                                  </div>
+                                  <input type="password" placeholder="Password..." class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <a href="#pablo" class="btn btn-primary btn-link btn-wd btn-lg">Get Started</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

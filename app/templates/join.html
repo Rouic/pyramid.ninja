@@ -1,0 +1,73 @@
+	<div class="page-header header-filter" filter-color="red" style="background-image: url('assets/img/old-pyramid-in-mexico-B482338(1).jpg'); background-size: cover; background-position: top center;">
+    	<div class="container">
+			<div class="row">
+				<div class="col-md-6 col-md-offset-3">
+					<div class="text-center">
+						<h3 class="title">Enter Game Code to Join</h3>
+					</div>
+
+					<div class="card card-raised card-form-horizontal" style="margin-bottom: 0px;">
+						<div class="content">
+							<form method="" action="">
+								<div class="row">
+									<div class="col-sm-8">
+
+										<div class="input-group">
+											<span class="input-group-addon">
+												<i class="material-icons">check_circle</i>
+											</span>
+											<div class="row">
+												<div class="col-sm-6">
+													<div class="form-group form-info is-empty"><input ng-model="join.roomcode" type="text" maxlength="4" value="" placeholder="Game Code..." class="form-control join-room-input"><span class="material-input"></span></div>
+													</div>
+												<div class="col-sm-6">
+													<div class="form-group form-info is-empty"><input ng-model="join.name" type="text" maxlength="10" value="" placeholder="Your Name..." class="form-control join-room-input"><span class="material-input"></span></div>
+												</div>
+											</div>											
+										</div>
+									</div>
+									<div class="col-sm-4">
+										<button ng-click="joinGame()" ng-disabled="!(join.roomcode.length == 4)" type="button" class="btn btn-info btn-block">Join</button>
+										<h4 ng-if="joinError" class="text-danger text-center" style="text-transform:capitalize">{{joinError}}</h4>
+									</div>
+								</div>
+							</form>
+						</div>
+					</div>
+					<div class="text-center">
+						<a ui-sref="start" class="btn btn-white btn-simple">
+							<i class="material-icons">arrow_back</i> Back to Start
+						</a>
+					</div>					
+				</div>
+            </div>
+    	</div>
+
+		<footer class="footer footer-bottom">
+	        <div class="container">
+	            <nav class="pull-left">
+					<ul>
+						<li>
+							<a href="https://www.rouic.com">
+								Rouic Ltd
+							</a>
+						</li>
+						<li>
+							<a sref="about">
+								About
+							</a>
+						</li>
+						<li>
+							<a sref="help">
+								Help
+							</a>
+						</li>						
+					</ul>
+	            </nav>
+	            <div class="copyright pull-right">
+	                &copy; 2020 <a href="https://www.rouic.com" target="_blank">Rouic</a>
+	            </div>
+	        </div>
+	    </footer>
+
+    </div>
