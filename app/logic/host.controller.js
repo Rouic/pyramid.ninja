@@ -27,11 +27,11 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 					
 					
 					if(!$scope.playerCards[player.name] || !$scope.playerCards[player.name].cards){
-						$scope.playerCards[player.name].cards = $scope.deck.cards.splice(0, 4);
+						$scope.playerCards[player.name].cards = $scope.deck.cards.splice(0, 4);					
 						player.cards = $scope.playerCards[player.name].cards.map(function (obj) {
 							return obj.i;
 						});						
-					} else {
+					} else {					
 						player.cards = $scope.playerCards[player.name].cards.map(function (obj) {
 							return obj.i;
 						})
@@ -74,7 +74,6 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 		$scope.information = 'Once ready, select the first card below to begin the round.';	
 		$scope.$apply();
 	});
-	
 	
 	$scope.startGame = function(){
 		socket.emit('startGame');
@@ -181,6 +180,8 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 						$scope.round_number++;
 						$scope.information = '';
 						$scope.round_row = $scope.pyramidRow(x);
+						$scope.round_transactions = [];
+						$scope.transaction_log = [];
 						
 						$scope.showCards = temp_deck.cards.filter(function(obj){
 							return pyramidCards[x].i == obj.i;
@@ -191,8 +192,12 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 						$scope.$apply();
 						
 						$('#roundModal').modal({keyboard: false, backdrop: 'static'});
-						
+						socket.emit('transaction_update', {room: $scope.roomCode.toLowerCase(), transactions: null});
 						socket.emit('gameRound', {room: $scope.roomCode.toLowerCase(), round: $scope.round_number, card: $scope.showCards[0]});
+						$scope.currentRound = {
+							num: $scope.round_number,
+							card: $scope.showCards[0]
+						};
 						
 						$scope.showCards[0].disableDragging();
 						$scope.showCards[0].disableFlipping();		
@@ -203,10 +208,63 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 					});
 				});	
 				$('#roundModal').on('hidden.bs.modal', function () {
+					$scope.round_transactions = [];
+					$scope.transaction_log = [];					
 					$scope.information = 'Select another card from the pyramid to continue...';
+					$scope.currentRound = null;
 					$scope.showCards[0].unmount($scope.$modalcontainer);
 					socket.emit('gameRound', {room: $scope.roomCode.toLowerCase(), round: null, card: null});
-				})							
+				});
+								
+				socket.on('clientCallDecision', function(msg){
+					console.log(msg);
+					if($scope.currentRound){	
+						
+						var foundIndex = $scope.round_transactions.findIndex(x => x.trans_num == msg.currentMove.trans_num);
+						if(msg.decision == 1){
+							
+							$scope.transaction_log.push(msg.currentMove.from_player+' has accepted '+msg.currentMove.to_player+' drinks!');
+							$scope.round_transactions[foundIndex].result = 'accepted';
+							
+						} else {
+							
+							$scope.transaction_log.push(msg.currentMove.from_player+' has called BULLSHIT on '+msg.currentMove.to_player+'!');
+							$scope.round_transactions[foundIndex].result = 'bullshit';
+						}
+						socket.emit('transaction_update', {room: $scope.roomCode.toLowerCase(), transactions: $scope.round_transactions});
+						
+					} else {
+						console.log("Error, no round in play!");
+					}	
+				});		
+				
+				socket.on('roundCall', function(msg){
+					if($scope.currentRound){
+						if(msg.playerfrom && msg.playerto){
+							
+							$scope.transaction_log.push(msg.playerfrom+' has called '+msg.playerto+' to drink!');
+							$scope.round_transactions.push({
+								trans_num: $scope.round_transactions.length + 1,
+								from_player: msg.playerfrom,
+								to_player: msg.playerto,
+								can_win: ($scope.playerCards[msg.playerfrom].cards.filter(e => e.rank === $scope.currentRound.card.rank).length > 0),
+								result: null
+							});
+							
+							$scope.transaction_log.push('Waiting on '+msg.playerto+'\'s response...');								
+							console.log('Round Tranaction Update:', $scope.round_transactions);
+							$scope.$apply();
+							socket.emit('transaction_update', {room: $scope.roomCode.toLowerCase(), transactions: $scope.round_transactions});
+							
+						} else {
+							console.log("Error, no player from or to!");
+						}
+					} else {
+						console.log("Error, no round in play!");
+					}
+					
+				});
+										
 				
 				$scope.players.forEach(function (player, i) {
 					if(player.type == 'client'){
@@ -218,7 +276,7 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 							$scope.playerCards[player.name].cards = $scope.deck.cards.splice(0, 4);
 							player.cards = $scope.playerCards[player.name].cards.map(function (obj) {
 									return obj.i;
-							});
+							});						
 							player.cardsState = [];
 							player.cards.forEach(function (card, i) {
 								$scope.playerCards[player.name].cardsState[i] = false;

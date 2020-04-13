@@ -12,6 +12,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 	if(!$stateParams.gameID){
 		$state.go('start');
 	} else {
+		$scope.myName = $cookies.get('name');
 		$scope.roomCode = $stateParams.gameID.toUpperCase();
 		$scope.instruction = 'Waiting for deck!';
 		console.log("Loading Game: "+$scope.roomCode);
@@ -59,7 +60,9 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		socket.on('gameRoundUpdate', function(msg){
 			$scope.allowViewAll = false;
 			if(msg.round && msg.card){
+				$scope.allowDecision = false;
 				$scope.allowCalling = true;
+				$scope.currentRound = msg.round;
 				$scope.instruction = 'Round '+msg.round+'! To call someone to drink on this card click the button below!';
 			} else {
 				$scope.allowCalling = false;
@@ -68,6 +71,53 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 			
 			$scope.$apply();
 		});
+		
+		socket.on('client_transaction_update', function(msg){
+			
+			console.log("Client Transaction Update!", msg);
+			
+			if($scope.currentRound && msg.transactions && msg.transactions.length > 0){
+				$scope.beenCalledCount = 0;
+				$scope.myBeenCalls = [];
+				msg.transactions.forEach(function (transaction, i) {
+					console.log(transaction.result);
+					if((transaction.to_player == $cookies.get('name')) && (transaction.result == null)){
+						$scope.myBeenCalls.push(transaction);
+						$scope.beenCalledCount++;
+					}					
+					
+				});
+				
+				console.log($scope.beenCalledCount);
+				
+				if($scope.beenCalledCount != 0){
+										
+					$scope.allowCalling = false;
+					
+					$scope.currentDecision = $scope.myBeenCalls[0];
+					
+					if($scope.myBeenCalls.length > 1){
+						$scope.instruction = 'You have been called to drink by several other players! Let\'s start with '+$scope.currentDecision.from_player+'. Decide what to do by choosing a button below.';
+						$scope.allowDecision = true;
+					} else {
+						$scope.instruction = 'You have been called to drink by '+$scope.currentDecision.from_player+'! Decide what to do by choosing a button below.';
+						$scope.allowDecision = true;
+					}
+										
+				} else {
+					$scope.allowDecision = false;
+					$scope.allowCalling = true;
+					$scope.instruction = 'Round '+$scope.currentRound+'! To call someone to drink on this card click the button below!';					
+				}
+				$scope.$apply();
+			}			
+			
+		});		
+		
+		$scope.decision = function(move){
+			socket.emit('callDecision', {decision: move, currentMove: $scope.currentDecision});
+		};
+		
 		
 		socket.on('playerSetupData', function(msg){
 					
@@ -136,11 +186,14 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 	$scope.callPlayer = function(){
 		$scope.selectedplayer.name = null;
 		$('#callModel').modal();
+		$('.selectplayerradio').prop('checked', false);
 		$.material.init();
 	};
 	
 	$scope.confirmCall = function(){
-		console.log($scope.selectedplayer.name);
+		console.log('Sending confirm call to :', $scope.selectedplayer.name);
+		socket.emit('confirmCall', {sendingTo: $scope.selectedplayer.name});
+		$('#callModel').modal('hide');
 	}
 	
 	$scope.showAllMyCards = function(){

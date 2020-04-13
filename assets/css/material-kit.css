@@ -1392,10 +1392,10 @@ fieldset[disabled] .form-group.is-focused .radio label {
   opacity: 1;
 }
 .radio input[type=radio]:checked ~ .check {
-  background-color: #9c27b0;
+  background-color: #e91e63;
 }
 .radio input[type=radio]:checked ~ .circle {
-  border-color: #9c27b0;
+  border-color: #e91e63;
 }
 .radio input[type=radio]:checked ~ .check {
   transform: scale3d(0.65, 0.65, 1);

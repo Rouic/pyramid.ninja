@@ -152,12 +152,32 @@ io.on('connection', function(socket){
 	   	}
    });
    
+   socket.on('confirmCall', function(msg){
+		if(socket.type == 'client'){
+			if(msg.sendingTo){
+				io.to(socket.clientOf).emit('roundCall', {playerfrom: socket.name, playerto: msg.sendingTo});
+				console.log("[INFO] Sending Round Call From: "+socket.name+" to "+msg.sendingTo);
+			}
+		}
+   });    
+   
    socket.on('seenCards', function(msg){
 		if(socket.type == 'client'){
 			io.to(socket.clientOf).emit('clientCardsSeen', {client: socket.name});
 			console.log("[INFO] Client seen cards: "+socket.name);
 		}
-   });  
+   }); 
+   
+   socket.on('callDecision', function(msg){
+		if(socket.type == 'client'){
+			io.to(socket.clientOf).emit('clientCallDecision', msg);
+			console.log("[INFO] Client decision made: "+socket.name);
+		}
+   });     
+   
+   	socket.on('transaction_update', function(msg){
+	  io.to(msg.room).emit('client_transaction_update', msg);
+   });     
    
    	socket.on('gameRound', function(msg){
 	   console.log("[INFO] Game round update for "+socket.clientOf);

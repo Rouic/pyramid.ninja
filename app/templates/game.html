@@ -17,15 +17,25 @@
 						<div class="room-code-holder">
 							<h2 class="title">{{roomCode}}</h2>
 						</div>		
+						<div ng-if="myName" class="room-cards-left-holder">
+							<h2 class="title">{{myName}}</h2>
+						</div>						
 						<div ng-if="countdown > 0" class="room-countdown-holder">
 							<h2 class="title">{{countdown}}</h2>
 						</div>											
-						<div class="row" ng-show="!mycards.length">
+						<div class="row" ng-show="!mycards.length" style="margin-top: 10px;">
 		                    <div class="col-xs-8 col-xs-offset-2 text-center">
 		                    	<h4>{{instruction}}</h4>
 								<button ng-click="showAllMyCards()" ng-show="allowViewAll" class="btn btn-success btn-round join-button">Show My Cards <i class="material-icons">visibility</i></button>
 									
-								<button ng-click="callPlayer()" ng-show="allowCalling" class="btn btn-success btn-round join-button">Select Player <i class="material-icons">local_bar</i></button>									
+								<button ng-click="callPlayer()" ng-show="allowCalling" class="btn btn-rose btn-round join-button">Select Player <i class="material-icons">local_bar</i></button>		
+									
+								<button ng-click="decision(1)" ng-show="allowDecision" class="btn btn-success btn-round join-button">Accept Drinks <i class="material-icons">done</i></button>		
+									
+								<button ng-click="decision(2)" ng-show="allowDecision" class="btn btn-rose btn-round join-button">Bullshit! <i class="material-icons">report</i></button>									
+								
+	
+																
 		                    </div>
 						</div>
 						 <div class="row">
@@ -86,18 +96,18 @@
 				
 				<div class="radio" ng-repeat="x in otherPlayers" ng-if="x.type != 'host'" style="margin-top:15px">
 					<label ng-click="selectedplayer.name = x.name">
-						<input type="radio" name="playerRadios" value="{{x.name}}">
+						<input class="selectplayerradio" type="radio" name="playerRadios" value="{{x.name}}">
 						<img ng-src="/avatar/{{x.name}}" alt="Connected User" class="img-rounded img-responsive img-raised in-progress-avatar">
 						{{x.name}}
 					</label>
 				</div>
 				
 				
-				<p ng-if="selectedplayer.name">Selected: {{selectedplayer.name}}</p>
+				<p ng-if="selectedplayer.name" style="margin-top:20px">About to send a drink to: {{selectedplayer.name}}</p>
 				
       </div>
       <div class="modal-footer">
-        <button type="button" ng-click="confirmCall()" class="btn btn-primary">Confirm</button>
+        <button type="button" ng-click="confirmCall()" class="btn btn-rose">Confirm</button>
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
       </div>
     </div>

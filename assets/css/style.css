@@ -465,3 +465,9 @@ margin-left: -27px
     margin-bottom: 30px;
     width: 40% !important;
 }
+.icon-logo {
+    max-width: 25px;
+    padding: 1px;
+    display: inline-block !important;
+    margin-right: 5px;
+}
