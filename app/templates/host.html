@@ -106,11 +106,33 @@
             </div>
 
             <div class="col-sm-5 mr-auto">
-				<p>The card on the left is currently in play. Use your device to call out another player.</p>
+				<p class="text-muted">The card on the left is currently in play. Use your device to call a drink to another player.</p>
+				<h6 class="waiting">Waiting<span>.</span><span>.</span><span>.</span></h6>
+				<h6>Round Log:</h6>
+				<table class="table">
+				    <tbody>
+				        <tr>
+				            <td>Player <b>Alex</b> has called Player <b>Tim</b> to drink!</td>
+				        </tr>
+						<tr>
+							<td>Waiting for Player <b>Tim</b>'s response...</td>
+						</tr>
+				        <tr>
+				            <td>Player <b>Tim</b> has accepted!</td>
+				        </tr>
+				    </tbody>
+				</table>					
+					
             </div>		
           </div>
+		  <div class="row" style="margin-top:100px">
+			  <div class="col-sm-10">
+			  	<h6>Current Round Results:</h6>
+				<p>Tim to drink (6) drinks!</p>
+			  </div>
+		  </div>
 		  <div class="row">
-              <div class="modal-footer justify-content-center text-center" style="margin-top:200px">
+              <div class="modal-footer justify-content-center text-center">
 				  <a class="btn btn-primary btn-round" data-dismiss="modal" aria-label="Close">Finish Round</a>
 			  </div>				  
 		  </div>

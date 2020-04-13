@@ -3,6 +3,10 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 	$.material.init();
 
 	$scope.continueButton = false;
+	$scope.allowCalling = false;
+	$scope.selectedplayer = {
+		name: null
+	}
 		
 	$rootScope.title = '| '+title+' Loading...';	
 	if(!$stateParams.gameID){
@@ -55,8 +59,10 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		socket.on('gameRoundUpdate', function(msg){
 			$scope.allowViewAll = false;
 			if(msg.round && msg.card){
-				$scope.instruction = 'Round '+msg.round+'! If you want to make a call click the button below!';
+				$scope.allowCalling = true;
+				$scope.instruction = 'Round '+msg.round+'! To call someone to drink on this card click the button below!';
 			} else {
+				$scope.allowCalling = false;
 				$scope.instruction = 'Waiting for host to continue...';
 			}
 			
@@ -72,6 +78,10 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 					
 			if(msg.data && $cookies.get('name')){
 				
+				$scope.otherPlayers = msg.data.filter(function(obj){
+					return obj.name != $cookies.get('name');
+				});
+				console.log("Other players:", $scope.otherPlayers);
 				$scope.mydata = msg.data.filter(function(obj){
 					return obj.name == $cookies.get('name');
 				});
@@ -122,6 +132,16 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		});	
 	
 	};
+	
+	$scope.callPlayer = function(){
+		$scope.selectedplayer.name = null;
+		$('#callModel').modal();
+		$.material.init();
+	};
+	
+	$scope.confirmCall = function(){
+		console.log($scope.selectedplayer.name);
+	}
 	
 	$scope.showAllMyCards = function(){
 		$scope.allowViewAll = false;
