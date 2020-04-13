@@ -458,3 +458,10 @@ margin-left: -27px
 .modal-backdrop {
   z-index: 0 !important;
 }
+.main-logo {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 30px;
+    width: 40% !important;
+}
