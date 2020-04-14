@@ -94,6 +94,7 @@
       <div class="modal-body">
        	<p>Select a different player below to call a drink to. They can either believe you or call your bluff!</p>
 				
+				<h6 ng-if="otherPlayers.length < 2">Oh no! No other players to send drinks to! :(</h6>
 				<div class="radio" ng-repeat="x in otherPlayers" ng-if="x.type != 'host'" style="margin-top:15px">
 					<label ng-click="selectedplayer.name = x.name">
 						<input class="selectplayerradio" type="radio" name="playerRadios" value="{{x.name}}">
@@ -107,7 +108,7 @@
 				
       </div>
       <div class="modal-footer">
-        <button type="button" ng-click="confirmCall()" class="btn btn-rose">Confirm</button>
+        <button type="button" ng-click="confirmCall()" ng-disabled="!selectedplayer.name" class="btn btn-rose">Confirm</button>
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
       </div>
     </div>
