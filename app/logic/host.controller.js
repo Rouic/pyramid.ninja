@@ -215,6 +215,11 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 					$scope.showCards[0].unmount($scope.$modalcontainer);
 					socket.emit('gameRound', {room: $scope.roomCode.toLowerCase(), round: null, card: null});
 				});
+					
+					
+				// 				var callCount = msg.transactions.filter(function(tran){
+				// 	return (tran.to_player == $cookies.get('name') || tran.from_player == $cookies.get('name')) && tran.result == null
+				// }).length;			
 								
 				socket.on('clientCallDecision', function(msg){
 					if($scope.currentRound){	
@@ -222,12 +227,12 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 						var foundIndex = $scope.round_transactions.findIndex(x => x.trans_num == msg.currentMove.trans_num);
 						if(msg.decision == 1){
 							
-							$scope.transaction_log.push(msg.currentMove.from_player+' has accepted '+msg.currentMove.to_player+' drinks!');
+							$scope.transaction_log.push(msg.currentMove.to_player+' has accepted '+msg.currentMove.from_player+' drinks!');
 							$scope.round_transactions[foundIndex].result = 'accepted';
 							
 						} else {
 							
-							$scope.transaction_log.push(msg.currentMove.from_player+' has called BULLSHIT on '+msg.currentMove.to_player+'!');
+							$scope.transaction_log.push(msg.currentMove.to_player+' has called BULLSHIT on '+msg.currentMove.from_player+'!');
 							$scope.round_transactions[foundIndex].result = 'bullshit';
 						}
 						socket.emit('transaction_update', {room: $scope.roomCode.toLowerCase(), transactions: $scope.round_transactions});
@@ -299,7 +304,7 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 				console.log("Starting players:", $scope.players);
 				$scope.gameHasStarted = true;
 				$scope.cardsleft = $scope.deck.cards.length;
-				$scope.information = 'Follow the steps shown on your device to continue!';							
+				$scope.information = 'Press the button on your device to view your cards!';							
 				socket.emit('playerSetup', {room: $scope.roomCode.toLowerCase(), players: $scope.players});
 			}		
 		});

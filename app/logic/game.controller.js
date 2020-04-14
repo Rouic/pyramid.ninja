@@ -73,27 +73,40 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		});
 		
 		socket.on('client_transaction_update', function(msg){
-			
-			console.log("Client Transaction Update!", msg);
-			
+						
 			if($scope.currentRound && msg.transactions && msg.transactions.length > 0){
 				$scope.beenCalledCount = 0;
+				$scope.bullShitCount = 0;
 				$scope.myBeenCalls = [];
+				$scope.myBullshitReponses = [];
+				$scope.bullshitReply = false;
 				msg.transactions.forEach(function (transaction, i) {
 					console.log(transaction.result);
 					if((transaction.to_player == $cookies.get('name')) && (transaction.result == null)){
 						$scope.myBeenCalls.push(transaction);
 						$scope.beenCalledCount++;
-					}					
-					
+					}
+					if((transaction.from_player == $cookies.get('name')) && (transaction.result == 'bullshit')){
+						
+						$scope.myBullshitReponses.push(transaction);
+						$scope.bullShitCount++;						
+						
+					}						
 				});
 				
-				console.log($scope.beenCalledCount);
-				
-				if($scope.beenCalledCount != 0){
+				if($scope.bullShitCount != 0){
+					
+					$scope.currentDecision = $scope.myBullshitReponses[0];
+					
+					$scope.instruction = 'Uh Oh! '+$scope.currentDecision.to_player+' has called BULLSHIT! Select a card below with the same rank below - or drink double!';
+					$scope.allowDecision = false;
+					$scope.allowCalling = false;
+					$scope.bullshitReply = true;
+					
+					
+				} else if($scope.beenCalledCount != 0){
 										
 					$scope.allowCalling = false;
-					
 					$scope.currentDecision = $scope.myBeenCalls[0];
 					
 					if($scope.myBeenCalls.length > 1){
@@ -108,9 +121,9 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 					$scope.allowDecision = false;
 					$scope.allowCalling = true;
 					$scope.instruction = 'Round '+$scope.currentRound+'! To call someone to drink on this card click the button below!';					
-				}
-				$scope.$apply();
-			}			
+				}				
+				$scope.$apply();	
+			}
 			
 		});		
 		
@@ -137,7 +150,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 				});
 				console.log($scope.mydata);								
 				if($scope.mydata[0] && $scope.mydata[0].cards) {
-					if(!$scope.cardSet || !$scope.cardSet.length > 0){
+					if($scope.cardSet.length == 0){
 						$scope.gameStarted = true; 
 						
 						
@@ -171,7 +184,12 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 																		
 						$('.playingcard').each(function(x) {
 						    $($('.playingcard')[x]).click(function(){
-								console.log("Clicked Card:", $scope.cardSet[x]);
+								if($scope.bullshitReply == true){
+									socket.emit('bullshitDecision', {decision: $scope.currentDecision, card: $scope.cardSet[x]});
+									console.log("Card click allowed:", $scope.cardSet[x]);
+								} else {
+								}
+								
 						    });
 						});						
 											

@@ -110,7 +110,7 @@
 				<h6 ng-if="transaction_log.length">Round Log:</h6>
 				<table class="table">
 				    <tbody>
-				        <tr ng-repeat="x in transaction_log">
+				        <tr ng-repeat="x in transaction_log track by $index">
 				            <td>{{x}}</td>
 				        </tr>
 				    </tbody>

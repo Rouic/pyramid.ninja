@@ -173,6 +173,12 @@ io.on('connection', function(socket){
 			io.to(socket.clientOf).emit('clientCallDecision', msg);
 			console.log("[INFO] Client decision made: "+socket.name);
 		}
+   });    
+   socket.on('bullshitDecision', function(msg){
+		if(socket.type == 'client'){
+			io.to(socket.clientOf).emit('clientBullshitDecision', msg);
+			console.log("[INFO] Client bullshit decision made: "+socket.name);
+		}
    });     
    
    	socket.on('transaction_update', function(msg){
