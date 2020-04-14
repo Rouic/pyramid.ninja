@@ -143,7 +143,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 						
 						$scope.mydata[0].cardsState.forEach(function (cardState, i) {
 							if(cardState == false) {
-								$scope.instruction = 'Press the button below to view your cards. You will have just 15 seconds to remember them! Tip: You can drag your cards around to re-order them.';
+								$scope.instruction = 'Press the button below to view your cards. You will have just 10 seconds to remember them! Tip: You can drag your cards around to re-order them.';
 								$scope.allowViewAll = true;
 							} else {
 								$scope.instruction = 'Waiting for host to continue...';
@@ -199,7 +199,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 	$scope.showAllMyCards = function(){
 		$scope.allowViewAll = false;
 		$scope.doingCardShow = true;
-		$scope.countdown = 15;
+		$scope.countdown = 10;
 		$scope.instruction = 'Remember your cards now! You will NOT be able to view them again!';
 		$scope.cardSet.forEach(function (card, i) {
 			card.setSide('front');
