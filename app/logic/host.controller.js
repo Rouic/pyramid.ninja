@@ -217,7 +217,6 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 				});
 								
 				socket.on('clientCallDecision', function(msg){
-					console.log(msg);
 					if($scope.currentRound){	
 						
 						var foundIndex = $scope.round_transactions.findIndex(x => x.trans_num == msg.currentMove.trans_num);
@@ -236,7 +235,15 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 					} else {
 						console.log("Error, no round in play!");
 					}	
-				});		
+				});	
+				
+				socket.on('bullshitResponse', function(msg){
+					console.log(msg);
+					
+					//either pass bullshit or fail bullshit
+					
+					
+				});	
 				
 				socket.on('roundCall', function(msg){
 					if($scope.currentRound){
