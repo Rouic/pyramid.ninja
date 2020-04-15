@@ -107,21 +107,28 @@
 
             <div class="col-sm-5 mr-auto">
 				<p class="text-muted">The card on the left is currently in play. Use your device to call a drink to another player.</p>
-				<h6 ng-if="transaction_log.length">Round Log:</h6>
+				<h6 ng-if="round_transactions.length > 0">Round Log:</h6>
 				<table class="table">
 				    <tbody>
-				        <tr ng-repeat="x in transaction_log track by $index">
-				            <td>{{x}}</td>
+				        <tr ng-repeat="x in round_transactions">
+				            <td>
+								<span><b>{{x.from_player}}</b> has called on <b>{{x.to_player}}</b> to drink!</span> 
+								<span ng-if="!x.result">Waiting for response...</span>
+								<span ng-if="x.result == 'accepted'"><b>{{x.to_player}}</b> <b class="text-success">ACCEPTED</b> the drinks!</span>
+								<span ng-if="x.result == 'bullshit'"><b>{{x.to_player}}</b> has called <b class="text-rose">BULLSHIT!</b> Waiting for {{x.from_player}} to show a card...</span>
+								<span ng-if="x.result == 'bullshit_wrong'"><b>{{x.to_player}}</b> has called <b class="text-rose">BULLSHIT!</b> <b>{{x.from_player}}</b> turned over a card with the <b class="text-danger">WRONG</b> rank!</span>
+								<span ng-if="x.result == 'bullshit_correct'"><b>{{x.to_player}}</b> has called <b class="text-rose">BULLSHIT!</b><b>{{x.from_player}}</b> turned over a card with the <b class="text-success">CORRECT</b> rank!</span>
+							</td>
 				        </tr>
 				    </tbody>
 				</table>					
-				<h6 class="waiting">Waiting for more updates...</h6>	
+				<h6 ng-if="round_transactions.length == 0" class="waiting">No updates yet...</h6>	
             </div>		
           </div>
 		  <div class="row" style="margin-top:70px">
 			  <div class="col-sm-10">
 			  	<h6 ng-if="drink_log.length > 0">Current Round Results:</h6>
-				<p><span ng-repeat="y in drink_log">{{y.name}} drinks {{y.drinks}}{{($last) ? '!' : ', '}}</span></p>
+				<p><span ng-repeat="y in drink_log">{{y.name}} drinks <b>{{y.drinks}}</b>{{($last) ? '!' : ', '}}</span></p>
 			  </div>
 		  </div>
 		  <div class="row">
