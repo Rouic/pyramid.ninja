@@ -12,12 +12,11 @@
     "url": "git+https://github.com/Rouic/pyramid.ninja.git"
   },
   "keywords": [
-    "google",
-    "trends",
+    "pyramid",
+    "ninja",
     "socket.io",
     "rouic",
-    "game",
-    "trends"
+    "game"
   ],
   "author": "Rouic Ltd",
   "license": "ISC",

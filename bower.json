@@ -7,12 +7,11 @@
   ],
   "license": "ISC",
   "keywords": [
-    "google",
-    "trends",
+    "pyramid",
+    "ninja",
     "socket.io",
     "rouic",
-    "game",
-    "trends"
+    "game"
   ],
   "homepage": "https://github.com/Rouic/pyramid.ninja",
   "private": true,
