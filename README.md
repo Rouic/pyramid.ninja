@@ -6,7 +6,7 @@ A digital version of the popular drinking game "pyramid". Live version can be fo
 ## How it Works
 * Pyramid.ninja uses websockets (socket.io) bridged with a NodeJS server to connect client devices to a single "host" device. The host's screen needs to be seen by all players who join with a random code. Oh, you thought this would explain the actual game? Nah that's a trade secret  😎
 * There is no database involved, and all game state information is stored on the host device... until they reload which resets the game and connected clients.
-* Find out how to play Pyramid the game at hhttps://pyramid.ninja/#!/about
+* Find out how to play Pyramid the game at https://pyramid.ninja/#!/about
 
 ## Dependancies
 * Node 8 (specifically, maybe use `NVM use 8` to get the right one. Others probably work but not tested...)
