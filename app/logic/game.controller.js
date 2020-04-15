@@ -87,12 +87,12 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		socket.on('client_newcard_update', function(msg){
 			if(msg.client == $cookies.get('name') && msg.cardIndex !== undefined && msg.card){
 				var newClientDeck = Deck(true);
-				$scope.cardSet[msg.cardIndex].unmount();
 				$scope.allowNewCard = false;
 				$scope.doneNewCard = true;
 				$scope.countdown = 5;
 				$scope.instruction = 'You have 5 seconds to look at your new card!';
 				$scope.selectedCard = null;
+				$scope.cardSet[msg.cardIndex].unmount();
 							
 				$scope.cardSet[msg.cardIndex] = newClientDeck.cards.filter(function(obj){
 					return obj.i == msg.card[0].i;
@@ -111,7 +111,24 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 				$scope.cardSet[msg.cardIndex].setSide('front');
 					
 				$scope.$apply();	
-															
+				
+				$scope.cardSet.forEach(function (card, i) {
+					card.unmount();	
+					card.enableDragging();
+					card.disableFlipping();		
+					if(i == msg.cardIndex){
+						card.animateTo({
+							delay: 0,
+							duration: 500,
+							ease: 'quartOut',
+							x: $scope.myCardsCoords(i).x,
+							y: $scope.myCardsCoords(i).y
+						});							
+					}
+					card.mount($scope.$container);			
+				});	
+				$scope.$apply();
+																
 				$('.playingcard').each(function(x) {
 					var xIndex = x;
 					$($('.playingcard')[xIndex]).unbind("click touchstart");
@@ -123,10 +140,12 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 							$scope.needsNewCard = true;
 							$scope.$apply();
 						}
-					
+						
 					});							
+				
+				});					
+						
 	
-				});			
 			}
 		});
 		
