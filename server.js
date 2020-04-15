@@ -166,7 +166,14 @@ io.on('connection', function(socket){
 			io.to(socket.clientOf).emit('clientCardsSeen', {client: socket.name});
 			console.log("[INFO] Client seen cards: "+socket.name);
 		}
-   }); 
+   });
+   
+   socket.on('getNewCard', function(msg){
+		if(socket.type == 'client'){
+			io.to(socket.clientOf).emit('clientNewCard', {client: socket.name, cardIndex: msg.cardNumber});
+			console.log("[INFO] Client wants new card: "+socket.name);
+		}
+   });   
    
    socket.on('callDecision', function(msg){
 		if(socket.type == 'client'){
@@ -181,12 +188,15 @@ io.on('connection', function(socket){
 		}
    });     
    
+   socket.on('newcard_update', function(msg){
+	  io.to(msg.room).emit('client_newcard_update', msg);
+   });    
+   
    	socket.on('transaction_update', function(msg){
 	  io.to(msg.room).emit('client_transaction_update', msg);
    });     
    
    	socket.on('gameRound', function(msg){
-	   console.log("[INFO] Game round update for "+socket.clientOf);
 	   io.to(msg.room).emit('gameRoundUpdate', msg);
     });    
     

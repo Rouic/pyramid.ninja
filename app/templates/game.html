@@ -7,7 +7,7 @@
 					<div ng-hide="gameStarted" class="card card-signup" style="margin-bottom: 0px">
 	                    <h2 class="card-title text-center">Waiting for host to continue...</h2>
 	                    <div class="col-md-8 col-md-offset-2 text-center">
-	                    	<buton ng-click="startGame()" ng-show="continueButton" class="btn btn-success btn-round join-button">Continue <i class="material-icons">navigate_next</i></button>
+	                    	<buton ng-click="startGame()" ng-show="continueButton" class="btn btn-rose btn-round join-button">Continue <i class="material-icons">navigate_next</i></button>
 	                    </div>
 	        		</div>
 	        		<!--WAITING CARD END -->
@@ -26,13 +26,15 @@
 						<div class="row" ng-show="!mycards.length" style="margin-top: 10px;">
 		                    <div class="col-xs-8 col-xs-offset-2 text-center">
 		                    	<h4>{{instruction}}</h4>
-								<button ng-click="showAllMyCards()" ng-show="allowViewAll" class="btn btn-success btn-round join-button">Show My Cards <i class="material-icons">visibility</i></button>
+								<button ng-click="showAllMyCards()" ng-show="allowViewAll" class="btn btn-rose btn-round join-button">Show My Cards <i class="material-icons">visibility</i></button>
+									
+								<button ng-click="getNewCard()" ng-show="allowNewCard" class="btn btn-rose btn-round join-button">Get New Card <i class="material-icons">visibility</i></button>									
 									
 								<button ng-click="callPlayer()" ng-show="allowCalling" class="btn btn-rose btn-round join-button">Select Player <i class="material-icons">local_bar</i></button>		
 									
 								<button ng-click="decision(1)" ng-show="allowDecision" class="btn btn-success btn-round join-button">Accept Drinks <i class="material-icons">done</i></button>		
 									
-								<button ng-click="decision(2)" ng-show="allowDecision" class="btn btn-rose btn-round join-button">Bullshit! <i class="material-icons">report</i></button>									
+								<button ng-click="decision(2)" ng-show="allowDecision" class="btn btn-danger btn-round join-button">Bullshit! <i class="material-icons">report</i></button>									
 								
 	
 																
@@ -94,8 +96,8 @@
       <div class="modal-body">
        	<p>Select a different player below to call a drink to. They can either believe you or call your bluff!</p>
 				
-				<h6 ng-if="otherPlayers.length < 2">Oh no! No other players to send drinks to! :(</h6>
-				<div class="radio" ng-repeat="x in otherPlayers" ng-if="x.type != 'host'" style="margin-top:15px">
+				<h6 ng-if="otherPlayersCopy.length < 2">Oh no! No other players to send drinks to! :(</h6>
+				<div class="radio" ng-repeat="x in otherPlayersCopy" ng-if="x.type != 'host'" style="margin-top:15px">
 					<label ng-click="selectedplayer.name = x.name">
 						<input class="selectplayerradio" type="radio" name="playerRadios" value="{{x.name}}">
 						<img ng-src="/avatar/{{x.name}}" alt="Connected User" class="img-rounded img-responsive img-raised in-progress-avatar">

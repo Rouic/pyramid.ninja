@@ -7,6 +7,17 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 	$scope.selectedplayer = {
 		name: null
 	}
+	
+	$scope.myCardsCoords = function(i){
+		switch(i) {
+			case 0: return {x:49, y:0};
+			case 1: return {x:-89, y:0};
+			case 2: return {x:49, y:175};
+			case 3: return {x:-89, y:175};
+			default: return {x:49, y:0};			
+			
+		}					
+	};	
 		
 	$rootScope.title = '| '+title+' Loading...';	
 	if(!$stateParams.gameID){
@@ -45,43 +56,92 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 	
 	
 	$scope.registerCheck = function(){
-			
-		$scope.myCardsCoords = function(i){
-			switch(i) {
-				case 0: return {x:49, y:0};
-				case 1: return {x:-89, y:0};
-				case 2: return {x:49, y:175};
-				case 3: return {x:-89, y:175};
-				default: return {x:49, y:0};			
-				
-			}					
-		};
 		
 		socket.on('gameRoundUpdate', function(msg){
 			$scope.allowViewAll = false;
 			if(msg.round && msg.card){
+				$scope.allowNewCard = false;
+				$scope.lockNewCall = false;
 				$scope.allowDecision = false;
 				$scope.allowCalling = true;
 				$scope.currentRound = msg.round;
+				
+				if($scope.selectedCard){
+					$scope.cardSet[$scope.selectedCard].unmount();
+					socket.emit('getNewCard', {cardNumber: $scope.selectedCard});
+				}
+				
 				$scope.instruction = 'Round '+msg.round+'! To call someone to drink on this card click the button below!';
+				
 			} else {
 				$scope.allowCalling = false;
-				$scope.instruction = 'Waiting for host to continue...';
+				if($scope.selectedCard){
+					$scope.instruction = 'We need a new card. Press the button below to see your new card, you will have 5 seconds!';
+					$scope.allowNewCard = true;
+				} else {
+					$scope.allowNewCard = false;
+					$scope.instruction = 'Waiting for host to continue...';
+				}				
+				
 			}
 			
 			$scope.$apply();
 		});
 		
+		
+		socket.on('client_newcard_update', function(msg){
+			
+			var newClientDeck = Deck(true);
+			$scope.isNewCard = true;
+			$scope.countdown = 5;
+			$scope.instruction = 'You have 5 seconds to look at your new card!';
+						
+			$scope.cardSet[msg.cardIndex] = newClientDeck.cards.filter(function(obj){
+				return obj.i == msg.card[0].i;
+			})[0];				
+						
+			$scope.cardSet[msg.cardIndex].enableDragging();
+			$scope.cardSet[msg.cardIndex].disableFlipping();		
+			$scope.cardSet[msg.cardIndex].animateTo({
+				delay: 1000 + msg.cardIndex * 2, // wait 1 second + i * 2 ms
+				duration: 500,
+				ease: 'quartOut',
+				x: $scope.myCardsCoords(msg.cardIndex).x,
+				y: $scope.myCardsCoords(msg.cardIndex).y
+			});	
+			$scope.cardSet[msg.cardIndex].mount($scope.$container);			
+			$scope.$apply();	
+														
+			$('.playingcard').each(function(x) {
+				var xIndex = x;
+				$($('.playingcard')[xIndex]).bind("click touchstart", function(){
+					if($scope.bullshitReply == true){
+						$scope.selectedCard = xIndex;
+						socket.emit('bullshitDecision', {card: $scope.cardSet[$scope.selectedCard], currentMove: $scope.currentDecision});
+						$scope.cardSet[$scope.selectedCard].setSide('front');
+						$scope.$apply();
+					}
+				
+				});							
+
+			});			
+			
+			
+		});
+		
 		socket.on('client_transaction_update', function(msg){
 						
 			if($scope.currentRound && msg.transactions && msg.transactions.length > 0){
+				
 				$scope.beenCalledCount = 0;
 				$scope.bullShitCount = 0;
+				$scope.bullshitOutcomesCount = 0;
 				$scope.myBeenCalls = [];
 				$scope.myBullshitReponses = [];
+				$scope.bullshitOutcomes = [];
 				$scope.bullshitReply = false;
+				
 				msg.transactions.forEach(function (transaction, i) {
-					console.log(transaction.result);
 					if((transaction.to_player == $cookies.get('name')) && (transaction.result == null)){
 						$scope.myBeenCalls.push(transaction);
 						$scope.beenCalledCount++;
@@ -91,14 +151,20 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 						$scope.myBullshitReponses.push(transaction);
 						$scope.bullShitCount++;						
 						
-					}						
+					}	
+					if((transaction.from_player == $cookies.get('name')) && (transaction.result == 'bullshit_wrong' || transaction.result == 'bullshit_correct')){
+						
+						$scope.bullshitOutcomes.push(transaction);
+						$scope.bullshitOutcomesCount++;						
+						
+					}											
 				});
-				
+								
 				if($scope.bullShitCount != 0){
 					
 					$scope.currentDecision = $scope.myBullshitReponses[0];
 					
-					$scope.instruction = 'Uh Oh! '+$scope.currentDecision.to_player+' has called BULLSHIT! Select a card below with the same rank below - or drink double!';
+					$scope.instruction = 'Uh Oh! '+$scope.currentDecision.to_player+' has called BULLSHIT! Select the card below with the same rank below - or drink double!';
 					$scope.allowDecision = false;
 					$scope.allowCalling = false;
 					$scope.bullshitReply = true;
@@ -119,8 +185,20 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 										
 				} else {
 					$scope.allowDecision = false;
-					$scope.allowCalling = true;
-					$scope.instruction = 'Round '+$scope.currentRound+'! To call someone to drink on this card click the button below!';					
+					if($scope.lockNewCall == true){
+						$scope.allowCalling = false;
+						if($scope.bullshitOutcomesCount > 0){
+							$scope.allowNewCard = true;
+							$scope.instruction = 'Round '+$scope.currentRound+'. You will automatically get a new card at the start of the next round.';		
+						} else {
+							$scope.instruction = 'Round '+$scope.currentRound+' - waiting for updates...';		
+						}
+											
+					} else {
+						$scope.allowCalling = true;
+						$scope.instruction = 'Round '+$scope.currentRound+'! To call someone to drink on this card click the button below!';							
+					}
+				
 				}				
 				$scope.$apply();	
 			}
@@ -144,11 +222,12 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 				$scope.otherPlayers = msg.data.filter(function(obj){
 					return obj.name != $cookies.get('name');
 				});
+				$scope.otherPlayersCopy = $scope.otherPlayers;
 				console.log("Other players:", $scope.otherPlayers);
 				$scope.mydata = msg.data.filter(function(obj){
 					return obj.name == $cookies.get('name');
 				});
-				console.log($scope.mydata);								
+												
 				if($scope.mydata[0] && $scope.mydata[0].cards) {
 					if($scope.cardSet.length == 0){
 						$scope.gameStarted = true; 
@@ -183,14 +262,17 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 						$scope.$apply();	
 																		
 						$('.playingcard').each(function(x) {
-						    $($('.playingcard')[x]).click(function(){
+							
+						    $($('.playingcard')[x]).bind("click touchstart", function(){
 								if($scope.bullshitReply == true){
-									socket.emit('bullshitDecision', {decision: $scope.currentDecision, card: $scope.cardSet[x]});
-									console.log("Card click allowed:", $scope.cardSet[x]);
-								} else {
+									$scope.selectedCard = x;
+									socket.emit('bullshitDecision', {card: $scope.cardSet[$scope.selectedCard], currentMove: $scope.currentDecision});
+									$scope.cardSet[$scope.selectedCard].setSide('front');
+									$scope.$apply();
 								}
 								
-						    });
+							});							
+
 						});						
 											
 					}				
@@ -209,6 +291,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 	};
 	
 	$scope.confirmCall = function(){
+		$scope.lockNewCall = true;
 		console.log('Sending confirm call to :', $scope.selectedplayer.name);
 		socket.emit('confirmCall', {sendingTo: $scope.selectedplayer.name});
 		$('#callModel').modal('hide');
@@ -222,6 +305,12 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		$scope.cardSet.forEach(function (card, i) {
 			card.setSide('front');
 		});
+	};
+	
+	$scope.getNewCard = function(){
+		if($scope.selectedCard){
+			socket.emit('getNewCard', {cardNumber: $scope.selectedCard});
+		}	
 	};
 
 	

@@ -215,11 +215,41 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 					$scope.showCards[0].unmount($scope.$modalcontainer);
 					socket.emit('gameRound', {room: $scope.roomCode.toLowerCase(), round: null, card: null});
 				});
+									
+				
+				socket.on('clientNewCard', function(msg){
 					
+					var newCard = $scope.deck.cards.splice(0, 1);
+					$scope.playerCards[msg.client].cards[msg.cardIndex] = newCard;
+					socket.emit('newcard_update', {room: $scope.roomCode.toLowerCase(), cardIndex: msg.cardIndex, card: newCard, client: msg.client});
 					
-				// 				var callCount = msg.transactions.filter(function(tran){
-				// 	return (tran.to_player == $cookies.get('name') || tran.from_player == $cookies.get('name')) && tran.result == null
-				// }).length;			
+				});
+								
+								
+				socket.on('clientBullshitDecision', function(msg){
+					if($scope.currentRound){	
+						
+						var foundIndex = $scope.round_transactions.findIndex(x => x.trans_num == msg.currentMove.trans_num);
+						
+						if(msg.card){
+																					
+							if(msg.card.rank == $scope.currentRound.card.rank){
+								$scope.transaction_log.push(msg.currentMove.from_player+' revealed a card with the correct rank!');
+								$scope.round_transactions[foundIndex].result = 'bullshit_correct';
+							} else {
+								$scope.transaction_log.push(msg.currentMove.from_player+' showed a card with the WRONG rank!');
+								$scope.round_transactions[foundIndex].result = 'bullshit_wrong';
+							}
+							
+							socket.emit('transaction_update', {room: $scope.roomCode.toLowerCase(), transactions: $scope.round_transactions});
+						}						
+						
+						
+					} else {
+						console.log("Error, no round in play!");
+					}	
+				});				
+				
 								
 				socket.on('clientCallDecision', function(msg){
 					if($scope.currentRound){	
