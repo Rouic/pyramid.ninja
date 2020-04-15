@@ -465,6 +465,11 @@ margin-left: -27px
     margin-bottom: 30px;
     width: 40% !important;
 }
+@media only screen and (max-width: 600px) {
+  .main-logo {
+     width: 70% !important;
+  }
+}
 .icon-logo {
     max-width: 25px;
     padding: 1px;
