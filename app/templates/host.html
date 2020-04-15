@@ -118,10 +118,10 @@
 				<h6 class="waiting">Waiting for more updates...</h6>	
             </div>		
           </div>
-		  <div class="row" style="margin-top:100px">
+		  <div class="row" style="margin-top:70px">
 			  <div class="col-sm-10">
-			  	<h6>Current Round Results:</h6>
-				<p>Tim to drink (6) drinks!</p>
+			  	<h6 ng-if="drink_log.length > 0">Current Round Results:</h6>
+				<p><span ng-repeat="y in drink_log">{{y.name}} drinks {{y.drinks}}{{($last) ? '!' : ', '}}</span></p>
 			  </div>
 		  </div>
 		  <div class="row">

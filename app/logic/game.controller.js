@@ -62,21 +62,19 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 			if(msg.round && msg.card){
 				$scope.allowNewCard = false;
 				$scope.lockNewCall = false;
+				$scope.doneNewCard = false;
 				$scope.allowDecision = false;
 				$scope.allowCalling = true;
 				$scope.currentRound = msg.round;
-				
-				if($scope.selectedCard){
-					$scope.cardSet[$scope.selectedCard].unmount();
-					socket.emit('getNewCard', {cardNumber: $scope.selectedCard});
-				}
 				
 				$scope.instruction = 'Round '+msg.round+'! To call someone to drink on this card click the button below!';
 				
 			} else {
 				$scope.allowCalling = false;
 				if($scope.selectedCard){
-					$scope.instruction = 'We need a new card. Press the button below to see your new card, you will have 5 seconds!';
+					$scope.cardSet[$scope.selectedCard].unmount();
+					socket.emit('getNewCard', {cardNumber: $scope.selectedCard});					
+					$scope.instruction = 'Getting new card...';
 					$scope.allowNewCard = true;
 				} else {
 					$scope.allowNewCard = false;
@@ -90,43 +88,45 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		
 		
 		socket.on('client_newcard_update', function(msg){
-			
-			var newClientDeck = Deck(true);
-			$scope.isNewCard = true;
-			$scope.countdown = 5;
-			$scope.instruction = 'You have 5 seconds to look at your new card!';
-						
-			$scope.cardSet[msg.cardIndex] = newClientDeck.cards.filter(function(obj){
-				return obj.i == msg.card[0].i;
-			})[0];				
-						
-			$scope.cardSet[msg.cardIndex].enableDragging();
-			$scope.cardSet[msg.cardIndex].disableFlipping();		
-			$scope.cardSet[msg.cardIndex].animateTo({
-				delay: 1000 + msg.cardIndex * 2, // wait 1 second + i * 2 ms
-				duration: 500,
-				ease: 'quartOut',
-				x: $scope.myCardsCoords(msg.cardIndex).x,
-				y: $scope.myCardsCoords(msg.cardIndex).y
-			});	
-			$scope.cardSet[msg.cardIndex].mount($scope.$container);			
-			$scope.$apply();	
-														
-			$('.playingcard').each(function(x) {
-				var xIndex = x;
-				$($('.playingcard')[xIndex]).bind("click touchstart", function(){
-					if($scope.bullshitReply == true){
-						$scope.selectedCard = xIndex;
-						socket.emit('bullshitDecision', {card: $scope.cardSet[$scope.selectedCard], currentMove: $scope.currentDecision});
-						$scope.cardSet[$scope.selectedCard].setSide('front');
-						$scope.$apply();
-					}
-				
-				});							
-
-			});			
-			
-			
+			if(msg.client == $cookies.get('name') && msg.cardIndex && msg.card){
+				var newClientDeck = Deck(true);
+				$scope.cardSet[msg.cardIndex].unmount();
+				$scope.allowNewCard = false;
+				$scope.doneNewCard = true;
+				$scope.countdown = 5;
+				$scope.instruction = 'You have 5 seconds to look at your new card!';
+							
+				$scope.cardSet[msg.cardIndex] = newClientDeck.cards.filter(function(obj){
+					return obj.i == msg.card[0].i;
+				})[0];				
+							
+				$scope.cardSet[msg.cardIndex].enableDragging();
+				$scope.cardSet[msg.cardIndex].disableFlipping();		
+				$scope.cardSet[msg.cardIndex].animateTo({
+					delay: 1000 + msg.cardIndex * 2, // wait 1 second + i * 2 ms
+					duration: 500,
+					ease: 'quartOut',
+					x: $scope.myCardsCoords(msg.cardIndex).x,
+					y: $scope.myCardsCoords(msg.cardIndex).y
+				});	
+				$scope.cardSet[msg.cardIndex].mount($scope.$container);	
+				$scope.cardSet[msg.cardIndex].setSide('front');			
+				$scope.$apply();	
+															
+				$('.playingcard').each(function(x) {
+					var xIndex = x;
+					$($('.playingcard')[xIndex]).bind("click touchstart", function(){
+						if($scope.bullshitReply == true){
+							$scope.selectedCard = xIndex;
+							socket.emit('bullshitDecision', {card: $scope.cardSet[$scope.selectedCard], currentMove: $scope.currentDecision});
+							$scope.cardSet[$scope.selectedCard].setSide('front');
+							$scope.$apply();
+						}
+					
+					});							
+	
+				});			
+			}
 		});
 		
 		socket.on('client_transaction_update', function(msg){
@@ -187,9 +187,9 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 					$scope.allowDecision = false;
 					if($scope.lockNewCall == true){
 						$scope.allowCalling = false;
-						if($scope.bullshitOutcomesCount > 0){
+						if($scope.bullshitOutcomesCount > 0 && $scope.doneNewCard == false){
 							$scope.allowNewCard = true;
-							$scope.instruction = 'Round '+$scope.currentRound+'. You will automatically get a new card at the start of the next round.';		
+							$scope.instruction = 'Round '+$scope.currentRound+'. Click the button below to get a new card, or you will be given one automatically at the start of the next round.';		
 						} else {
 							$scope.instruction = 'Round '+$scope.currentRound+' - waiting for updates...';		
 						}
@@ -262,10 +262,10 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 						$scope.$apply();	
 																		
 						$('.playingcard').each(function(x) {
-							
-						    $($('.playingcard')[x]).bind("click touchstart", function(){
+							var xIndex = x;
+						    $($('.playingcard')[xIndex]).bind("click touchstart", function(){
 								if($scope.bullshitReply == true){
-									$scope.selectedCard = x;
+									$scope.selectedCard = xIndex;
 									socket.emit('bullshitDecision', {card: $scope.cardSet[$scope.selectedCard], currentMove: $scope.currentDecision});
 									$scope.cardSet[$scope.selectedCard].setSide('front');
 									$scope.$apply();
@@ -310,13 +310,16 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 	$scope.getNewCard = function(){
 		if($scope.selectedCard){
 			socket.emit('getNewCard', {cardNumber: $scope.selectedCard});
-		}	
+		} else {
+			$scope.instruction = 'Hmm, no selected card!';
+		}
 	};
 
 	
 	$scope.$watch('countdown', function() {
-		if($scope.doingCardShow && $scope.countdown == 0){
+		if(($scope.doingCardShow || $scope.selectedCard) && $scope.countdown == 0){
 			$scope.doingCardShow = false;
+			$scope.selectedCard = null;
 			$scope.instruction = 'Waiting for host to continue...';
 			$scope.cardSet.forEach(function (card, i) {
 				card.setSide('back');

@@ -175,13 +175,14 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 				
 				
 				$('.playingcard').each(function(x) {
-					$($('.playingcard')[x]).click(function(){
+					$($('.playingcard')[x]).bind("click touchstart", function(){
 						
 						$scope.round_number++;
 						$scope.information = '';
 						$scope.round_row = $scope.pyramidRow(x);
 						$scope.round_transactions = [];
 						$scope.transaction_log = [];
+						$scope.drink_log = [];
 						
 						$scope.showCards = temp_deck.cards.filter(function(obj){
 							return pyramidCards[x].i == obj.i;
@@ -221,6 +222,7 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 					
 					var newCard = $scope.deck.cards.splice(0, 1);
 					$scope.playerCards[msg.client].cards[msg.cardIndex] = newCard;
+					console.log('Giving new card to:', msg.client)
 					socket.emit('newcard_update', {room: $scope.roomCode.toLowerCase(), cardIndex: msg.cardIndex, card: newCard, client: msg.client});
 					
 				});
@@ -235,9 +237,33 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 																					
 							if(msg.card.rank == $scope.currentRound.card.rank){
 								$scope.transaction_log.push(msg.currentMove.from_player+' revealed a card with the correct rank!');
+								
+								var foundDrinkIndex = $scope.drink_log.findIndex(x => x.name == msg.currentMove.to_player);
+								if($scope.drink_log[foundDrinkIndex]){
+									$scope.drink_log[foundDrinkIndex].drinks = $scope.drink_log[foundDrinkIndex].drinks+(2*$scope.round_row);
+								} else {
+									$scope.drink_log.push({
+										name: msg.currentMove.to_player,
+										drinks: 2*$scope.round_row
+									});					
+								}									
+								
 								$scope.round_transactions[foundIndex].result = 'bullshit_correct';
+								console.log($scope.drink_log);
 							} else {
 								$scope.transaction_log.push(msg.currentMove.from_player+' showed a card with the WRONG rank!');
+								
+								var foundDrinkIndex = $scope.drink_log.findIndex(x => x.name == msg.currentMove.from_player);
+								if($scope.drink_log[foundDrinkIndex]){
+									$scope.drink_log[foundDrinkIndex].drinks = $scope.drink_log[foundDrinkIndex].drinks+(2*$scope.round_row);
+								} else {
+									$scope.drink_log.push({
+										name: msg.currentMove.from_player,
+										drinks: 2*$scope.round_row
+									});					
+								}								
+								
+								console.log($scope.drink_log);
 								$scope.round_transactions[foundIndex].result = 'bullshit_wrong';
 							}
 							
@@ -248,6 +274,7 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 					} else {
 						console.log("Error, no round in play!");
 					}	
+					$scope.$apply();
 				});				
 				
 								
@@ -258,7 +285,19 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 						if(msg.decision == 1){
 							
 							$scope.transaction_log.push(msg.currentMove.to_player+' has accepted '+msg.currentMove.from_player+' drinks!');
+														
+							var foundDrinkIndex = $scope.drink_log.findIndex(x => x.name == msg.currentMove.to_player);
+							if($scope.drink_log[foundDrinkIndex]){
+								$scope.drink_log[foundDrinkIndex].drinks = $scope.drink_log[foundDrinkIndex].drinks+(1*$scope.round_row);
+							} else {
+								$scope.drink_log.push({
+									name: msg.currentMove.to_player,
+									drinks: 1*$scope.round_row
+								});					
+							}
+							
 							$scope.round_transactions[foundIndex].result = 'accepted';
+							console.log($scope.drink_log);
 							
 						} else {
 							
@@ -269,7 +308,8 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 						
 					} else {
 						console.log("Error, no round in play!");
-					}	
+					}
+					$scope.$apply();	
 				});	
 				
 				socket.on('bullshitResponse', function(msg){
@@ -293,7 +333,6 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 								result: null
 							});
 							
-							$scope.transaction_log.push('Waiting on '+msg.playerto+'\'s response...');								
 							console.log('Round Tranaction Update:', $scope.round_transactions);
 							$scope.$apply();
 							socket.emit('transaction_update', {room: $scope.roomCode.toLowerCase(), transactions: $scope.round_transactions});
