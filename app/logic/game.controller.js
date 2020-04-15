@@ -323,7 +323,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 			$scope.doingCardShow = false;
 			$scope.selectedCard = null;
 			if($scope.currentRound){
-				$scope.instruction = 'Round '+$scope.currentRound+' - waiting for new updates...';	
+				$scope.instruction = 'Round '+$scope.currentRound+' - waiting for host to continue...';	
 			} else {
 				$scope.instruction = 'Waiting for host to continue...';
 			}

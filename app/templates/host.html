@@ -97,7 +97,7 @@
     <div class="modal-content">
       <div class="card card-plain">
         <div class="modal-header">
-          <h5 class="modal-title card-title">Round {{round_number}}, Row {{round_row}}</h5>
+          <h4 class="modal-title card-title text-center">Round {{round_number}}, Row {{round_row}}</h4>
         </div>
         <div class="modal-body">
           <div class="row">
@@ -125,10 +125,10 @@
 				<h6 ng-if="round_transactions.length == 0" class="waiting">No updates yet...</h6>	
             </div>		
           </div>
-		  <div class="row" style="margin-top:70px">
-			  <div class="col-sm-10">
-			  	<h6 ng-if="drink_log.length > 0">Current Round Results:</h6>
-				<p><span ng-repeat="y in drink_log">{{y.name}} drinks <b>{{y.drinks}}</b>{{($last) ? '!' : ', '}}</span></p>
+		  <div class="row text-center" style="margin-top:70px">
+			  <div class="col-sm-12">
+			  	<h6 ng-if="drink_log.length > 0">Round Results:</h6>
+				<p><span ng-repeat="y in drink_log"><b>{{y.name}}</b> drinks <b>{{y.drinks}}</b>{{($last) ? '!' : ', '}}</span></p>
 			  </div>
 		  </div>
 		  <div class="row">
