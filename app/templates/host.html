@@ -101,11 +101,11 @@
         </div>
         <div class="modal-body">
           <div class="row">
-            <div class="col-sm-5 ml-auto">
+            <div class="col-sm-6 ml-auto">
 				<div id="modalcardcontainer"></div>
             </div>
 
-            <div class="col-sm-5 mr-auto">
+            <div class="col-sm-6 mr-auto">
 				<p class="text-muted">The card on the left is currently in play. Use your device to call a drink to another player.</p>
 				<h6 ng-if="round_transactions.length > 0">Round Log:</h6>
 				<table class="table">
@@ -113,11 +113,11 @@
 				        <tr ng-repeat="x in round_transactions">
 				            <td>
 								<span><b>{{x.from_player}}</b> has called on <b>{{x.to_player}}</b> to drink!</span> 
-								<span ng-if="!x.result">Waiting for response...</span>
-								<span ng-if="x.result == 'accepted'"><b>{{x.to_player}}</b> <b class="text-success">ACCEPTED</b> the drinks!</span>
-								<span ng-if="x.result == 'bullshit'"><b>{{x.to_player}}</b> has called <b class="text-rose">BULLSHIT!</b> Waiting for {{x.from_player}} to show a card...</span>
-								<span ng-if="x.result == 'bullshit_wrong'"><b>{{x.to_player}}</b> has called <b class="text-rose">BULLSHIT!</b> <b>{{x.from_player}}</b> turned over a card with the <b class="text-danger">WRONG</b> rank!</span>
-								<span ng-if="x.result == 'bullshit_correct'"><b>{{x.to_player}}</b> has called <b class="text-rose">BULLSHIT!</b><b>{{x.from_player}}</b> turned over a card with the <b class="text-success">CORRECT</b> rank!</span>
+								<span ng-if="!x.result">Waiting on response from <b>{{x.to_player}}</b>...</span>
+								<span ng-if="x.result == 'accepted'"><br><b>{{x.to_player}}</b> <b class="text-success">ACCEPTED</b> the drinks!</span>
+								<span ng-if="x.result == 'bullshit'"><b><br>{{x.to_player}}</b> has called <b class="text-rose">BULLSHIT!</b> Waiting for <b>{{x.from_player}}</b> to show a card...</span>
+								<span ng-if="x.result == 'bullshit_wrong'"><br><b>{{x.to_player}}</b> has called <b class="text-rose">BULLSHIT!</b> <b>{{x.from_player}}</b> turned over a card with the <b class="text-danger">WRONG</b> rank!</span>
+								<span ng-if="x.result == 'bullshit_correct'"><br><b>{{x.to_player}}</b> has called <b class="text-rose">BULLSHIT!</b><b>{{x.from_player}}</b> turned over a card with the <b class="text-success">CORRECT</b> rank!</span>
 							</td>
 				        </tr>
 				    </tbody>

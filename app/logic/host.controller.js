@@ -22,7 +22,6 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 
 		$scope.players.forEach(function (player, i) {
 			if(player.type == 'client' && $scope.gameHasStarted == true){
-				console.log(player);
 				if($scope.deck && $scope.deck.cards && $scope.deck.cards.length > 4){
 					
 					
@@ -47,14 +46,10 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 						player.cardsState = $scope.playerCards[player.name].cardsState;
 					} 
 					
-				} else {
-					console.log("Run out of cards to give!");
-					//error, deck not setup yet, or we've run out of cards!
 				}
 				
 			}
 		});
-		console.log($scope.players);
 		$scope.cardsleft = $scope.deck.cards.length;
 		socket.emit('playerSetup', {gamestarted: true, room: $scope.roomCode.toLowerCase(), players: $scope.players});
 		
@@ -62,7 +57,6 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 	});
 	
 	socket.on('clientCardsSeen', function(msg){
-		console.log('Cards seen:', msg.client);
 		$scope.players.forEach(function (player, i) {
 			if(player.name == msg.client){
 				player.cards.forEach(function (card, i) {
@@ -187,7 +181,6 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 							return pyramidCards[x].i == obj.i;
 						});							
 						
-						console.log("Clicked Card:", pyramidCards[x]);
 						pyramidCards[x].setSide('front');
 						$scope.$apply();
 						
@@ -217,12 +210,14 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 									
 				
 				socket.on('clientNewCard', function(msg){
-					
-					var newCard = $scope.deck.cards.splice(0, 1);
-					$scope.playerCards[msg.client].cards[msg.cardIndex] = newCard;
-					console.log('Giving new card to:', msg.client)
-					socket.emit('newcard_update', {room: $scope.roomCode.toLowerCase(), cardIndex: msg.cardIndex, card: newCard, client: msg.client});
-					
+					if($scope.deck && $scope.deck.cards && $scope.deck.cards.length > 0){
+						var newCard = $scope.deck.cards.splice(0, 1);
+						$scope.playerCards[msg.client].cards[msg.cardIndex] = newCard;
+						$scope.cardsleft = $scope.deck.cards.length;
+						socket.emit('newcard_update', {room: $scope.roomCode.toLowerCase(), cardIndex: msg.cardIndex, card: newCard, client: msg.client});
+					} else {
+						//no cards left to give.
+					}
 				});
 								
 								
@@ -246,7 +241,6 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 								}									
 								
 								$scope.round_transactions[foundIndex].result = 'bullshit_correct';
-								console.log($scope.drink_log);
 							} else {
 								
 								var foundDrinkIndex = $scope.drink_log.findIndex(x => x.name == msg.currentMove.from_player);
@@ -259,7 +253,6 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 									});					
 								}								
 								
-								console.log($scope.drink_log);
 								$scope.round_transactions[foundIndex].result = 'bullshit_wrong';
 							}
 							
@@ -267,8 +260,6 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 						}						
 						
 						
-					} else {
-						console.log("Error, no round in play!");
 					}	
 					$scope.$apply();
 				});				
@@ -291,7 +282,6 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 							}
 							
 							$scope.round_transactions[foundIndex].result = 'accepted';
-							console.log($scope.drink_log);
 							
 						} else {
 							
@@ -299,18 +289,8 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 						}
 						socket.emit('transaction_update', {room: $scope.roomCode.toLowerCase(), transactions: $scope.round_transactions});
 						
-					} else {
-						console.log("Error, no round in play!");
 					}
 					$scope.$apply();	
-				});	
-				
-				socket.on('bullshitResponse', function(msg){
-					console.log(msg);
-					
-					//either pass bullshit or fail bullshit
-					
-					
 				});	
 				
 				socket.on('roundCall', function(msg){
@@ -325,15 +305,10 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 								result: null
 							});
 							
-							console.log('Round Tranaction Update:', $scope.round_transactions);
 							$scope.$apply();
 							socket.emit('transaction_update', {room: $scope.roomCode.toLowerCase(), transactions: $scope.round_transactions});
 							
-						} else {
-							console.log("Error, no player from or to!");
 						}
-					} else {
-						console.log("Error, no round in play!");
 					}
 					
 				});
@@ -362,7 +337,6 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 						
 					}
 				});
-				console.log("Starting players:", $scope.players);
 				$scope.gameHasStarted = true;
 				$scope.cardsleft = $scope.deck.cards.length;
 				$scope.information = 'Press the button on your device to view your cards!';							
