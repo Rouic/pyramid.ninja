@@ -86,7 +86,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		
 		socket.on('client_newcard_update', function(msg){
 			if(msg.client == $cookies.get('name') && msg.cardIndex !== undefined && msg.card){
-				var newClientDeck = Deck(true);
+				var newClientDeck = Deck();
 				$scope.allowNewCard = false;
 				$scope.doneNewCard = true;
 				$scope.countdown = 5;
@@ -232,7 +232,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		
 		socket.on('playerSetupData', function(msg){
 					
-			var clientDeck = Deck(true);
+			var clientDeck = Deck();
 			$scope.$container = document.getElementById('clientcardcontainer');
 			$scope.$containerparent = document.getElementById('clientcontainerparent');							
 			$scope.instruction = 'Waiting for your cards...';		

@@ -2,14 +2,14 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 	$rootScope.pageClass = 'signup-page';
 	$.material.init();
 	$scope.domain = window.location.hostname;
-	var temp_deck = Deck(true);
+	var temp_deck = Deck();
 	socket.emit('newRoom');
 	socket.on('newRoomSuccess', function(msg){
 		currentGame = msg.room;
 		$scope.roomCode = msg.room.toUpperCase();
 		$scope.roomDeck = msg.deck;
 		
-		$scope.deck = Deck(true);
+		$scope.deck = Deck();
 		
 		$scope.$apply();
 	});
@@ -146,7 +146,7 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 			}
 			if($scope.countdown == 0 && $scope.step == 3){
 				$scope.deck.unmount();
-				$scope.deck = Deck(true);
+				$scope.deck = Deck();
 				$scope.deck.shuffle();		
 				$scope.information = 'Building Pyramid';
 				pyramidCards = $scope.deck.cards.splice(0, 15);
