@@ -71,7 +71,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 				
 			} else {
 				$scope.allowCalling = false;
-				if($scope.selectedCard){
+				if($scope.selectedCard !== undefined || $scope.selectedCard !== null){
 					$scope.cardSet[$scope.selectedCard].unmount();
 					socket.emit('getNewCard', {cardNumber: $scope.selectedCard});					
 					$scope.instruction = 'Getting new card...';
@@ -88,7 +88,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		
 		
 		socket.on('client_newcard_update', function(msg){
-			if(msg.client == $cookies.get('name') && msg.cardIndex && msg.card){
+			if(msg.client == $cookies.get('name') && msg.cardIndex !== undefined && msg.card){
 				var newClientDeck = Deck(true);
 				$scope.cardSet[msg.cardIndex].unmount();
 				$scope.allowNewCard = false;
@@ -110,7 +110,8 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 					y: $scope.myCardsCoords(msg.cardIndex).y
 				});	
 				$scope.cardSet[msg.cardIndex].mount($scope.$container);	
-				$scope.cardSet[msg.cardIndex].setSide('front');			
+				$scope.cardSet[msg.cardIndex].setSide('front');
+					
 				$scope.$apply();	
 															
 				$('.playingcard').each(function(x) {
@@ -118,6 +119,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 					$($('.playingcard')[xIndex]).bind("click touchstart", function(){
 						if($scope.bullshitReply == true){
 							$scope.selectedCard = xIndex;
+							console.log("Selected Card:", $scope.selectedCard);
 							socket.emit('bullshitDecision', {card: $scope.cardSet[$scope.selectedCard], currentMove: $scope.currentDecision});
 							$scope.cardSet[$scope.selectedCard].setSide('front');
 							$scope.$apply();
@@ -191,7 +193,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 							$scope.allowNewCard = true;
 							$scope.instruction = 'Round '+$scope.currentRound+'. Click the button below to get a new card, or you will be given one automatically at the start of the next round.';		
 						} else {
-							$scope.instruction = 'Round '+$scope.currentRound+' - waiting for updates...';		
+							$scope.instruction = 'Round '+$scope.currentRound+' - waiting for new updates...';		
 						}
 											
 					} else {
@@ -266,6 +268,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 						    $($('.playingcard')[xIndex]).bind("click touchstart", function(){
 								if($scope.bullshitReply == true){
 									$scope.selectedCard = xIndex;
+									console.log("Selected Card:", $scope.selectedCard);
 									socket.emit('bullshitDecision', {card: $scope.cardSet[$scope.selectedCard], currentMove: $scope.currentDecision});
 									$scope.cardSet[$scope.selectedCard].setSide('front');
 									$scope.$apply();
@@ -308,7 +311,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 	};
 	
 	$scope.getNewCard = function(){
-		if($scope.selectedCard){
+		if($scope.selectedCard !== undefined || $scope.selectedCard !== null){
 			socket.emit('getNewCard', {cardNumber: $scope.selectedCard});
 		} else {
 			$scope.instruction = 'Hmm, no selected card!';
@@ -317,10 +320,14 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 
 	
 	$scope.$watch('countdown', function() {
-		if(($scope.doingCardShow || $scope.selectedCard) && $scope.countdown == 0){
+		if(($scope.doingCardShow || ($scope.selectedCard !== undefined || $scope.selectedCard !== null)) && $scope.countdown == 0){
 			$scope.doingCardShow = false;
 			$scope.selectedCard = null;
-			$scope.instruction = 'Waiting for host to continue...';
+			if($scope.currentRound){
+				$scope.instruction = 'Round '+$scope.currentRound+' - waiting for new updates...';	
+			} else {
+				$scope.instruction = 'Waiting for host to continue...';
+			}
 			$scope.cardSet.forEach(function (card, i) {
 				card.setSide('back');
 			});	
