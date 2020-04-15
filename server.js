@@ -61,8 +61,9 @@ app.get('/*',function(req,res,next){
 //Unique(ish) Avatar generator using game name with a hash colour
 app.get('/avatar/:fullName', function(req, res, next){				
 	var matches = req.params.fullName.match(/\b(\w)/g);
-	var acronym = matches.join('');	
-	var colourName = req.params.fullName;					
+	var acronym = (matches) ? matches.join('') : '?';
+	var colourName = req.params.fullName;	
+						
 	var stringToColour = function(str) {
 		var hash = 0;
 		for (var i = 0; i < str.length; i++) {
@@ -141,7 +142,6 @@ io.on('connection', function(socket){
 					     var clientSocket = io.sockets.connected[clientId];				
 						gameClients.push({name: clientSocket.name, type: clientSocket.type, cards: clientSocket.cards});
 					}
-					console.log("[INFO] informing host about client changes to "+socket.clientOf);	
 					io.to(socket.clientOf).emit('newGameClients', {data: gameClients});	   
 				}		
 	   		}
@@ -156,7 +156,6 @@ io.on('connection', function(socket){
 		if(socket.type == 'client'){
 			if(msg.sendingTo){
 				io.to(socket.clientOf).emit('roundCall', {playerfrom: socket.name, playerto: msg.sendingTo});
-				console.log("[INFO] Sending Round Call From: "+socket.name+" to "+msg.sendingTo);
 			}
 		}
    });    
@@ -164,27 +163,23 @@ io.on('connection', function(socket){
    socket.on('seenCards', function(msg){
 		if(socket.type == 'client'){
 			io.to(socket.clientOf).emit('clientCardsSeen', {client: socket.name});
-			console.log("[INFO] Client seen cards: "+socket.name);
 		}
    });
    
    socket.on('getNewCard', function(msg){
 		if(socket.type == 'client'){
 			io.to(socket.clientOf).emit('clientNewCard', {client: socket.name, cardIndex: msg.cardNumber});
-			console.log("[INFO] Client wants new card: "+socket.name);
 		}
    });   
    
    socket.on('callDecision', function(msg){
 		if(socket.type == 'client'){
 			io.to(socket.clientOf).emit('clientCallDecision', msg);
-			console.log("[INFO] Client decision made: "+socket.name);
 		}
    });    
    socket.on('bullshitDecision', function(msg){
 		if(socket.type == 'client'){
 			io.to(socket.clientOf).emit('clientBullshitDecision', msg);
-			console.log("[INFO] Client bullshit decision made: "+socket.name);
 		}
    });     
    
@@ -247,10 +242,8 @@ io.on('connection', function(socket){
 				
 				var newClientExists = false;
 				for (var existingClient in clients ) {
-					console.log(io.sockets.connected[existingClient].name, msg.name);
 					if(io.sockets.connected[existingClient].name == msg.name) newClientExists = true;
 				}
-				// if((msg.init && msg.init == true) || newClientExists == false){
 				
 					socket.type = 'client';
 					socket.clientOf = msg.room;
@@ -270,10 +263,7 @@ io.on('connection', function(socket){
 					}			
 					console.log("[INFO] informing host about client changes to "+msg.room);
 					io.to(msg.room).emit('newGameClients', {data: gameClients});
-					
-				// } else {
-				// 	socket.emit('joinRoomResponce', {validity: false, error: 'duplicate name, pick another!'});
-				// }
+
 				
 			} else {
 				socket.emit('joinRoomResponce', {validity: false, error: 'unknown game code'});
