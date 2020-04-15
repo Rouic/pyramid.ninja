@@ -341,11 +341,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		if(($scope.doingCardShow || ($scope.selectedCard !== undefined || $scope.selectedCard !== null)) && $scope.countdown == 0){
 			$scope.doingCardShow = false;
 			$scope.selectedCard = null;
-			if($scope.currentRound){
-				$scope.instruction = 'Round '+$scope.currentRound+' - waiting for host to continue...';	
-			} else {
-				$scope.instruction = 'Waiting for host to continue...';
-			}
+			$scope.instruction = 'Waiting for host to continue...';
 			$scope.cardSet.forEach(function (card, i) {
 				card.setSide('back');
 			});	
