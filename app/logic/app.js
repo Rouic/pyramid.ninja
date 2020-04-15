@@ -27,9 +27,7 @@ Pyramid.config(function($stateProvider, $urlRouterProvider) {
 	    $urlRouterProvider.otherwise('/join');
     } else {
 	    $urlRouterProvider.otherwise('/start');
-    }
-    
-     
+    }     
     
     $stateProvider   
 	.state('root', {
@@ -108,17 +106,12 @@ Pyramid.config(function($stateProvider, $urlRouterProvider) {
 		    }
         }        
     });    
-
   
 });
 
-Pyramid.controller('root', function($state, $scope, $rootScope, $stateParams){
-	
-});
+Pyramid.controller('root', function($state, $scope, $rootScope, $stateParams){});
 
-Pyramid.controller('header', function($state, $scope, $rootScope, $stateParams){
-
-});
+Pyramid.controller('header', function($state, $scope, $rootScope, $stateParams){});
 
 Pyramid.controller('start', function($state, $scope, $rootScope, $stateParams){
 	$rootScope.pageClass = 'signup-page';
@@ -163,20 +156,6 @@ Pyramid.controller('about', function($state, $scope, $rootScope, $stateParams){
 	$rootScope.pageClass = 'about-us';
     $.material.init();
     window_width = $(window).width();
-    $('[data-toggle="tooltip"], [rel="tooltip"]').tooltip();
-    if($('.datepicker').length != 0){
-        $('.datepicker').datepicker({
-             weekStart:1
-        });
-    }
-    $(".select").dropdown({ "dropdownClass": "dropdown-menu", "optionClass": "" });
-    $('[data-toggle="popover"]').popover();
-	$('.carousel').carousel({
-      interval: 400000
-    });
-    if($(".tagsinput").length != 0){
-        $(".tagsinput").tagsInput();
-    }
     if($('.navbar-color-on-scroll').length != 0){
         $(window).on('scroll', materialKit.checkScrollForTransparentNavbar)
     }

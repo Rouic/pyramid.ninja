@@ -83,7 +83,6 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 			$scope.$apply();
 		});
 		
-		
 		socket.on('client_newcard_update', function(msg){
 			if(msg.client == $cookies.get('name') && msg.cardIndex !== undefined && msg.card){
 				var newClientDeck = Deck();
@@ -189,7 +188,6 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 					$scope.allowCalling = false;
 					$scope.bullshitReply = true;
 					
-					
 				} else if($scope.beenCalledCount != 0){
 										
 					$scope.allowCalling = false;
@@ -228,7 +226,6 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		$scope.decision = function(move){
 			socket.emit('callDecision', {decision: move, currentMove: $scope.currentDecision});
 		};
-		
 		
 		socket.on('playerSetupData', function(msg){
 					
@@ -335,7 +332,6 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 			$scope.instruction = 'Hmm, no selected card!';
 		}
 	};
-
 	
 	$scope.$watch('countdown', function() {
 		if(($scope.doingCardShow || ($scope.selectedCard !== undefined || $scope.selectedCard !== null)) && $scope.countdown == 0){
@@ -346,12 +342,6 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 				card.setSide('back');
 			});	
 			socket.emit('seenCards');
-		}
-	});
-	
-	$scope.$watch('cardSet', function() {
-		if($scope.cardSet && $scope.cardSet.length > 0){
-			//cards in play and ready...
 		}
 	});
 	

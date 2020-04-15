@@ -3,14 +3,14 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 	$.material.init();
 	$scope.domain = window.location.hostname;
 	var temp_deck = Deck();
+	
 	socket.emit('newRoom');
+	
 	socket.on('newRoomSuccess', function(msg){
 		currentGame = msg.room;
 		$scope.roomCode = msg.room.toUpperCase();
 		$scope.roomDeck = msg.deck;
-		
 		$scope.deck = Deck();
-		
 		$scope.$apply();
 	});
 	
@@ -23,7 +23,6 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 		$scope.players.forEach(function (player, i) {
 			if(player.type == 'client' && $scope.gameHasStarted == true){
 				if($scope.deck && $scope.deck.cards && $scope.deck.cards.length > 4){
-					
 					
 					if(!$scope.playerCards[player.name] || !$scope.playerCards[player.name].cards){
 						$scope.playerCards[player.name].cards = $scope.deck.cards.splice(0, 4);					
@@ -133,7 +132,6 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 				$scope.deck.fan();
 				$scope.countdown = 3;
 				$scope.step = 2;
-						
 				
 			}
 			if($scope.countdown == 0 && $scope.step == 2){
@@ -151,7 +149,6 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 				$scope.information = 'Building Pyramid';
 				pyramidCards = $scope.deck.cards.splice(0, 15);
 				
-				
 				pyramidCards.forEach(function (card, i) {
 																				
 					card.disableDragging();
@@ -166,7 +163,6 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 						y: $scope.pyramidCoords(i).y
 					});
 				});
-				
 				
 				$('.playingcard').each(function(x) {
 					$($('.playingcard')[x]).bind("click touchstart", function(){
@@ -197,9 +193,9 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 						$scope.showCards[0].mount($scope.$modalcontainer);
 						$scope.showCards[0].setSide('front');					
 						
-						
 					});
 				});	
+				
 				$('#roundModal').on('hidden.bs.modal', function () {
 					$scope.round_transactions = [];
 					$scope.information = 'Select another card from the pyramid to continue...';
@@ -207,7 +203,6 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 					$scope.showCards[0].unmount($scope.$modalcontainer);
 					socket.emit('gameRound', {room: $scope.roomCode.toLowerCase(), round: null, card: null});
 				});
-									
 				
 				socket.on('clientNewCard', function(msg){
 					if($scope.deck && $scope.deck.cards && $scope.deck.cards.length > 0){
@@ -220,14 +215,12 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 					}
 				});
 								
-								
 				socket.on('clientBullshitDecision', function(msg){
 					if($scope.currentRound){	
 						
 						var foundIndex = $scope.round_transactions.findIndex(x => x.trans_num == msg.currentMove.trans_num);
 						
 						if(msg.card){
-																					
 							if(msg.card.rank == $scope.currentRound.card.rank){
 								
 								var foundDrinkIndex = $scope.drink_log.findIndex(x => x.name == msg.currentMove.to_player);
@@ -264,7 +257,6 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 					$scope.$apply();
 				});				
 				
-								
 				socket.on('clientCallDecision', function(msg){
 					if($scope.currentRound){	
 						
@@ -312,7 +304,6 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 					}
 					
 				});
-										
 				
 				$scope.players.forEach(function (player, i) {
 					if(player.type == 'client'){
@@ -337,16 +328,13 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 						
 					}
 				});
+				
 				$scope.gameHasStarted = true;
 				$scope.cardsleft = $scope.deck.cards.length;
 				$scope.information = 'Press the button on your device to view your cards!';							
 				socket.emit('playerSetup', {room: $scope.roomCode.toLowerCase(), players: $scope.players});
 			}		
 		});
-		
-		//request game configuration
-		//setup countdown
-		//display information page
 		
 	});
 	
