@@ -1,4 +1,4 @@
-	<div class="page-header header-filter" data-parallax="active" style="background-image: url('assets/img/bg9.jpg');">
+	<div class="page-header header-filter" filter-color="red" data-parallax="active" style="background-image: url('assets/img/bg9.jpg');">
 		<div class="container">
     		<div class="row">
         		<div class="col-md-8 col-md-offset-2">
@@ -14,6 +14,7 @@
             <div class="about-description" style="padding-bottom:70px">
                 <div class="row">
     				<div class="col-md-8 col-md-offset-2">
+						<img src="/assets/img/pyramid.ninja.png" class="main-logo">
     					<h6>Basic Rules</h6>
 						<p>First, everyone gets to look at their cards for 10 seconds until they are covered again. You should remember <b>just the rank</b> (so suit is irrelevant) of your cards without revealing what you have to anyone else. The key is to memorise what you have, and in what order, because you won't be allowed to look at them again, unless you get called out on a bluff.</p>
 
@@ -38,19 +39,24 @@
 							</a>
 						</li>
 						<li>
-							<a sref="about">
+							<a ui-sref="about">
 								About
 							</a>
 						</li>
 						<li>
-							<a sref="help">
-								Help
+							<a ui-sref="join">
+								Join Game
 							</a>
-						</li>						
+						</li>
+						<li>
+							<a ui-sref="host">
+								Host Game
+							</a>
+						</li>												
 					</ul>
 	            </nav>
 	            <div class="copyright pull-right">
-	                &copy; 2020, made with <i class="fa fa-heart heart"></i> by <a href="https://www.rouic.com" target="_blank">Rouic</a>
+	                &copy; 2020, made with <i class="fa fa-heart heart text-danger"></i> by <a class="text-rose" href="https://www.rouic.com" target="_blank">Rouic</a>
 	            </div>
 	        </div>
 	    </footer>
