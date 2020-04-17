@@ -1,7 +1,9 @@
 Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$stateParams', 'title', '$interval', function($cookies, $state, $scope, $rootScope, $stateParams, title, $interval){
 	$rootScope.pageClass = 'signup-page';
 	$.material.init();
-
+	
+	$scope.soundEffect = new Audio();
+	
 	$scope.continueButton = false;
 	$scope.allowCalling = false;
 	$scope.selectedplayer = {
@@ -183,6 +185,12 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 					
 					$scope.currentDecision = $scope.myBullshitReponses[0];
 					
+					var randomBullshit = Math.floor(Math.random() * 7) + 1;
+
+					$scope.soundEffect.src = '/assets/sounds/bullshit/'+randomBullshit+'.mp3'
+
+					$scope.soundEffect.play();
+					
 					$scope.instruction = 'bullshit';
 					$scope.allowDecision = false;
 					$scope.allowCalling = false;
@@ -315,6 +323,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 	}
 	
 	$scope.showAllMyCards = function(){
+		$scope.soundEffect.play();
 		$scope.allowViewAll = false;
 		$scope.doingCardShow = true;
 		$scope.countdown = 10;
