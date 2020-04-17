@@ -275,6 +275,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 						});				
 						
 						$scope.cardSet.forEach(function (card, i) {
+							card.unmount();	
 							card.enableDragging();
 							card.disableFlipping();		
 							card.animateTo({
