@@ -23,7 +23,7 @@
             		<!--WAITING CARD END -->
             		
             		<!--GAME CARD START -->
-					<div ng-show="gameStarted" class="card card-signup" style="margin-bottom: 0px">
+					<div ng-show="gameStarted" class="card card-signup" id="maingamecontainer" style="margin-bottom: 0px">
 						<div class="room-code-holder">
 							<h2 class="title">{{roomCode}}</h2>
 						</div>
@@ -32,26 +32,23 @@
 						</div>							
 						<div ng-if="countdown > 0" class="room-countdown-holder">
 							<h2 class="title">{{countdown}}</h2>
-						</div>					
+						</div>			
+						<div class="players-container">
+			    			<div ng-repeat="x in players" ng-if="x.type != 'host'" class="in-progress-user">
+								<img ng-src="/avatar/{{x.name}}" alt="Connected User" class="img-rounded img-responsive img-raised in-progress-avatar">
+								<p style="display: inline-block">{{x.name}}</p>
+							</div>								
+						</div>		
                         <div class="row">
 		    				<div class="col-md-8 col-md-offset-2 text-center">
 								<h3 style="padding: 20px;" class="text-center card-title">{{information}}</h3>					    				
 		    				</div>      
                 		</div>
 						 <div class="row">
-							 <div class="col-md-8 col-md-offset-2 text-center" id="containerparent" style="min-height: 75vh;position: inherit;overflow: hidden;">
+							 <div on-size-changed="logResize" class="col-md-8 col-md-offset-2 text-center" id="containerparent" style="min-height: 75vh;position: inherit;overflow: hidden;">
 								 <div id="cardcontainer"></div>
 							 </div>
-						 </div>
-                        <div class="row">
-		    				<div class="col-md-8 col-md-offset-2 text-center">
-			    				<div ng-repeat="x in players" ng-if="x.type != 'host'" class="in-progress-user">
-			    					<img ng-src="/avatar/{{x.name}}" alt="Connected User" class="img-rounded img-responsive img-raised in-progress-avatar">
-			    					<div class="userState"></div>
-									<p style="display: inline-block">{{x.name}}</p>
-			    				</div>	    					    				
-		    				</div>                          					
-                		</div>                		
+						 </div>               		
             		</div>
             		<!--GAME CARD END -->            		
             		
@@ -61,16 +58,12 @@
 					</a>
 				</div>	
 		</div>
-
-		<footer class="footer">
+			</div>
+		</div>
+		<footer class="footer footer-bottom">
 	        <div class="container" style="height: 30px;">
 	            <nav class="pull-left">
 					<ul>
-						<li>
-							<a href="https://www.rouic.com">
-								Rouic Ltd
-							</a>
-						</li>
 						<li>
 							<a ui-sref="about">
 								About

@@ -439,6 +439,7 @@
 }
 .in-progress-user {
   display: inline;
+  padding: 5px;
   margin-right: 20px;
 }
 .in-progress-user > p {
@@ -478,4 +479,10 @@ margin-left: -27px
 }
 a:hover, a:focus {
   color: #e91e63;
+}
+.players-container {
+    display: grid;
+    position: absolute;
+    padding: 10px;
+    margin-top: 20px;
 }
