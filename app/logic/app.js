@@ -158,6 +158,8 @@ Pyramid.controller('join', ['$cookies', '$state', '$scope','$rootScope', '$state
 	
 	$scope.joinGame = function(){
 		if($scope.join.roomcode && $scope.join.name){
+            $rootScope.soundEffect = new Audio();
+            $rootScope.soundEffect.play();
 			socket.emit('joinRoom', {room: $scope.join.roomcode.toLowerCase(), name: $scope.join.name.toUpperCase(), init: true});
 			socket.on('joinRoomResponce', function(msg){
 				if(msg.validity == true){

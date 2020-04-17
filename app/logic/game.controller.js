@@ -2,7 +2,6 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 	$rootScope.pageClass = 'signup-page';
 	$.material.init();
 	
-	$scope.soundEffect = new Audio();
 	
 	$scope.continueButton = false;
 	$scope.allowCalling = false;
@@ -60,6 +59,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		socket.on('gameRoundUpdate', function(msg){
 			$scope.allowViewAll = false;
 			if(msg.round && msg.card){
+				$scope.soundsLock = null;
 				$scope.allowNewCard = false;
 				$scope.lockNewCall = false;
 				$scope.doneNewCard = false;
@@ -189,7 +189,10 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 
 					$scope.soundEffect.src = '/assets/sounds/bullshit/'+randomBullshit+'.mp3'
 
-					$scope.soundEffect.play();
+					if(!$scope.soundsLock){
+						$scope.soundEffect.play();
+						$scope.soundsLock = true;
+					}
 					
 					$scope.instruction = 'bullshit';
 					$scope.allowDecision = false;
@@ -323,7 +326,6 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 	}
 	
 	$scope.showAllMyCards = function(){
-		$scope.soundEffect.play();
 		$scope.allowViewAll = false;
 		$scope.doingCardShow = true;
 		$scope.countdown = 10;
