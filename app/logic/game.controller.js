@@ -183,7 +183,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 					
 					$scope.currentDecision = $scope.myBullshitReponses[0];
 					
-					$scope.instruction = 'Uh Oh! '+$scope.currentDecision.to_player+' has called BULLSHIT! Select the card with the same rank below - or drink double!';
+					$scope.instruction = 'bullshit';
 					$scope.allowDecision = false;
 					$scope.allowCalling = false;
 					$scope.bullshitReply = true;
@@ -194,10 +194,10 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 					$scope.currentDecision = $scope.myBeenCalls[0];
 					
 					if($scope.myBeenCalls.length > 1){
-						$scope.instruction = 'You have been called to drink by several other players! Let\'s start with '+$scope.currentDecision.from_player+'. Decide what to do by choosing a button below.';
+						$scope.instruction = 'several_drink';
 						$scope.allowDecision = true;
 					} else {
-						$scope.instruction = 'You have been called to drink by '+$scope.currentDecision.from_player+'! Decide what to do by choosing a button below.';
+						$scope.instruction = 'drink';
 						$scope.allowDecision = true;
 					}
 										
