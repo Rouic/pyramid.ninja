@@ -1,5 +1,20 @@
+  var firebaseConfig = {
+    apiKey: "AIzaSyDyk-FE8w0yd82WduMP6KVmvRPt0-4miS8",
+    authDomain: "pyramid-ninja.firebaseapp.com",
+    databaseURL: "https://pyramid-ninja.firebaseio.com",
+    projectId: "pyramid-ninja",
+    storageBucket: "pyramid-ninja.appspot.com",
+    messagingSenderId: "668178102663",
+    appId: "1:668178102663:web:bc247d167d2cab96adfb22",
+    measurementId: "G-VCPEBG1XK7"
+  };
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  firebase.analytics();
+var db = firebase.firestore();
+
+
 var Pyramid = angular.module('Pyramid', ['ui.router', 'ngCookies']);
-var socket = io();
 var currentGame = null;
 var canContinue = false;
 
@@ -11,10 +26,10 @@ Pyramid.run(['$window', '$rootScope', '$state', '$stateParams', function($window
     	$window.history.back();
 	};	
 	
-	socket.on('connect', function(){
-	    $rootScope.socketID = socket.io.engine.id;
-	});
-	
+	// socket.on('connect', function(){
+	//     $rootScope.socketID = socket.io.engine.id;
+	// });
+	// 
     $rootScope.$on('$stateChangeSuccess', function (event, current, previous) {       
         $rootScope.title = '| '+$state.current.title || 'Pyramid.Ninja';
     });			
@@ -135,7 +150,30 @@ Pyramid.config(function($stateProvider, $urlRouterProvider) {
   
 });
 
-Pyramid.controller('root', function($state, $scope, $rootScope, $stateParams){});
+Pyramid.controller('root', function($state, $scope, $rootScope, $stateParams){
+    firebase.auth().signInAnonymously().catch(function(error) {
+      // Handle Errors here.
+      var errorCode = error.code;
+      var errorMessage = error.message;
+      console.log(error);
+      // ...
+    });    
+    firebase.auth().onAuthStateChanged(function(user) {
+      if (user) {
+        // User is signed in.
+        var isAnonymous = user.isAnonymous;
+        
+        $rootScope.user_uid = user.uid;
+        console.log($rootScope.user_uid);
+        // ...
+      } else {
+        // User is signed out.
+        $rootScope.user_uid = null;
+        // ...
+      }
+      // ...
+    });    
+});
 
 Pyramid.controller('header', function($state, $scope, $rootScope, $stateParams){});
 
@@ -143,7 +181,7 @@ Pyramid.controller('start', function($state, $scope, $rootScope, $stateParams){
 	$rootScope.pageClass = 'signup-page';
 	$.material.init();
 	if(currentGame){
-		socket.emit('leave', {room: currentGame});
+		// socket.emit('leave', {room: currentGame});
 		currentGame = null;
 		canContinue = false;
 	}
@@ -160,19 +198,39 @@ Pyramid.controller('join', ['$cookies', '$state', '$scope','$rootScope', '$state
 		if($scope.join.roomcode && $scope.join.name){
             $rootScope.soundEffect = new Audio();
             $rootScope.soundEffect.play();
-			socket.emit('joinRoom', {room: $scope.join.roomcode.toLowerCase(), name: $scope.join.name.toUpperCase(), init: true});
-			socket.on('joinRoomResponce', function(msg){
-				if(msg.validity == true){
-					currentGame = $scope.join.roomcode;
-					$cookies.put('name', $scope.join.name.toUpperCase());
-					if(msg.num == 2) canContinue = true;
-					$state.go('game', {gameID: $scope.join.roomcode, showContinue: true});
-				} else {
-					$scope.joinError = msg.error;
-					console.log(msg.error);
-					$scope.$apply();
-				}
-			});	
+            
+            db.collection("games").doc($scope.join.roomcode.toUpperCase()).set({
+                [$rootScope.user_uid]: {
+                    admin: true,
+                    name: $scope.join.name.toUpperCase(),
+                    drinks: 0
+                }
+            }, {merge: true})
+            .then(function() {
+                console.log("Player data successfully written!");
+                currentGame = $scope.join.roomcode;
+                $cookies.put('name', $scope.join.name.toUpperCase());
+                $state.go('game', {gameID: $scope.join.roomcode, showContinue: true});
+            })
+            .catch(function(error) {
+                $scope.joinError = error;
+                console.error("Error writing game: ", error);
+		});                
+            
+            
+			// socket.emit('joinRoom', {room: $scope.join.roomcode.toLowerCase(), name: $scope.join.name.toUpperCase(), init: true});
+			// socket.on('joinRoomResponce', function(msg){
+			// 	if(msg.validity == true){
+			// 		currentGame = $scope.join.roomcode;
+			// 		$cookies.put('name', $scope.join.name.toUpperCase());
+			// 		if(msg.num == 2) canContinue = true;
+			// 		$state.go('game', {gameID: $scope.join.roomcode, showContinue: true});
+			// 	} else {
+			// 		$scope.joinError = msg.error;
+			// 		console.log(msg.error);
+			// 		$scope.$apply();
+			// 	}
+			// });	
 		} else {
 			$scope.joinError = 'Name or Code cannot be empty.'
 		}	

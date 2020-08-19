@@ -2,6 +2,8 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 	$rootScope.pageClass = 'signup-page';
 	$.material.init();
 	
+	$scope.$container = document.getElementById('clientcardcontainer');
+	$scope.$containerparent = document.getElementById('clientcontainerparent');		
 	
 	$scope.continueButton = false;
 	$scope.allowCalling = false;
@@ -29,21 +31,33 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		$scope.instruction = 'Waiting for deck!';
 		$scope.cardSet = [];
 		if($cookies.get('name')){
-			socket.emit('joinRoom', {room: $scope.roomCode.toLowerCase(), name: $cookies.get('name')});
-			socket.on('joinRoomResponce', function(msg){
-				if(msg.validity == true){
-					if(msg.num == 2) {
-						$scope.continueButton = true;
+			
+			console.log($scope.roomCode);
+			
+			db.collection("games").doc($scope.roomCode).onSnapshot(function(doc) {
+				
+				console.log("Data Change", doc.data());
+				
+				if(doc.data()){
+					if(doc.data()[$rootScope.user_uid]){
+						
+						console.log(doc.data()[$rootScope.user_uid]);
+						
+						const peopleArray = Object.keys(doc.data()).map(i => doc.data()[i]);
+						$scope.players = peopleArray.filter(function(el){
+							return el.name;
+						});
+						
+						if($scope.players.length == 1){
+							$scope.continueButton = true;
+						}
+						$rootScope.title = '| '+title+' Waiting...';
+						$scope.$apply();
+						
 					}
-					if(!$scope.cardSet || !($scope.cardSet.length > 0)) $scope.registerCheck();
-					$rootScope.title = '| '+title+' Waiting...';
-					$scope.$apply();
-				} else {
-					$scope.joinError = msg.error;
-					$rootScope.title = '| '+title+' Error...';
-					$state.go('join');
 				}
 			});
+
 		} else {
 			$state.go('join');
 		}					
@@ -86,8 +100,8 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		});
 		
 		socket.on('client_newcard_update', function(msg){
-			if(msg.client == $cookies.get('name') && msg.cardIndex !== undefined && msg.card){
-				var newClientDeck = Deck();
+			if(msg.client == $cookies.get('name') && msg.cardIndex !== undefined && msg.card && $scope.clientDeck){
+				$scope.clientDeck.unmount();
 				$scope.allowNewCard = false;
 				$scope.doneNewCard = true;
 				$scope.countdown = 5;
@@ -95,15 +109,15 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 				$scope.selectedCard = null;
 				$scope.cardSet[msg.cardIndex].unmount();
 							
-				$scope.cardSet[msg.cardIndex] = newClientDeck.cards.filter(function(obj){
+				$scope.cardSet[msg.cardIndex] = $scope.clientDeck.cards.filter(function(obj){
 					return obj.i == msg.card[0].i;
 				})[0];				
 							
 				$scope.cardSet[msg.cardIndex].enableDragging();
 				$scope.cardSet[msg.cardIndex].disableFlipping();		
 				$scope.cardSet[msg.cardIndex].animateTo({
-					delay: 1000 + msg.cardIndex * 2, // wait 1 second + i * 2 ms
-					duration: 500,
+					delay: 0, // wait 1 second + i * 2 ms
+					duration: 0,
 					ease: 'quartOut',
 					x: $scope.myCardsCoords(msg.cardIndex).x,
 					y: $scope.myCardsCoords(msg.cardIndex).y
@@ -114,7 +128,6 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 				$scope.$apply();	
 				
 				$scope.cardSet.forEach(function (card, i) {
-					card.unmount();	
 					card.enableDragging();
 					card.disableFlipping();		
 					if(i == msg.cardIndex){
@@ -235,14 +248,12 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		});		
 		
 		$scope.decision = function(move){
-			socket.emit('callDecision', {decision: move, currentMove: $scope.currentDecision});
+			// socket.emit('callDecision', {decision: move, currentMove: $scope.currentDecision});
 		};
 		
 		socket.on('playerSetupData', function(msg){
 					
-			var clientDeck = Deck();
-			$scope.$container = document.getElementById('clientcardcontainer');
-			$scope.$containerparent = document.getElementById('clientcontainerparent');							
+								
 			$scope.instruction = 'Waiting for your cards...';		
 					
 			if(msg.data && $cookies.get('name')){
@@ -256,6 +267,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 				});
 												
 				if($scope.mydata[0] && $scope.mydata[0].cards) {
+					$scope.clientDeck = Deck();
 					if($scope.cardSet.length == 0){
 						$scope.gameStarted = true; 
 						
@@ -270,7 +282,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 							}
 						});
 						
-						$scope.cardSet = clientDeck.cards.filter(function(obj){
+						$scope.cardSet = $scope.clientDeck.cards.filter(function(obj){
 							return ($scope.mydata[0].cards.includes(obj.i));
 						});				
 						
@@ -290,11 +302,11 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 						$scope.$apply();	
 																		
 						$('.playingcard').each(function(x) {
-							var xIndex = x;
-							$($('.playingcard')[xIndex]).unbind("click touchstart");
-						    $($('.playingcard')[xIndex]).bind("click touchstart", function(){
+							var yIndex = x;
+							$($('.playingcard')[yIndex]).unbind("click touchstart");
+						    $($('.playingcard')[yIndex]).bind("click touchstart", function(){
 								if($scope.bullshitReply == true){
-									$scope.selectedCard = xIndex;
+									$scope.selectedCard = yIndex;
 									socket.emit('bullshitDecision', {card: $scope.cardSet[$scope.selectedCard], currentMove: $scope.currentDecision});
 									$scope.cardSet[$scope.selectedCard].setSide('front');
 									$scope.needsNewCard = true;
@@ -339,7 +351,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 	$scope.getNewCard = function(){
 		if($scope.selectedCard !== undefined || $scope.selectedCard !== null){
 			$scope.needsNewCard = false;
-			socket.emit('getNewCard', {cardNumber: $scope.selectedCard});
+			//socket.emit('getNewCard', {cardNumber: $scope.selectedCard});
 		} else {
 			$scope.instruction = 'Hmm, no selected card!';
 		}
@@ -353,23 +365,33 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 			$scope.cardSet.forEach(function (card, i) {
 				card.setSide('back');
 			});	
-			socket.emit('seenCards');
+			//socket.emit('seenCards');
 		}
 	});
 	
-	socket.on('hostLeft', function(){
-		$state.go('join');
-	});
+	// socket.on('hostLeft', function(){
+	// 	$state.go('join');
+	// });
 	
 	$scope.startGame = function(){
-		socket.emit('startGame');				
+		db.collection("games").doc($scope.roomCode).set({
+			'__pyramid.meta': {
+				started: true
+			}
+		}, {merge: true})
+		.then(function() {
+				
+		})
+		.catch(function(error) {
+			console.error("Error writing game data: ", error);
+		});			
 	};
-	
-	socket.on('gameStarted', function(msg){
-		$scope.gameStarted = true;
-		$rootScope.title = '| '+title;
-		$scope.$apply();
-	});	
+	// 
+	// socket.on('gameStarted', function(msg){
+	// 	$scope.gameStarted = true;
+	// 	$rootScope.title = '| '+title;
+	// 	$scope.$apply();
+	// });	
 	
 	
 }]);
