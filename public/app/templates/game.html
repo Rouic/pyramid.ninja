@@ -101,21 +101,21 @@
       <div class="modal-body">
        	<p>Select a different player below to call a drink to. They can either believe you or call your bluff!</p>
 				
-				<h6 ng-if="otherPlayersCopy.length < 2">Oh no! No other players to send drinks to! :(</h6>
-				<div class="radio" ng-repeat="x in otherPlayersCopy" ng-if="x.type != 'host'" style="margin-top:15px">
-					<label ng-click="selectedplayer.name = x.name">
-						<input class="selectplayerradio" type="radio" name="playerRadios" value="{{x.name}}">
-						<img ng-src="/avatar/{{x.name}}" alt="Connected User" class="img-rounded img-responsive img-raised in-progress-avatar">
+				<h6 ng-if="otherPlayersCopy.length < 1">Oh no! No other players to send drinks to! :(</h6>
+				<div class="radio" ng-repeat="x in otherPlayersCopy" style="margin-top:15px">
+					<label ng-click="selectP(x)">
+						<input class="selectplayerradio" type="radio" name="playerRadios" value="{{x.uid}}">
+						<img ng-src="https://api.adorable.io/avatars/70/{{x.name}}.png" alt="Connected User" class="img-rounded img-responsive img-raised in-progress-avatar">
 						{{x.name}}
 					</label>
 				</div>
 				
 				
-				<p ng-if="selectedplayer.name" style="margin-top:20px">About to send a drink to: {{selectedplayer.name}}</p>
+				<p ng-if="selectedplayer" style="margin-top:20px">About to send a drink to: {{selectedplayer.name}}</p>
 				
       </div>
       <div class="modal-footer">
-        <button type="button" ng-click="confirmCall()" ng-disabled="!selectedplayer.name" class="btn btn-rose">Confirm</button>
+        <button type="button" ng-click="confirmCall()" ng-disabled="!selectedplayer" class="btn btn-rose">Confirm</button>
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
       </div>
     </div>
