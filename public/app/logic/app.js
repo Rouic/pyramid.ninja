@@ -146,7 +146,8 @@ Pyramid.controller('root', function($state, $scope, $rootScope, $stateParams){
       } else {
         $rootScope.user_uid = null;
       }
-    });    
+    });  
+    $rootScope.soundEffect = new Audio();      
 });
 
 Pyramid.controller('header', function($state, $scope, $rootScope, $stateParams){});
@@ -170,8 +171,6 @@ Pyramid.controller('join', ['$cookies', '$state', '$scope','$rootScope', '$state
 	
 	$scope.joinGame = function(){
 		if($scope.join.roomcode && $scope.join.name){
-            $rootScope.soundEffect = new Audio();
-            $rootScope.soundEffect.play();
             
             db.collection("games").doc($scope.join.roomcode.toUpperCase()).set({
                 [$rootScope.user_uid]: {
@@ -185,6 +184,7 @@ Pyramid.controller('join', ['$cookies', '$state', '$scope','$rootScope', '$state
                 console.log("Player data successfully written!");
                 currentGame = $scope.join.roomcode;
                 $cookies.put('name', $scope.join.name.toUpperCase());
+                $rootScope.soundEffect.play();
                 $state.go('game', {gameID: $scope.join.roomcode, showContinue: true});
             })
             .catch(function(error) {

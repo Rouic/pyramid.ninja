@@ -6,6 +6,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 	$scope.$containerparent = document.getElementById('clientcontainerparent');		
 	
 	$scope.clientDeck = Deck();
+	$scope.temp_deck = Deck();
 	
 	$scope.initalLoad = true;
 	$scope.continueButton = false;
@@ -67,9 +68,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 							
 						}						
 						
-						
-						console.log(doc.data()[$rootScope.user_uid]);
-						
+												
 						const peopleArray = Object.keys(doc.data()).map(i => doc.data()[i]);
 						$scope.players = peopleArray.filter(function(el){
 							return el.name;
@@ -107,15 +106,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 								
 							} else {
 								$scope.myCards = doc.data()[$rootScope.user_uid].cards;
-								if(doc.data()[$rootScope.user_uid].cards.length < 4){
-									
-									var needed_cards = 4 - doc.data()[$rootScope.user_uid].cards.length;
-									
-									for(var i=0; i < needed_cards; i++){
-										console.log('Get card');
-									}									
-									
-								} else {
+								
 									$scope.gameStarted = true;
 									doc.data()[$rootScope.user_uid].cards.forEach(function (card, i) {
 										if(card.seen == false) {
@@ -158,22 +149,6 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 									$scope.initalLoad = false;
 									$scope.$apply();	
 									
-									$('.playingcard').each(function(x) {
-										var yIndex = x;
-										$($('.playingcard')[yIndex]).unbind("click touchstart");
-										$($('.playingcard')[yIndex]).bind("click touchstart", function(){
-											if($scope.bullshitReply == true){
-												$scope.selectedCard = yIndex;
-												//socket.emit('bullshitDecision', {card: $scope.cardSet[$scope.selectedCard], currentMove: $scope.currentDecision});
-												$scope.cardSet[$scope.selectedCard].setSide('front');
-												$scope.needsNewCard = true;
-												$scope.$apply();
-											}
-											
-										});							
-										
-									});	
-									
 									const peopleArray = Object.keys(doc.data()).map(i => doc.data()[i]);
 									$scope.players = peopleArray.filter(function(el){
 										return el.name;
@@ -183,10 +158,15 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 										return obj.name != $cookies.get('name');
 									});
 									$scope.otherPlayersCopy = $scope.otherPlayers;
-									console.log($scope.otherPlayersCopy);
 									$scope.mydata = $scope.players.filter(function(obj){
 										return obj.name == $cookies.get('name');
-									});																		
+									});
+									
+									$('.playingcard').each(function(x) {
+										$($('.playingcard')[x]).off();
+									});								
+									
+									
 									
 									if(doc.data()['__pyramid.currentRound']){
 										$scope.soundsLock = null;
@@ -197,21 +177,151 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 										$scope.allowCalling = true;
 										$scope.currentRound = doc.data()['__pyramid.currentRound'].round_number;
 										$scope.roundTransactions = doc.data()['__pyramid.rounds'][$scope.currentRound].round_transactions;
-																				
+										
 										$scope.instruction = 'Round '+doc.data()['__pyramid.currentRound'].round_number+'! To call someone to drink on this card click the button below!';
+									}									
+									
+									if(doc.data()['__pyramid.currentRound'] && doc.data()['__pyramid.currentRound'].round_number && doc.data()['__pyramid.rounds'] && doc.data()['__pyramid.rounds'][doc.data()['__pyramid.currentRound'].round_number] && doc.data()['__pyramid.rounds'][doc.data()['__pyramid.currentRound'].round_number].round_transactions && doc.data()['__pyramid.rounds'][doc.data()['__pyramid.currentRound'].round_number].round_transactions.length > 0){
+										console.log("New transaction data!");		
+										
+										$scope.decision = function(move){
+											var temp_rounds = angular.copy(doc.data()['__pyramid.rounds']);
+											temp_rounds[doc.data()['__pyramid.currentRound'].round_number].round_transactions[$scope.transactionIteration].status = (move == 1) ? 'accepted' : 'bullshit';
+											
+											db.collection("games").doc($scope.roomCode).set({
+												'__pyramid.rounds': temp_rounds
+											}, {merge: true})
+											.then(function() {
+												console.log("Round data updated!");
+											})
+											.catch(function(error) {
+												console.error("Error writing game data: ", error);
+											});												
+										};											
+											
+											
+										if ((doc.data()['__pyramid.rounds'][doc.data()['__pyramid.currentRound'].round_number].round_transactions).filter(e => e.t_from === $rootScope.user_uid).length > 0) {
+											$scope.instruction = 'Round '+doc.data()['__pyramid.currentRound'].round_number+'! You have sent drinks already - please wait for round to finish...';
+											
+											$scope.allowCalling = false;
+											$scope.allowDecision = false;
+										}
+										
+										if(doc.data()[$rootScope.user_uid].cards.length < 4){
+											
+											var needed_cards = 4 - doc.data()[$rootScope.user_uid].cards.length;
+											
+											for(var i=0; i < needed_cards; i++){
+												console.log('Get card');
+												$scope.allowDecision = false;
+												$scope.allowCalling = false;
+												$scope.allowNewCard = true;
+												$scope.instruction = 'Round '+doc.data()['__pyramid.currentRound'].round_number+'. Looks like you need more cards! Click the button below to get a new one, or wait until the end of the round.';	
+												
+											}									
+											
+										}																					
+										
+										var callsOnUs = 0;
+										(doc.data()['__pyramid.rounds'][doc.data()['__pyramid.currentRound'].round_number].round_transactions).forEach(function(transaction, i) {
+											$scope.transactionIteration = i;
+											$scope.currentDecision = {
+												from_player: doc.data()[transaction.t_from].name,
+												to_player: doc.data()[transaction.t_to].name
+											};
+											
+											if(transaction.t_to == $rootScope.user_uid && transaction.status == 'waiting'){
+												//someone sent us a transaction! Need to block all options until we reply.
+												callsOnUs++;
+												if(callsOnUs > 1){
+													$scope.instruction = 'several_drink';
+													$scope.allowDecision = true;
+													$scope.allowCalling = false;
+												} else {
+													$scope.instruction = 'drink';
+													$scope.allowDecision = true;
+													$scope.allowCalling = false;
+												}												
+												
+											}
+											if(transaction.t_from == $rootScope.user_uid && transaction.status == 'bullshit'){
+												var randomBullshit = Math.floor(Math.random() * 7) + 1;
+												
+												$rootScope.soundEffect.src = '/assets/sounds/bullshit/'+randomBullshit+'.mp3'
+												
+												if(!$scope.soundsLock){
+													$rootScope.soundEffect.play();
+													$scope.soundsLock = true;
+												}
+												
+												$scope.instruction = 'bullshit';
+												$scope.allowDecision = false;
+												$scope.allowCalling = false;
+												$scope.bullshitReply = true;
+												
+												$('.playingcard').each(function(x) {
+													var xIndex = x;
+													$($('.playingcard')[xIndex]).off();
+													$($('.playingcard')[xIndex]).bind("click touchstart", function(){
+														if($scope.bullshitReply == true){
+															$scope.selectedCard = xIndex;
+															
+															//work out if card has same value as one in play, adjust 
+															//bullshit_correct bullshit_wrong
+															
+															var currentCardRank = $scope.temp_deck.cards.filter(obj => {
+  														  		return obj.i === doc.data()['__pyramid.currentRound'].round_card
+															});
+															
+															var updated_rounds = angular.copy(doc.data()['__pyramid.rounds']);
+															updated_rounds[doc.data()['__pyramid.currentRound'].round_number].round_transactions[$scope.transactionIteration].status = ($scope.clientDeck.cards[$scope.selectedCard].rank == currentCardRank.rank) ? 'bullshit_correct' : 'bullshit_wrong';
+																
+																var updatedCardSet = [];
+																$scope.clientDeck.cards.forEach(function (card, i) {
+																	if(card.i != $scope.clientDeck.cards[$scope.selectedCard].i){
+																		updatedCardSet.push({i: card.i, seen: true});
+																	}
+																
+																});									
+																
+																console.log(updatedCardSet, updated_rounds);
+																
+																db.collection("games").doc($scope.roomCode).set({
+																	[$rootScope.user_uid]: {
+																		cards: updatedCardSet
+																	},
+																	'__pyramid.rounds': updated_rounds
+																}, {merge: true})
+																.then(function() {
+																	console.log("Round data updated!");
+																})
+																.catch(function(error) {
+																	console.error("Error writing game data: ", error);
+																});														
+															
+
+															$scope.clientDeck.cards[$scope.selectedCard].setSide('front');
+															$scope.needsNewCard = true;
+															$scope.$apply();
+														}
+														
+													});							
+													
+												});												
+												
+												
+												
+											}
+		
+										});
+										
+										
+										
 									}
-									
-									
-									
-									
-									
-									
 																								
-								}
 
 								
 							}
-
 							
 						} else {
 							if($scope.players.length == 1){
@@ -230,197 +340,13 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		} else {
 			$state.go('join');
 		}					
-	}
+	};
+	
 	
 	$interval(function(){
 		if($scope.countdown > 0) $scope.countdown--;
 	}, 1000);	
 	
-	
-	$scope.registerCheck = function(){
-		
-		socket.on('gameRoundUpdate', function(msg){
-			$scope.allowViewAll = false;
-			if(msg.round && msg.card){
-				$scope.soundsLock = null;
-				$scope.allowNewCard = false;
-				$scope.lockNewCall = false;
-				$scope.doneNewCard = false;
-				$scope.allowDecision = false;
-				$scope.allowCalling = true;
-				$scope.currentRound = msg.round;
-				
-				$scope.instruction = 'Round '+msg.round+'! To call someone to drink on this card click the button below!';
-				
-			} else {
-				$scope.allowCalling = false;
-				if(($scope.selectedCard !== undefined || $scope.selectedCard !== null) && $scope.doneNewCard == false && $scope.needsNewCard == true){
-					socket.emit('getNewCard', {cardNumber: $scope.selectedCard});					
-					$scope.instruction = 'Getting new card...';
-					$scope.allowNewCard = true;
-				} else {
-					$scope.allowNewCard = false;
-					$scope.instruction = 'Waiting for host to continue...';
-				}				
-				
-			}
-			
-			$scope.$apply();
-		});
-		
-		socket.on('client_newcard_update', function(msg){
-			if(msg.client == $cookies.get('name') && msg.cardIndex !== undefined && msg.card && $scope.clientDeck){
-				$scope.clientDeck.unmount();
-				$scope.allowNewCard = false;
-				$scope.doneNewCard = true;
-				$scope.countdown = 5;
-				$scope.instruction = 'You have 5 seconds to look at your new card!';
-				$scope.selectedCard = null;
-				$scope.cardSet[msg.cardIndex].unmount();
-							
-				$scope.cardSet[msg.cardIndex] = $scope.clientDeck.cards.filter(function(obj){
-					return obj.i == msg.card[0].i;
-				})[0];				
-							
-				$scope.cardSet[msg.cardIndex].enableDragging();
-				$scope.cardSet[msg.cardIndex].disableFlipping();		
-				$scope.cardSet[msg.cardIndex].animateTo({
-					delay: 0, // wait 1 second + i * 2 ms
-					duration: 0,
-					ease: 'quartOut',
-					x: $scope.myCardsCoords(msg.cardIndex).x,
-					y: $scope.myCardsCoords(msg.cardIndex).y
-				});	
-				$scope.cardSet[msg.cardIndex].mount($scope.$container);	
-				$scope.cardSet[msg.cardIndex].setSide('front');
-					
-				$scope.$apply();	
-				
-				$scope.cardSet.forEach(function (card, i) {
-					card.enableDragging();
-					card.disableFlipping();		
-					if(i == msg.cardIndex){
-						card.animateTo({
-							delay: 0,
-							duration: 500,
-							ease: 'quartOut',
-							x: $scope.myCardsCoords(i).x,
-							y: $scope.myCardsCoords(i).y
-						});							
-					}
-					card.mount($scope.$container);			
-				});	
-				$scope.$apply();
-																
-				$('.playingcard').each(function(x) {
-					var xIndex = x;
-					$($('.playingcard')[xIndex]).unbind("click touchstart");
-					$($('.playingcard')[xIndex]).bind("click touchstart", function(){
-						if($scope.bullshitReply == true){
-							$scope.selectedCard = xIndex;
-							socket.emit('bullshitDecision', {card: $scope.cardSet[$scope.selectedCard], currentMove: $scope.currentDecision});
-							$scope.cardSet[$scope.selectedCard].setSide('front');
-							$scope.needsNewCard = true;
-							$scope.$apply();
-						}
-						
-					});							
-				
-				});					
-						
-	
-			}
-		});
-		
-		socket.on('client_transaction_update', function(msg){
-						
-			if($scope.currentRound && msg.transactions && msg.transactions.length > 0){
-				
-				$scope.beenCalledCount = 0;
-				$scope.bullShitCount = 0;
-				$scope.bullshitOutcomesCount = 0;
-				$scope.myBeenCalls = [];
-				$scope.myBullshitReponses = [];
-				$scope.bullshitOutcomes = [];
-				$scope.bullshitReply = false;
-				
-				msg.transactions.forEach(function (transaction, i) {
-					if((transaction.to_player == $cookies.get('name')) && (transaction.result == null)){
-						$scope.myBeenCalls.push(transaction);
-						$scope.beenCalledCount++;
-					}
-					if((transaction.from_player == $cookies.get('name')) && (transaction.result == 'bullshit')){
-						
-						$scope.myBullshitReponses.push(transaction);
-						$scope.bullShitCount++;						
-						
-					}	
-					if((transaction.from_player == $cookies.get('name')) && (transaction.result == 'bullshit_wrong' || transaction.result == 'bullshit_correct')){
-						
-						$scope.bullshitOutcomes.push(transaction);
-						$scope.bullshitOutcomesCount++;						
-						
-					}											
-				});
-								
-				if($scope.bullShitCount != 0){
-					
-					$scope.currentDecision = $scope.myBullshitReponses[0];
-					
-					var randomBullshit = Math.floor(Math.random() * 7) + 1;
-
-					$scope.soundEffect.src = '/assets/sounds/bullshit/'+randomBullshit+'.mp3'
-
-					if(!$scope.soundsLock){
-						$scope.soundEffect.play();
-						$scope.soundsLock = true;
-					}
-					
-					$scope.instruction = 'bullshit';
-					$scope.allowDecision = false;
-					$scope.allowCalling = false;
-					$scope.bullshitReply = true;
-					
-				} else if($scope.beenCalledCount != 0){
-										
-					$scope.allowCalling = false;
-					$scope.currentDecision = $scope.myBeenCalls[0];
-					
-					if($scope.myBeenCalls.length > 1){
-						$scope.instruction = 'several_drink';
-						$scope.allowDecision = true;
-					} else {
-						$scope.instruction = 'drink';
-						$scope.allowDecision = true;
-					}
-										
-				} else {
-					$scope.allowDecision = false;
-					if($scope.lockNewCall == true){
-						$scope.allowCalling = false;
-						if($scope.bullshitOutcomesCount > 0 && $scope.doneNewCard == false){
-							$scope.allowNewCard = true;
-							$scope.instruction = 'Round '+$scope.currentRound+'. Click the button below to get a new card, or wait till the end of the round.';		
-						} else {
-							$scope.instruction = 'Waiting for host to continue...';		
-						}
-											
-					} else {
-						$scope.allowCalling = true;
-						$scope.instruction = 'Round '+$scope.currentRound+'! To call someone to drink on this card click the button below!';							
-					}
-				
-				}				
-				$scope.$apply();	
-			}
-			
-		});		
-		
-		$scope.decision = function(move){
-			// socket.emit('callDecision', {decision: move, currentMove: $scope.currentDecision});
-		};
-			
-	};
 	
 	$scope.selectP = function(player){
 		$scope.selectedplayer = player;
@@ -451,13 +377,14 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		}, {merge: true})
 		.then(function() {
 			console.log("Submitting transactions");
+			$scope.allowCalling = false;
 		})
 		.catch(function(error) {
 			console.error("Error writing game data: ", error);
 		});			
 		
 		$('#callModel').modal('hide');
-	}
+	};
 	
 	$scope.showAllMyCards = function(){
 		$scope.allowViewAll = false;
@@ -470,12 +397,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 	};
 	
 	$scope.getNewCard = function(){
-		if($scope.selectedCard !== undefined || $scope.selectedCard !== null){
-			$scope.needsNewCard = false;
-			//socket.emit('getNewCard', {cardNumber: $scope.selectedCard});
-		} else {
-			$scope.instruction = 'Hmm, no selected card!';
-		}
+		
 	};
 	
 	$scope.$watch('countdown', function() {

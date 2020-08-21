@@ -66,6 +66,7 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 		$scope.pyramidCards = $scope.deck.cards.splice(0, 15);
 		$scope.deckArray = [];
 		$scope.cardsArray = [];
+		$scope.drink_log = [];
 		
 		$scope.deck.cards.forEach(function (card, i) {
 			$scope.deckArray.push(card.i);
@@ -118,11 +119,6 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 		});
 		
 		
-		//get pyramid, convert to deck
-		
-		
-		
-		
 		if(doc.data()['__pyramid.meta'].started == true){
 
 				if($scope.gameStarted != true){
@@ -164,6 +160,36 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 						$scope.gameStarted = true;
 						console.log("Game update!");						 
 						
+						$scope.round_transactions = [];
+						if($scope.round_number && doc.data()['__pyramid.rounds'] && doc.data()['__pyramid.rounds'][$scope.round_number] && doc.data()['__pyramid.rounds'][$scope.round_number].round_transactions){
+							console.log("New transaction data!");			
+														
+							(doc.data()['__pyramid.rounds'][$scope.round_number].round_transactions).forEach(function(transaction, i) {
+																								
+								if(transaction.status == 'waiting'){
+									var trans_status = null;
+								} else if(transaction.status == 'bullshit'){
+									var trans_status = 'bullshit';
+								} else if(transaction.status == 'bullshit_wrong'){
+									var trans_status = 'bullshit_wrong';
+								} else if(transaction.status == 'bullshit_correct'){
+									var trans_status = 'bullshit_correct';
+								} else if(transaction.status == 'accepted'){
+									var trans_status = 'accepted';
+								}	else {
+									var trans_status = null;
+								}
+								
+								$scope.round_transactions.push({
+									from_player: doc.data()[transaction.t_from].name,
+									to_player: doc.data()[transaction.t_to].name,
+									result: trans_status
+								});
+								//$scope.drink_log.push();			
+								
+							});
+							
+						}							
 												
 						//if there is a transaction log for the current round, convert round log to structures drinks_log and updates_log;
 						
@@ -176,13 +202,7 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 									 $scope.round_number++;
 									 $scope.information = '';
 									 $scope.round_row = $scope.pyramidRow(x);
-									 $scope.round_transactions = [];
 									 $scope.drink_log = [];
-									 
-									 if(doc.data()['__pyramid.rounds'][$scope.round_number] && doc.data()['__pyramid.rounds'][$scope.round_number].round_transactions){
-										 console.log("TRANSACTION DATA:");
-										 console.log(doc.data()['__pyramid.rounds'][$scope.round_number].round_transactions);
-									 }
 									 
 									 $scope.pyramidDeck.cards[x].setSide('front');
 									 
@@ -218,6 +238,7 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 											}, {merge: true})
 											.then(function() {
 												console.log("Card successfully updated!");	
+																																			
 											})
 											.catch(function(error) {
 												console.error("Error writing card: ", error);
@@ -227,6 +248,7 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 												num: $scope.round_number,
 												card: $scope.showCards[0]
 											};
+																				
 											 
 											$scope.showCards[0].disableDragging();
 											$scope.showCards[0].disableFlipping();		
@@ -242,7 +264,6 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 									'__pyramid.currentRound': firebase.firestore.FieldValue.delete()
 								}, {merge: true});
 							
-								 $scope.round_transactions = [];
 								 $scope.information = 'Select another card from the pyramid to continue...';
 								 $scope.currentRound = null;
 								 $scope.showCards[0].unmount($scope.$modalcontainer);
@@ -313,7 +334,17 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 	// });
 	
 	$scope.startGame = function(){
-		socket.emit('startGame');
+		db.collection("games").doc($scope.roomCode).set({
+			'__pyramid.meta': {
+				started: true
+			}
+		}, {merge: true})
+		.then(function() {
+			
+		})
+		.catch(function(error) {
+			console.error("Error writing game data: ", error);
+		});		
 	};
 	
 	$scope.countdown = 0;
