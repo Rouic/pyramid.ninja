@@ -11,7 +11,7 @@
                         <div class="row">
 		    				<div class="col-md-8 col-md-offset-2 text-center">
 			    				<div class="game-player" ng-repeat="x in players" ng-if="x.type != 'host'">
-			    					<img ng-src="https://api.adorable.io/avatars/70/{{x.name}}.png" alt="Connected User" class="img-rounded img-responsive img-raised" style="max-width: 100px">
+			    					<img ng-src="https://us-central1-pyramid-ninja.cloudfunctions.net/avatars/70/{{x.name}}.png" alt="Connected User" class="img-rounded img-responsive img-raised" style="max-width: 100px">
 									<p>{{x.name}}</p>
 			    				</div>	    					    				
 		    				</div>  
@@ -35,7 +35,7 @@
 						</div>			
 						<div class="players-container">
 			    			<div ng-repeat="x in players" ng-if="x.type != 'host'" class="in-progress-user">
-								<img ng-src="https://api.adorable.io/avatars/70/{{x.name}}.png" alt="Connected User" class="img-rounded img-responsive img-raised in-progress-avatar">
+								<img ng-src="https://us-central1-pyramid-ninja.cloudfunctions.net/avatars/70/{{x.name}}.png" alt="Connected User" class="img-rounded img-responsive img-raised in-progress-avatar">
 								<p style="display: inline-block">{{x.name}}</p>
 							</div>								
 						</div>		
