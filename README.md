@@ -14,12 +14,15 @@ A digital version of the popular drinking game "pyramid". Live version can be fo
 * Node > 8
 
 ## Install Instructions
-* Clone the repo into a lovely folder of your choosing
-* Run `bower install` from the public folder to install bower components
-* Run `npm install` from the functions folder to install bower components
+* First you need an active Firebase project and account to deploy to - a free one will work fine. It's also recommended to have a local Firebase environment setup for testing.
+* Clone the repo into a lovely folder of your choosing.
+* Run `bower install` from the public folder to install public bower components.
+* Run `npm install` from the functions folder to install node modules for Firebase functions.
 * Run `firebase serve` to start the local server, default port is 5000.
 * Navigate to http://localhost:5000 in your favourite modern browser to see pretty things.
 
+
+
 If you can't tell, this thing is a bit beta, so feel free to submit issues and other fun stuff!
 
-Powered By Rouic!
+Powered By Rouic! www.rouic.com

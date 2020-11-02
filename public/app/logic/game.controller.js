@@ -30,43 +30,43 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		value = value+1;
 		  switch(value) {
 			case 1: case 14: case 27: case 40:
-			  card = "An Ace";
+			  card = "an Ace";
 			  break;
 			case 2: case 15: case 28: case 41:
-			  card = "A Two";
+			  card = "a Two";
 			  break;
 			case 3: case 16: case 29: case 42:
-			  card = "A Three";
+			  card = "a Three";
 			  break;
 			case 4: case 17: case 30: case 43:
-			  card = "A Four";
+			  card = "a Four";
 			  break;
 			case 5: case 18: case 31: case 44:
-			  card = "A Five";
+			  card = "a Five";
 			  break;
 			case 6: case 19: case 32: case 45:
-			  card = "A Six";
+			  card = "a Six";
 			  break;
 			case 7: case 20: case 33: case 46:
-			  card = "A Seven";
+			  card = "a Seven";
 			  break;
 			case 8: case 21: case 34: case 47:
-			  card = "An Eight";
+			  card = "an Eight";
 			  break;
 			case 9: case 22: case 35: case 48:
-			  card = "A Nine";
+			  card = "a Nine";
 			  break;
 			case 10: case 23: case 36: case 49:
-			  card = "A Ten";
+			  card = "a Ten";
 			  break;
 			case 11: case 24: case 37: case 50:
-			  card = "A Jack";
+			  card = "a Jack";
 			  break;
 			case 12: case 25: case 38: case 51:
-			  card = "A Queen";
+			  card = "a Queen";
 			  break;
 			case 13: case 26: case 39: case 52:
-			  card = "A King";
+			  card = "a King";
 			  break;
 			default:
 			  card = null;
@@ -97,6 +97,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 						}
 						
 						$scope.currentRound = null;
+						$scope.allowDecision = false;
 						
 						if(doc.data()[$rootScope.user_uid].initial_deal == false || !doc.data()[$rootScope.user_uid].cards){
 							
@@ -243,7 +244,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 									$('.playingcard').each(function(x) {
 										$($('.playingcard')[x]).off();
 									});								
-																		
+									
 									if(doc.data()['__pyramid.currentRound']){
 										$scope.roundsStarted = true;
 										$scope.soundsLock = null;
@@ -341,14 +342,17 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 										
 										var callsOnUs = 0;
 										(doc.data()['__pyramid.rounds'][doc.data()['__pyramid.currentRound'].round_number].round_transactions).forEach(function(transaction, i) {
-											$scope.transactionIteration = i;
-											$scope.currentDecision = {
-												from_player: doc.data()[transaction.t_from].name,
-												to_player: doc.data()[transaction.t_to].name
-											};
 											
+																						
 											if(transaction.t_to == $rootScope.user_uid && transaction.status == 'waiting'){
 												//someone sent us a transaction! Need to block all options until we reply.
+												
+												$scope.transactionIteration = i;
+												$scope.currentDecision = {
+													from_player: doc.data()[transaction.t_from].name,
+													to_player: doc.data()[transaction.t_to].name
+												};	
+												
 												callsOnUs++;
 												if(callsOnUs > 1){
 													$scope.instruction = 'several_drink';
@@ -362,6 +366,13 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 												
 											}
 											if(transaction.t_from == $rootScope.user_uid && transaction.status == 'bullshit'){
+												
+												$scope.transactionIteration = i;
+												$scope.currentDecision = {
+													from_player: doc.data()[transaction.t_from].name,
+													to_player: doc.data()[transaction.t_to].name
+												};	
+												
 												var randomBullshit = Math.floor(Math.random() * 7) + 1;
 												
 												$rootScope.soundEffect.src = '/assets/sounds/bullshit/'+randomBullshit+'.mp3'
@@ -431,9 +442,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 														
 													});							
 													
-												});												
-												
-												
+												});																								
 												
 											}
 		
@@ -442,7 +451,15 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 										
 										
 									}
-																								
+									if(doc.data()['__pyramid.summary']){
+										$scope.information = 'The game is over! Check your cards below!';
+										console.log(doc.data()['__pyramid.summary'][$rootScope.user_uid]); 
+										$('.playingcard').off();
+										$scope.clientDeck.cards.forEach(function (card, i) {
+											card.setSide('front');
+										});
+										console.log("Game already ended!");
+									}
 
 								
 							}
@@ -512,6 +529,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 	
 	$scope.showAllMyCards = function(){
 		$scope.allowViewAll = false;
+		$scope.allowNewCard = false;
 		$scope.doingCardShow = true;
 		$scope.countdown = 10;
 		$scope.instruction = 'Remember your cards now! You will NOT be able to view them again!';
@@ -523,7 +541,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 	$scope.revealNewCard = function(){
 		$scope.doingCardShow = true;
 		$scope.allowNewCard = false;
-		$scope.countdown = 10;
+		$scope.countdown = 5;
 		$scope.instruction = 'Remember your new card! You will NOT be able to view it again!';
 	};
 	

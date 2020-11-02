@@ -119,7 +119,11 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 		});
 		
 		
-		if(doc.data()['__pyramid.meta'].started == true){
+		if(doc.data()['__pyramid.summary']){
+			$scope.information = 'That\'s the end of the game! Let\'s look at our cards!'; 
+			$('.playingcard').off();
+			console.log("Game already ended!");
+		} else if(doc.data()['__pyramid.meta'].started == true){
 
 				if($scope.gameStarted != true){
 					$scope.pyramidDeck = Deck();
@@ -210,7 +214,7 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 									}
 
 									
-								}	else {
+								} else {
 									var trans_status = null;
 								}
 								
@@ -300,6 +304,48 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 							 $scope.information = 'Select another card from the pyramid to continue...';
 							 $scope.currentRound = null;
 							 $scope.showCards[0].unmount($scope.$modalcontainer);
+							 
+							 if($scope.round_number == 15){
+								 $scope.information = 'That\'s the end of the game! Let\'s look at our cards!';
+								 
+								 $('.playingcard').off();
+								 
+								 var summary = {};
+								 doc.data()['__pyramid.rounds'].forEach(function (round, i) {
+									 
+									 round.round_transactions.forEach(function (round_transaction, r) {
+										 
+										if(round_transaction.status == 'bullshit_wrong'){
+											if(summary[round_transaction.t_from]){
+												summary[round_transaction.t_from] = summary[round_transaction.t_from] + (round.round_row * 2);
+											} else {
+												summary[round_transaction.t_from] = (round.round_row * 2);
+											}
+										}
+										if(round_transaction.status == 'accepted'){
+											if(summary[round_transaction.t_to]){
+												summary[round_transaction.t_to] = summary[round_transaction.t_to] + (round.round_row * 1);
+											} else {
+												summary[round_transaction.t_to] = (round.round_row * 1);
+											}	  
+										}
+										if(round_transaction.status == 'bullshit_correct'){
+											if(summary[round_transaction.t_to]){
+												summary[round_transaction.t_to] = summary[round_transaction.t_to] + (round.round_row * 2);
+											} else {
+												summary[round_transaction.t_to] = (round.round_row * 2);
+											}		   
+										}
+										 
+										 
+									 });									 
+								 });								 
+								 
+								 db.collection("games").doc($scope.roomPIN).set({
+									 '__pyramid.summary': summary
+								 }, {merge: true});
+							 }
+							 
 						});					
 				
 			
