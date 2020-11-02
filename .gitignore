@@ -2,3 +2,4 @@ node_modules
 bower_components
 functions/node_modules
 functions/firebase-debug.log
+firebase-debug.log
