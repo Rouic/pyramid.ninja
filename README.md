@@ -9,13 +9,14 @@ A digital version of the popular drinking game "pyramid". Live version can be fo
 * Find out how to play Pyramid the game at https://pyramid.ninja/#!/about
 
 ## Dependancies
-* Node > 9
+* Firebase
 * Bower
+* Node > 8
 
 ## Install Instructions
 * Clone the repo into a lovely folder of your choosing
-* Run `npm install` from the source folder and functions folder to install node modules
-* Run `bower install` from the source folder to install bower components
+* Run `bower install` from the public folder to install bower components
+* Run `npm install` from the functions folder to install bower components
 * Run `firebase serve` to start the local server, default port is 5000.
 * Navigate to http://localhost:5000 in your favourite modern browser to see pretty things.
 
