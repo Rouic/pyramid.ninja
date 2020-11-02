@@ -118,6 +118,7 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 			 return el.name;
 		});
 		
+		$scope.allRounds = doc.data()['__pyramid.rounds'];
 		
 		if(doc.data()['__pyramid.summary']){
 			$scope.information = 'That\'s the end of the game! Let\'s look at our cards!'; 
@@ -311,36 +312,37 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 								 $('.playingcard').off();
 								 
 								 var summary = {};
-								 doc.data()['__pyramid.rounds'].forEach(function (round, i) {
-									 
-									 round.round_transactions.forEach(function (round_transaction, r) {
+								 if($scope.allRounds.length){
+									 $scope.allRounds.forEach(function (round, i) {
 										 
-										if(round_transaction.status == 'bullshit_wrong'){
-											if(summary[round_transaction.t_from]){
-												summary[round_transaction.t_from] = summary[round_transaction.t_from] + (round.round_row * 2);
-											} else {
-												summary[round_transaction.t_from] = (round.round_row * 2);
+										 round.round_transactions.forEach(function (round_transaction, r) {
+											 
+											if(round_transaction.status == 'bullshit_wrong'){
+												if(summary[round_transaction.t_from]){
+													summary[round_transaction.t_from] = summary[round_transaction.t_from] + (round.round_row * 2);
+												} else {
+													summary[round_transaction.t_from] = (round.round_row * 2);
+												}
 											}
-										}
-										if(round_transaction.status == 'accepted'){
-											if(summary[round_transaction.t_to]){
-												summary[round_transaction.t_to] = summary[round_transaction.t_to] + (round.round_row * 1);
-											} else {
-												summary[round_transaction.t_to] = (round.round_row * 1);
-											}	  
-										}
-										if(round_transaction.status == 'bullshit_correct'){
-											if(summary[round_transaction.t_to]){
-												summary[round_transaction.t_to] = summary[round_transaction.t_to] + (round.round_row * 2);
-											} else {
-												summary[round_transaction.t_to] = (round.round_row * 2);
-											}		   
-										}
-										 
-										 
-									 });									 
-								 });								 
-								 
+											if(round_transaction.status == 'accepted'){
+												if(summary[round_transaction.t_to]){
+													summary[round_transaction.t_to] = summary[round_transaction.t_to] + (round.round_row * 1);
+												} else {
+													summary[round_transaction.t_to] = (round.round_row * 1);
+												}	  
+											}
+											if(round_transaction.status == 'bullshit_correct'){
+												if(summary[round_transaction.t_to]){
+													summary[round_transaction.t_to] = summary[round_transaction.t_to] + (round.round_row * 2);
+												} else {
+													summary[round_transaction.t_to] = (round.round_row * 2);
+												}		   
+											}
+											 
+											 
+										 });									 
+									 });								 
+							 	}
 								 db.collection("games").doc($scope.roomPIN).set({
 									 '__pyramid.summary': summary
 								 }, {merge: true});
