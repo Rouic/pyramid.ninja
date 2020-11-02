@@ -140,9 +140,7 @@ Pyramid.controller('root', function($state, $scope, $rootScope, $stateParams){
     firebase.auth().onAuthStateChanged(function(user) {
       if (user) {
         var isAnonymous = user.isAnonymous;
-        
         $rootScope.user_uid = user.uid;
-        console.log($rootScope.user_uid);
       } else {
         $rootScope.user_uid = null;
       }

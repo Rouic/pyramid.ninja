@@ -27,6 +27,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		
 	$scope.cardIndexTranslation = function(value){
 		var card = null;
+		value = value+1;
 		  switch(value) {
 			case 1: case 14: case 27: case 40:
 			  card = "An Ace";
@@ -95,6 +96,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 							$state.go('join');
 						}
 						
+						$scope.currentRound = null;
 						
 						if(doc.data()[$rootScope.user_uid].initial_deal == false || !doc.data()[$rootScope.user_uid].cards){
 							
