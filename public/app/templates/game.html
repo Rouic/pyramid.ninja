@@ -26,7 +26,7 @@
 						<div class="row" ng-show="!mycards.length" style="margin-top: 10px;">
 		                    <div class="col-xs-8 col-xs-offset-2 text-center">
 								
-		                    	<h4 ng-if="instruction != 'bullshit' && instruction != 'drink' && instruction != 'several_drink'">{{instruction}} <span class="text-muted" ng-if="drinkNumber > 0">You need to drink {{drinkNumber}} this round!</span></h4>
+		                    	<h4 ng-if="instruction != 'bullshit' && instruction != 'drink' && instruction != 'several_drink'"><span class="text-muted" style="font-weight: 500">Round {{currentRound}}, row {{currentRow}} - it's {{$scope.currentCard}}!</span> {{instruction}} <span class="text-rose" style="font-weight: 500" ng-if="drinkNumber > 0">You need to drink {{drinkNumber}} this round!</span></h4>
 								<h4 ng-if="instruction == 'bullshit'">What's this? <b>{{currentDecision.to_player}}</b> has called <b class="text-rose">BULLSHIT</b>! Select the card with the <b>same</b> rank as the card in play below - or face drinking double! <span class="text-muted" ng-if="drinkNumber > 0">By the way you already need to drink {{drinkNumber}} this round!</span></h4>
 								<h4 ng-if="instruction == 'several_drink'">You have been called to drink by <b>multiple</b> other players! We'll begin with <b>{{currentDecision.from_player}}</b>. Decide what to do by choosing a button below.</h4>
 								<h4 ng-if="instruction == 'drink'"><b>{{currentDecision.from_player}}</b> has asked you to drink! Decide what to do by choosing a button below.</h4>

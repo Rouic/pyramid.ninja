@@ -310,6 +310,20 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 		
     });
 
+	window.addEventListener("beforeunload", function(e){
+		db.collection("games").doc($scope.roomCode).set({
+			'__pyramid.meta': {
+				finished: true
+			}
+		}, {merge: true})
+		.then(function() {
+			return null;
+		})
+		.catch(function(error) {
+			console.error("Error writing game data: ", error);
+		});	
+	}, false);
+	
 	
 	$scope.startGame = function(){
 		db.collection("games").doc($scope.roomCode).set({
