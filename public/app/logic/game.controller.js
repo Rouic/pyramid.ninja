@@ -9,8 +9,10 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 	$scope.temp_deck = Deck();
 	
 	$scope.initalLoad = true;
+	$scope.roundsStarted = false;
 	$scope.continueButton = false;
 	$scope.allowCalling = false;
+	$scope.newRoundLock = true;
 	
 	$scope.myCardsCoords = function(i){
 		switch(i) {
@@ -34,12 +36,10 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		
 		if($cookies.get('name')){
 			
-			console.log($scope.roomCode);
+			console.log("ROOM:", $scope.roomCode);
 			
 			db.collection("games").doc($scope.roomCode).onSnapshot(function(doc) {
-				
-				console.log("Data Change", doc.data());
-				
+								
 				if(doc.data()){
 					if(doc.data()[$rootScope.user_uid]){
 						
@@ -109,17 +109,40 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 								$scope.myCards = doc.data()[$rootScope.user_uid].cards;
 								
 									$scope.gameStarted = true;
-									$scope.instruction = 'Waiting for host to continue...';
+									$scope.instruction = 'Waiting for host to pick a card...';
+									$scope.drinkNumber = 0;
+									
+									if($scope.newRoundLock == false) {
+										$scope.newRoundLock = true;
+										$scope.getNewCard();
+									}
+									
 									$scope.allowViewAll = false;
 									$scope.allowCalling = false;
+									
+									var hiddenCardNum = 0;
+									function callback(){
+										if(hiddenCardNum == 4){
+											if($scope.roundsStarted == false){
+												$scope.instruction = 'Press the button below to view your cards. You will have just 10 seconds to remember them! Tip: You can drag your cards around to re-order them.';
+												if(!doc.data()['__pyramid.currentRound']) $scope.allowViewAll = true;
+												$scope.allowCalling = false;
+											}
+										} else {
+											$scope.allowViewAll = false;
+											if($scope.getNewCard) $scope.getNewCard();
+										}
+									}
 									doc.data()[$rootScope.user_uid].cards.forEach(function (card, i) {
 										if(card.seen == false) {
-											$scope.instruction = 'Press the button below to view your cards. You will have just 10 seconds to remember them! Tip: You can drag your cards around to re-order them.';
-											$scope.allowViewAll = true;
-											$scope.allowCalling = false;
+											hiddenCardNum++;
+										}
+										if(hiddenCardNum == doc.data()[$rootScope.user_uid].cards.length){
+											callback()
 										}
 									});
 									
+									 
 									
 									$scope.clientDeck.cards.forEach(function(card, i) {
 										
@@ -130,9 +153,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 											});										
 										}
 									});	
-									
-									console.log("CURRENT HAND 1", $scope.clientDeck.cards);
-															
+																								
 									$scope.clientDeck.cards.forEach(function (card, i) {
 										card.unmount();	
 										card.enableDragging();
@@ -148,7 +169,6 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 										}
 										card.mount($scope.$container);			
 									});	
-									console.log("CURRENT HAND 2", $scope.clientDeck.cards);
 									$scope.initalLoad = false;
 									$scope.$apply();	
 									
@@ -172,12 +192,14 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 									
 									
 									if(doc.data()['__pyramid.currentRound']){
+										$scope.roundsStarted = true;
 										$scope.soundsLock = null;
 										$scope.allowNewCard = false;
 										$scope.lockNewCall = false;
 										$scope.doneNewCard = false;
 										$scope.allowDecision = false;
 										$scope.allowCalling = true;
+										$scope.drinkNumber = 0;
 										$scope.currentRound = doc.data()['__pyramid.currentRound'].round_number;
 										$scope.roundTransactions = doc.data()['__pyramid.rounds'][$scope.currentRound].round_transactions;
 										
@@ -187,6 +209,23 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 									if(doc.data()['__pyramid.currentRound'] && doc.data()['__pyramid.currentRound'].round_number && doc.data()['__pyramid.rounds'] && doc.data()['__pyramid.rounds'][doc.data()['__pyramid.currentRound'].round_number] && doc.data()['__pyramid.rounds'][doc.data()['__pyramid.currentRound'].round_number].round_transactions && doc.data()['__pyramid.rounds'][doc.data()['__pyramid.currentRound'].round_number].round_transactions.length > 0){
 										console.log("New transaction data!");		
 										
+										
+										doc.data()['__pyramid.rounds'][doc.data()['__pyramid.currentRound'].round_number].round_transactions.forEach(function(transaction, i) {
+											if(transaction.t_to == $rootScope.user_uid && transaction.status == 'accepted'){
+												$scope.drinkNumber = ($scope.drinkNumber + (doc.data()['__pyramid.currentRound'].round_row * 1));
+											}
+											
+											if(transaction.t_from == $rootScope.user_uid && transaction.status == 'bullshit_wrong'){
+												$scope.drinkNumber = ($scope.drinkNumber + (doc.data()['__pyramid.currentRound'].round_row * 2));
+											}
+											
+											if(transaction.t_to == $rootScope.user_uid && transaction.status == 'bullshit_correct'){
+												$scope.drinkNumber = ($scope.drinkNumber + (doc.data()['__pyramid.currentRound'].round_row * 2));
+											}
+											
+											
+										});
+																				
 										$scope.decision = function(move){
 											var temp_rounds = angular.copy(doc.data()['__pyramid.rounds']);
 											temp_rounds[doc.data()['__pyramid.currentRound'].round_number].round_transactions[$scope.transactionIteration].status = (move == 1) ? 'accepted' : 'bullshit';
@@ -203,33 +242,28 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 										};	
 										
 										$scope.getNewCard = function(){
-											
-												$scope.clientDeck.cards[$scope.selectedCard].unmount();
-																								
-												$scope.newDeck = doc.data()['__pyramid.deck'].splice(1, doc.data()['__pyramid.deck'].length);	
-												$scope.newCard = doc.data()['__pyramid.deck'].splice(0, 1);							
-																										
-																										
-												console.log(currentHand);
-												db.collection("games").doc($scope.roomCode).set({
-													'__pyramid.deck': $scope.newDeck,
-													[$rootScope.user_uid]: {
-														cards: currentHand
-													}
-												}, {merge: true})
-												.then(function() {
-													console.log("Round cards updated!");
-												})
-												.catch(function(error) {
-													console.error("Error writing game: ", error);
-												});													
+											$scope.newRoundLock = true;
+											$scope.allowNewCard = false;
+											$('.playingcard.hearts, .playingcard.spades, .playingcard.diamonds, .playingcard.clubs').remove();	
+																						
+											doc.data()[$rootScope.user_uid].cards.forEach(function(setcard, ii) {
 												
+												Deck().cards.forEach(function(card, i) {
+													if(setcard.seen == false && i == setcard.i){
+														
+														$scope.clientDeck.cards.push(card);
+														
+														$scope.clientDeck.cards.find(x => x.i === i).enableDragging();
+														$scope.clientDeck.cards.find(x => x.i === i).disableFlipping();
+														$scope.clientDeck.cards.find(x => x.i === i).setSide('front');
+														$scope.clientDeck.cards.find(x => x.i === i).mount($scope.$container);
+																												
+													}
+												});
+
+											});	
 											
-											//unmount all cards.
-											//find out how many cards we need
-											//splice x cards from the deck
-											//remount
-											
+											$scope.revealNewCard();												
 											
 										};																				
 											
@@ -237,24 +271,18 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 										if ((doc.data()['__pyramid.rounds'][doc.data()['__pyramid.currentRound'].round_number].round_transactions).filter(e => e.t_from === $rootScope.user_uid).length > 0) {
 											$scope.instruction = 'Round '+doc.data()['__pyramid.currentRound'].round_number+'! You have sent drinks already - please wait for round to finish...';
 											
-											$scope.allowCalling = false;
-											$scope.allowDecision = false;
-										}
-										
-										if(doc.data()[$rootScope.user_uid].cards.length < 4){
-											
-											var needed_cards = 4 - doc.data()[$rootScope.user_uid].cards.length;
-											
-											for(var i=0; i < needed_cards; i++){
+											if($scope.allowNewCard == true){
 												console.log('Get card');
 												$scope.allowDecision = false;
 												$scope.allowCalling = false;
-												$scope.allowNewCard = true;
 												$scope.instruction = 'Round '+doc.data()['__pyramid.currentRound'].round_number+'. Looks like you need more cards! Click the button below to get a new one, or wait until the end of the round.';	
-												
-											}									
+
+											}
 											
-										}																					
+											$scope.allowCalling = false;
+											$scope.allowDecision = false;
+										}
+																				
 										
 										var callsOnUs = 0;
 										(doc.data()['__pyramid.rounds'][doc.data()['__pyramid.currentRound'].round_number].round_transactions).forEach(function(transaction, i) {
@@ -295,6 +323,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 												
 												$('.playingcard').each(function(x) {
 													var xIndex = x;
+													$scope.selectedIndex = x;
 													$($('.playingcard')[xIndex]).off();
 													$($('.playingcard')[xIndex]).bind("click touchstart", function(){
 														if($scope.bullshitReply == true){
@@ -321,9 +350,6 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 																updatedCardSet.push({i:angular.copy(doc.data()['__pyramid.deck']).splice(0, 1)[0], seen: false});
 																var updatedDeck = angular.copy(doc.data()['__pyramid.deck']).splice(1, angular.copy(doc.data()['__pyramid.deck']).length);
 																
-																
-																console.log(updatedCardSet, updatedDeck, updated_rounds);
-																
 																db.collection("games").doc($scope.roomCode).set({
 																	[$rootScope.user_uid]: {
 																		cards: updatedCardSet
@@ -332,6 +358,10 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 																	'__pyramid.rounds': updated_rounds
 																}, {merge: true})
 																.then(function() {
+																	$scope.newRoundLock = false;
+																	$scope.allowDecision = false;
+																	$scope.allowCalling = false;
+																	$scope.allowNewCard = true;
 																	console.log("Round data updated!");
 																})
 																.catch(function(error) {
@@ -363,7 +393,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 							}
 							
 						} else {
-							if($scope.players.length == 1){
+							if($scope.players.length > 1){
 								$scope.continueButton = true;
 							}
 						}
@@ -433,6 +463,13 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		$scope.clientDeck.cards.forEach(function (card, i) {
 			card.setSide('front');
 		});
+	};
+	
+	$scope.revealNewCard = function(){
+		$scope.doingCardShow = true;
+		$scope.allowNewCard = false;
+		$scope.countdown = 10;
+		$scope.instruction = 'Remember your new card! You will NOT be able to view it again!';
 	};
 	
 	$scope.$watch('countdown', function() {

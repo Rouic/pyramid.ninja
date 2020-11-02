@@ -159,11 +159,11 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 						 
 						$scope.gameStarted = true;
 						console.log("Game update!");						 
-						
+						$scope.drink_log = [];
 						$scope.round_transactions = [];
 						if($scope.round_number && doc.data()['__pyramid.rounds'] && doc.data()['__pyramid.rounds'][$scope.round_number] && doc.data()['__pyramid.rounds'][$scope.round_number].round_transactions){
 							console.log("New transaction data!");			
-														
+							
 							(doc.data()['__pyramid.rounds'][$scope.round_number].round_transactions).forEach(function(transaction, i) {
 																								
 								if(transaction.status == 'waiting'){
@@ -172,10 +172,44 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 									var trans_status = 'bullshit';
 								} else if(transaction.status == 'bullshit_wrong'){
 									var trans_status = 'bullshit_wrong';
+									
+									console.log($scope.drink_log);
+									if($scope.drink_log.find(x => x.name == doc.data()[transaction.t_from].name)){
+										$scope.drink_log[$scope.drink_log.findIndex(x => x.name == doc.data()[transaction.t_from].name)].drinks = $scope.drink_log[$scope.drink_log.findIndex(x => x.name == doc.data()[transaction.t_from].name)].drinks + (2 * $scope.round_row);
+									} else {
+										$scope.drink_log.push({
+											name: doc.data()[transaction.t_from].name,
+											drinks: 2 * $scope.round_row
+										});
+									}
+									
 								} else if(transaction.status == 'bullshit_correct'){
 									var trans_status = 'bullshit_correct';
+									
+									console.log($scope.drink_log);
+									if($scope.drink_log.find(x => x.name == doc.data()[transaction.t_to].name)){
+										$scope.drink_log[$scope.drink_log.findIndex(x => x.name == doc.data()[transaction.t_to].name)].drinks = $scope.drink_log[$scope.drink_log.findIndex(x => x.name == doc.data()[transaction.t_to].name)].drinks + (2 * $scope.round_row);
+									} else {
+										$scope.drink_log.push({
+											name: doc.data()[transaction.t_to].name,
+											drinks: 2 * $scope.round_row
+										});
+									}
+									
 								} else if(transaction.status == 'accepted'){
 									var trans_status = 'accepted';
+
+									console.log($scope.drink_log);
+									if($scope.drink_log.find(x => x.name == doc.data()[transaction.t_to].name)){
+										$scope.drink_log[$scope.drink_log.findIndex(x => x.name == doc.data()[transaction.t_to].name)].drinks = $scope.drink_log[$scope.drink_log.findIndex(x => x.name == doc.data()[transaction.t_to].name)].drinks + (1 * $scope.round_row);
+									} else {
+										$scope.drink_log.push({
+											name: doc.data()[transaction.t_to].name,
+											drinks: 1 * $scope.round_row
+										});
+									}
+
+									
 								}	else {
 									var trans_status = null;
 								}
@@ -185,12 +219,11 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 									to_player: doc.data()[transaction.t_to].name,
 									result: trans_status
 								});
-								
-								//TODO: work out how many drinks are needed, update log
-								
-								//$scope.drink_log.push();			
+																			
 								
 							});
+							
+							
 							
 						}							
 						
