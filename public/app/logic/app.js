@@ -1,5 +1,17 @@
+const firebaseConfig = {
+  apiKey: "AIzaSyDyk-FE8w0yd82WduMP6KVmvRPt0-4miS8",
+  authDomain: "pyramid-ninja.firebaseapp.com",
+  databaseURL: "https://pyramid-ninja.firebaseio.com",
+  projectId: "pyramid-ninja",
+  storageBucket: "pyramid-ninja.appspot.com",
+  messagingSenderId: "668178102663",
+  appId: "1:668178102663:web:bc247d167d2cab96adfb22",
+  measurementId: "G-VCPEBG1XK7"
+};
+firebase.initializeApp(firebaseConfig);
+var perf = firebase.performance();
+var db = firebase.firestore();
 var Pyramid = angular.module('Pyramid', ['ui.router', 'ngCookies']),
-db = firebase.firestore(),
 currentGame = null,
 canContinue = false;
 
