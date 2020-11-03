@@ -365,6 +365,7 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 	
 	
 	$scope.startGame = function(){
+		firebase.analytics().logEvent('HostedGame');
 		db.collection("games").doc($scope.roomCode).set({
 			'__pyramid.meta': {
 				started: true
