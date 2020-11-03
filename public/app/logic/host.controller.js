@@ -79,7 +79,6 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 		});
 		
 		
-		console.log($scope.deck);
 		//TO-DO: Cache the PIN on reload?
 		
 		db.collection("games").doc($scope.roomPIN).set({
@@ -93,7 +92,6 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 			'__pyramid.deck': $scope.deckArray
 		}, {merge: true})
 		.then(function() {
-		    console.log("Game successfully written!");
 			$scope.roomCode = $scope.roomPIN.toUpperCase();
 			$scope.$apply();			
 		})
@@ -110,9 +108,7 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 	
 	
 	db.collection("games").doc($scope.roomPIN).onSnapshot(function(doc) {
-		
-		console.log("Data Change", doc.data());
-		
+				
 		const peopleArray = Object.keys(doc.data()).map(i => doc.data()[i]);
 		$scope.players = peopleArray.filter(function(el){
 			 return el.name;
@@ -167,7 +163,6 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 						$scope.drink_log = [];
 						$scope.round_transactions = [];
 						if($scope.round_number && doc.data()['__pyramid.rounds'] && doc.data()['__pyramid.rounds'][$scope.round_number] && doc.data()['__pyramid.rounds'][$scope.round_number].round_transactions){
-							console.log("New transaction data!");			
 							
 							(doc.data()['__pyramid.rounds'][$scope.round_number].round_transactions).forEach(function(transaction, i) {
 																								
@@ -178,7 +173,6 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 								} else if(transaction.status == 'bullshit_wrong'){
 									var trans_status = 'bullshit_wrong';
 									
-									console.log($scope.drink_log);
 									if($scope.drink_log.find(x => x.name == doc.data()[transaction.t_from].name)){
 										$scope.drink_log[$scope.drink_log.findIndex(x => x.name == doc.data()[transaction.t_from].name)].drinks = $scope.drink_log[$scope.drink_log.findIndex(x => x.name == doc.data()[transaction.t_from].name)].drinks + (2 * $scope.round_row);
 									} else {
@@ -191,7 +185,6 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 								} else if(transaction.status == 'bullshit_correct'){
 									var trans_status = 'bullshit_correct';
 									
-									console.log($scope.drink_log);
 									if($scope.drink_log.find(x => x.name == doc.data()[transaction.t_to].name)){
 										$scope.drink_log[$scope.drink_log.findIndex(x => x.name == doc.data()[transaction.t_to].name)].drinks = $scope.drink_log[$scope.drink_log.findIndex(x => x.name == doc.data()[transaction.t_to].name)].drinks + (2 * $scope.round_row);
 									} else {
@@ -204,7 +197,6 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 								} else if(transaction.status == 'accepted'){
 									var trans_status = 'accepted';
 
-									console.log($scope.drink_log);
 									if($scope.drink_log.find(x => x.name == doc.data()[transaction.t_to].name)){
 										$scope.drink_log[$scope.drink_log.findIndex(x => x.name == doc.data()[transaction.t_to].name)].drinks = $scope.drink_log[$scope.drink_log.findIndex(x => x.name == doc.data()[transaction.t_to].name)].drinks + (1 * $scope.round_row);
 									} else {
@@ -276,7 +268,6 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 											}, {merge: true})
 											.then(function() {
 												console.log("Card successfully updated!");	
-																																			
 											})
 											.catch(function(error) {
 												console.error("Error writing card: ", error);
