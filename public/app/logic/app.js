@@ -189,7 +189,6 @@ Pyramid.controller('start', function($state, $scope, $rootScope, $stateParams){
 	$rootScope.pageClass = 'signup-page';
 	$.material.init();
 	if(currentGame){
-		// socket.emit('leave', {room: currentGame});
 		currentGame = null;
 		canContinue = false;
 	}
