@@ -83,10 +83,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		$scope.instruction = 'Waiting for deck!';
 		$scope.cardSet = [];
 		
-		if($cookies.get('name')){
-			firebase.analytics().logEvent('JoinedGame');
-			console.log("ROOM:", $scope.roomCode);
-			
+		if($cookies.get('name')){			
 			db.collection("games").doc($scope.roomCode).onSnapshot(function(doc) {
 								
 				if(doc.data()){

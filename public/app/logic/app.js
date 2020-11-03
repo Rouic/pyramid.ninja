@@ -193,6 +193,7 @@ Pyramid.controller('start', function($state, $scope, $rootScope, $stateParams){
 		currentGame = null;
 		canContinue = false;
 	}
+    firebase.analytics().logEvent('ViewedSplash');
 	
 });
 
@@ -214,6 +215,7 @@ Pyramid.controller('join', ['$cookies', '$state', '$scope','$rootScope', '$state
                 }
             }, {merge: true})
             .then(function() {
+                firebase.analytics().logEvent('JoinedGame');
                 console.log("Player data successfully written!");
                 currentGame = $scope.join.roomcode;
                 $cookies.put('name', $scope.join.name.toUpperCase());
