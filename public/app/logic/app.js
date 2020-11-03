@@ -1,3 +1,23 @@
+/*
+____                                   __   ____
+/ __ \____ _      _____  ________  ____/ /  / __ )__  __
+/ /_/ / __ \ | /| / / _ \/ ___/ _ \/ __  /  / __  / / / /
+/ ____/ /_/ / |/ |/ /  __/ /  /  __/ /_/ /  / /_/ / /_/ /
+/_/    \____/|__/|__/\___\_/   \___/\__,_/  /_____/\__, /
+  / __ \____  __  __(_)____                   /____/
+ / /_/ / __ \/ / / / / ___/
+/ _, _/ /_/ / /_/ / / /__
+/_/ |_|\____/\__,_/_/\___/
+
+#####//{  ---Pyramid.Ninja---  }\\#####
+
+Author/s: Alex Cottenham (alex@rouic.com)
+
+Contact: hello@rouic.com
+
+*/
+
+/* Firebase config start */
 const firebaseConfig = {
   apiKey: "AIzaSyDyk-FE8w0yd82WduMP6KVmvRPt0-4miS8",
   authDomain: "pyramid-ninja.firebaseapp.com",
@@ -10,7 +30,10 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 var perf = firebase.performance();
+var analytics = firebase.analytics();
 var db = firebase.firestore();
+/* Firebase config end */
+
 var Pyramid = angular.module('Pyramid', ['ui.router', 'ngCookies']),
 currentGame = null,
 canContinue = false;
