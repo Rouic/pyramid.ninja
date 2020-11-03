@@ -179,7 +179,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 									var hiddenCardNum = 0;
 									function callback(){
 										if(hiddenCardNum == 4){
-											if($scope.roundsStarted == false){
+											if($scope.roundsStarted == false && $scope.countdown == 0){
 												$scope.instruction = 'Press the button below to view your cards. You will have just 10 seconds to remember them! Tip: You can drag your cards around to re-order them.';
 												if(!doc.data()['__pyramid.currentRound']) $scope.allowViewAll = true;
 												$scope.allowCalling = false;
