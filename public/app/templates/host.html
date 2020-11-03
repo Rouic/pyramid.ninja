@@ -7,7 +7,8 @@
 					<div ng-hide="gameStarted" class="card card-signup" style="margin-bottom: 0px">
                         <h2 ng-if="!(players.length > 2)" class="card-title text-center">Waiting for more players...</h2>
                         <h2 ng-if="(players.length > 2)" class="card-title text-center">Press Continue when ready...</h2>
-                        <h3 class="text-center">Open {{domain}} on your devices and enter <span class="card-title">{{roomCode}}</span> to join this game.</h3>
+						<h3><em>Generating new game...</em></h3>
+                        <h3 class="text-center" ng-if="roomCode">Open {{domain}} on your devices and enter <span class="card-title">{{roomCode}}</span> to join this game.</h3>
                         <div class="row">
 		    				<div class="col-md-8 col-md-offset-2 text-center">
 			    				<div class="game-player" ng-repeat="x in players" ng-if="x.type != 'host'">
@@ -82,7 +83,7 @@
 					</ul>
 	            </nav>
 	            <div class="copyright pull-right">
-	                  &copy; 2020, made with <i class="fa fa-heart heart"></i> by <a class="text-rose" href="https://www.rouic.com" target="_blank">Rouic</a>
+	                  &copy; {{year}}, made with <i class="fa fa-heart heart"></i> by <a class="text-rose" href="https://www.rouic.com" target="_blank">Rouic</a>
 	            </div>
 	        </div>
 	    </footer>
