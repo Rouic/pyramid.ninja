@@ -397,15 +397,13 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 															//work out if card has same value as one in play, adjust 
 															//bullshit_correct bullshit_wrong
 															
-															var currentCardRank = $scope.temp_deck.cards.filter(obj => {
+															var currentCardRank = Deck().cards.filter(obj => {
   														  		return obj.i === doc.data()['__pyramid.currentRound'].round_card
-															});
-															
+															})[0];
+																														
 															var updated_rounds = angular.copy(doc.data()['__pyramid.rounds']);
 															updated_rounds[doc.data()['__pyramid.currentRound'].round_number].round_transactions[$scope.transactionIteration].status = ($scope.clientDeck.cards[$scope.selectedCard].rank == currentCardRank.rank) ? 'bullshit_correct' : 'bullshit_wrong';
-																
-															console.log("RANKS:", $scope.clientDeck.cards[$scope.selectedCard].rank, currentCardRank.rank);	
-																
+																																
 																var updatedCardSet = [];
 																$scope.clientDeck.cards.forEach(function (card, i) {
 																	if(card.i != $scope.clientDeck.cards[$scope.selectedCard].i){
