@@ -80,13 +80,16 @@ Pyramid.directive('onSizeChanged', ['$window', function ($window) {
         }
     }
 }]);
-Pyramid.config(function($stateProvider, $urlRouterProvider) { 
+Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', function($stateProvider, $urlRouterProvider, $locationProvider) { 
     
     if(/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream){
 	    $urlRouterProvider.otherwise('/join');
     } else {
 	    $urlRouterProvider.otherwise('/start');
-    }     
+    }
+    
+    $locationProvider.html5Mode(true);
+    $locationProvider.hashPrefix('!');        
     
     $stateProvider   
 	.state('root', {
@@ -166,7 +169,7 @@ Pyramid.config(function($stateProvider, $urlRouterProvider) {
         }        
     });    
   
-});
+}]);
 
 Pyramid.controller('root', function($state, $scope, $rootScope, $stateParams){
     firebase.auth().signInAnonymously().catch(function(error) {
