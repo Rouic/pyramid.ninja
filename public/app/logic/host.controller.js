@@ -1,4 +1,4 @@
-Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $interval){
+Pyramid.controller('host', ['$state', '$scope', '$rootScope', '$stateParams', '$interval', function($state, $scope, $rootScope, $stateParams, $interval){
 	$rootScope.pageClass = 'signup-page';
 	$.material.init();
 	$scope.domain = window.location.hostname;
@@ -387,4 +387,4 @@ Pyramid.controller('host', function($state, $scope, $rootScope, $stateParams, $i
 		
 	
 	
-});
+}]);

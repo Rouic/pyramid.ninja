@@ -82,7 +82,7 @@ Pyramid.directive('onSizeChanged', ['$window', function ($window) {
 }]);
 Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', function($stateProvider, $urlRouterProvider, $locationProvider) { 
     
-    if(/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream){
+    if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && !window.MSStream) {
 	    $urlRouterProvider.otherwise('/join');
     } else {
 	    $urlRouterProvider.otherwise('/start');
@@ -95,18 +95,18 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
     $locationProvider.hashPrefix('!');        
     
     $stateProvider   
-	.state('root', {
-	    views: {
-		    '@' : {
- 			    templateUrl: 'app/templates/layout.html',
- 			    controller: 'root',
-		    },
-		    'header': {
-			    templateUrl: 'app/templates/header.html',
-			    controller: 'header'
-		    }
-	    }
-	})	                
+  	.state('root', {
+  	    views: {
+  		    '@' : {
+   			    templateUrl: 'app/templates/layout.html',
+   			    controller: 'root',
+  		    },
+  		    'header': {
+  			    templateUrl: 'app/templates/header.html',
+  			    controller: 'header'
+  		    }
+  	    }
+  	})	                
     .state('start', {
  	    parent: 'root',
  	    title: 'Start',
@@ -191,9 +191,9 @@ Pyramid.controller('root', function($state, $scope, $rootScope, $stateParams){
     $rootScope.soundEffect = new Audio();      
 });
 
-Pyramid.controller('header', function($state, $scope, $rootScope, $stateParams){});
+Pyramid.controller('header', ['$state', '$scope', '$rootScope', '$stateParams', function($state, $scope, $rootScope, $stateParams){}]);
 
-Pyramid.controller('start', function($state, $scope, $rootScope, $stateParams){
+Pyramid.controller('start', ['$state', '$scope', '$rootScope', '$stateParams', function($state, $scope, $rootScope, $stateParams){
 	$rootScope.pageClass = 'signup-page';
 	$.material.init();
 	if(currentGame){
@@ -202,7 +202,7 @@ Pyramid.controller('start', function($state, $scope, $rootScope, $stateParams){
 	}
     firebase.analytics().logEvent('ViewedSplash');
 	
-});
+}]);
 
 Pyramid.controller('join', ['$cookies', '$state', '$scope','$rootScope', '$stateParams', function($cookies, $state, $scope, $rootScope, $stateParams){
 	$rootScope.pageClass = 'signup-page';
@@ -240,7 +240,7 @@ Pyramid.controller('join', ['$cookies', '$state', '$scope','$rootScope', '$state
 	
 }]);
 
-Pyramid.controller('about', function($state, $scope, $rootScope, $stateParams){
+Pyramid.controller('about', ['$state', '$scope', '$rootScope', '$stateParams', function($state, $scope, $rootScope, $stateParams){
 	$rootScope.pageClass = 'about-us';
     $.material.init();
     window_width = $(window).width();
@@ -254,4 +254,4 @@ Pyramid.controller('about', function($state, $scope, $rootScope, $stateParams){
         }
 
     }
-});
+}]);

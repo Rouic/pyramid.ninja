@@ -13,6 +13,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 	$scope.continueButton = false;
 	$scope.allowCalling = false;
 	$scope.newRoundLock = true;
+	$scope.hasIntialLooked = false;
 	
 	$scope.myCardsCoords = function(i){
 		switch(i) {
@@ -177,7 +178,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 									var hiddenCardNum = 0;
 									function callback(){
 										if(hiddenCardNum == 4){
-											if($scope.roundsStarted == false && $scope.countdown == 0){
+											if($scope.roundsStarted == false && $scope.hasIntialLooked == false){ //poopy
 												$scope.instruction = 'Press the button below to view your cards. You will have just 10 seconds to remember them! Tip: You can drag your cards around to re-order them.';
 												if(!doc.data()['__pyramid.currentRound']) $scope.allowViewAll = true;
 												$scope.allowCalling = false;
@@ -403,6 +404,8 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 															var updated_rounds = angular.copy(doc.data()['__pyramid.rounds']);
 															updated_rounds[doc.data()['__pyramid.currentRound'].round_number].round_transactions[$scope.transactionIteration].status = ($scope.clientDeck.cards[$scope.selectedCard].rank == currentCardRank.rank) ? 'bullshit_correct' : 'bullshit_wrong';
 																
+															console.log("RANKS:", $scope.clientDeck.cards[$scope.selectedCard].rank, currentCardRank.rank);	
+																
 																var updatedCardSet = [];
 																$scope.clientDeck.cards.forEach(function (card, i) {
 																	if(card.i != $scope.clientDeck.cards[$scope.selectedCard].i){
@@ -526,6 +529,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 	};
 	
 	$scope.showAllMyCards = function(){
+		$scope.hasIntialLooked = true;
 		$scope.allowViewAll = false;
 		$scope.allowNewCard = false;
 		$scope.doingCardShow = true;
