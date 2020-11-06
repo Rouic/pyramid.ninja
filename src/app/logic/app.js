@@ -222,15 +222,4 @@ Pyramid.controller('join', ['$cookies', '$state', '$scope','$rootScope', '$state
 Pyramid.controller('about', ['$state', '$scope', '$rootScope', '$stateParams', function($state, $scope, $rootScope, $stateParams){
 	$rootScope.pageClass = 'about-us';
     $.material.init();
-    window_width = $(window).width();
-    if($('.navbar-color-on-scroll').length != 0){
-        $(window).on('scroll', materialKit.checkScrollForTransparentNavbar)
-    }
-    if (window_width >= 768){
-        big_image = $('.page-header[data-parallax="active"]');
-        if(big_image.length != 0){
-            $(window).on('scroll', materialKitDemo.checkScrollForParallax);
-        }
-
-    }
 }]);

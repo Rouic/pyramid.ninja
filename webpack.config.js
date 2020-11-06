@@ -9,14 +9,14 @@ const CopyPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 module.exports = {
-  entry: [
-	'./src/index.js',
-	'./src/app/logic/app.js',
-	'./src/app/logic/game.controller.js',
-	'./src/app/logic/host.controller.js'
-  ],
+  entry: {
+	main: './src/index.js',
+	app: './src/app/logic/app.js',
+	game: './src/app/logic/game.controller.js',
+	host: './src/app/logic/host.controller.js'
+  },
   output: {
-	filename: 'app.bundle.[contenthash].js',
+	filename: 'bundle.[name].[contenthash:8].js',
 	path: path.resolve(__dirname, 'dist'),
   },
   optimization: {

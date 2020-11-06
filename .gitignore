@@ -7,3 +7,4 @@ firebase-debug.log
 .DS_Store
 *.cache
 dist
+firepit-log.txt
