@@ -1,0 +1,47 @@
+{
+  "name": "pyramid.ninja.webpack",
+  "version": "1.0.0",
+  "description": "![pyramid.ninja logo](https://pyramid-ninja.web.app/assets/img/pyramid.ninja.png)",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Rouic/pyramid.ninja.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Rouic/pyramid.ninja/issues"
+  },
+  "homepage": "https://github.com/Rouic/pyramid.ninja#readme",
+  "devDependencies": {
+    "@beyonk/google-fonts-webpack-plugin": "^1.5.0",
+    "clean-webpack-plugin": "^3.0.0",
+    "copy-webpack-plugin": "^6.3.0",
+    "css-loader": "^5.0.1",
+    "exports-loader": "^1.1.1",
+    "file-loader": "^6.2.0",
+    "google-fonts-webpack-plugin": "^0.4.4",
+    "html-webpack-plugin": "^4.5.0",
+    "mini-css-extract-plugin": "^1.3.0",
+    "style-loader": "^2.0.0",
+    "svg-url-loader": "^6.0.0",
+    "uglifyjs-webpack-plugin": "^2.2.0",
+    "url-loader": "^4.1.1",
+    "webpack": "^5.4.0",
+    "webpack-cli": "^4.2.0",
+    "webpack-material-design-icons": "^0.1.0"
+  },
+  "dependencies": {
+    "angular": "^1.8.2",
+    "angular-cookies": "^1.8.2",
+    "angular-ui-router": "^1.0.28",
+    "firebase": "^8.0.1",
+    "jquery": "^3.5.1",
+    "material-design-icons": "^3.0.1"
+  }
+}

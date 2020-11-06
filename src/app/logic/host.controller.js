@@ -51,7 +51,7 @@ Pyramid.controller('host', ['$state', '$scope', '$rootScope', '$stateParams', '$
 	$scope.players = [];
 	$scope.setupGame = function(){
 		
-		firebase.analytics().logEvent('HostedGame');
+		analytics.logEvent('HostedGame');
 		
 		var emptyString = "";
 		var alphabet = "abcdefghijklmnopqrstuvwxyz";
@@ -292,7 +292,7 @@ Pyramid.controller('host', ['$state', '$scope', '$rootScope', '$stateParams', '$
 						$('#roundModal').on('hidden.bs.modal', function () {
 							
 							db.collection("games").doc($scope.roomPIN).set({
-								'__pyramid.currentRound': firebase.firestore.FieldValue.delete()
+								'__pyramid.currentRound': firebase.default.firestore.FieldValue.delete()
 							}, {merge: true});
 						
 							 $scope.information = 'Select another card from the pyramid to continue...';

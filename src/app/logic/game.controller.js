@@ -85,7 +85,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		$scope.cardSet = [];
 		
 		if($cookies.get('name')){		
-			firebase.analytics().logEvent('JoinedGame');
+			analytics.logEvent('JoinedGame');
 			db.collection("games").doc($scope.roomCode).onSnapshot(function(doc) {
 								
 				if(doc.data()){
@@ -197,7 +197,6 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 										}
 									});
 									
-									 
 									
 									$scope.clientDeck.cards.forEach(function(card, i) {
 										
@@ -374,7 +373,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 												
 												var randomBullshit = Math.floor(Math.random() * 7) + 1;
 												
-												$rootScope.soundEffect.src = '/assets/sounds/bullshit/'+randomBullshit+'.mp3'
+												$rootScope.soundEffect.src = '/assets/sounds/'+randomBullshit+'.mp3'
 												
 												if(!$scope.soundsLock){
 													$rootScope.soundEffect.play();
@@ -480,13 +479,11 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		} else {
 			$state.go('join');
 		}					
-	};
-	
+	}
 	
 	$interval(function(){
 		if($scope.countdown > 0) $scope.countdown--;
 	}, 1000);	
-	
 	
 	$scope.selectP = function(player){
 		$scope.selectedplayer = player;

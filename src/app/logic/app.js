@@ -17,27 +17,6 @@ Contact: hello@rouic.com
 
 */
 
-/* Firebase config start */
-const firebaseConfig = {
-  apiKey: "AIzaSyDyk-FE8w0yd82WduMP6KVmvRPt0-4miS8",
-  authDomain: "pyramid-ninja.firebaseapp.com",
-  databaseURL: "https://pyramid-ninja.firebaseio.com",
-  projectId: "pyramid-ninja",
-  storageBucket: "pyramid-ninja.appspot.com",
-  messagingSenderId: "668178102663",
-  appId: "1:668178102663:web:bc247d167d2cab96adfb22",
-  measurementId: "G-VCPEBG1XK7"
-};
-firebase.initializeApp(firebaseConfig);
-var perf = firebase.performance();
-var analytics = firebase.analytics();
-var db = firebase.firestore();
-/* Firebase config end */
-
-var Pyramid = angular.module('Pyramid', ['ui.router', 'ngCookies']),
-currentGame = null,
-canContinue = false;
-
 Pyramid.run(['$window', '$rootScope', '$state', '$stateParams', function($window, $rootScope, $state, $stateParams){
 	$rootScope.$state = $state;
 	$rootScope.$stateParams = $stateParams;
@@ -98,11 +77,11 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
   	.state('root', {
   	    views: {
   		    '@' : {
-   			    templateUrl: 'app/templates/layout.html',
+   			    templateUrl: '/templates/layout.html',
    			    controller: 'root',
   		    },
   		    'header': {
-  			    templateUrl: 'app/templates/header.html',
+  			    templateUrl: '/templates/header.html',
   			    controller: 'header'
   		    }
   	    }
@@ -113,7 +92,7 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
         url: '/start',
         views: {
 	        'view': {
- 		        templateUrl: 'app/templates/start.html',
+ 		        templateUrl: '/templates/start.html',
 		        controller: 'start'
 		    }
         }        
@@ -124,7 +103,7 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
         url: '/host',
         views: {
 	        'view': {
- 		        templateUrl: 'app/templates/host.html',
+ 		        templateUrl: '/templates/host.html',
 		        controller: 'host'
 		    }
         }        
@@ -135,7 +114,7 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
         url: '/join',
         views: {
 	        'view': {
- 		        templateUrl: 'app/templates/join.html',
+ 		        templateUrl: '/templates/join.html',
 		        controller: 'join'
 		    }
         }        
@@ -145,14 +124,14 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
         url: '/game/:gameID?',
         views: {
 	        'view': {
- 		        templateUrl: 'app/templates/game.html',
+ 		        templateUrl: '/templates/game.html',
 		        controller: 'game'
 		    }
         },
  	    resolve: {
-	 	    title: function($stateParams){
+	 	    title: ['$stateParams', function($stateParams){
 		 	    return 'Game '+$stateParams.gameID.toUpperCase();
-		 	}
+		 	}]
 	 	},        
         params: {
           itemList: {
@@ -166,7 +145,7 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
         url: '/about',
         views: {
 	        'view': {
- 		        templateUrl: 'app/templates/about.html',
+ 		        templateUrl: '/templates/about.html',
 		        controller: 'about'
 		    }
         }        
@@ -174,13 +153,13 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
   
 }]);
 
-Pyramid.controller('root', function($state, $scope, $rootScope, $stateParams){
-    firebase.auth().signInAnonymously().catch(function(error) {
+Pyramid.controller('root', ['$state', '$scope', '$rootScope', '$stateParams', function($state, $scope, $rootScope, $stateParams){
+    auth.signInAnonymously().catch(function(error) {
       var errorCode = error.code;
       var errorMessage = error.message;
       console.log(error);
     });    
-    firebase.auth().onAuthStateChanged(function(user) {
+    auth.onAuthStateChanged(function(user) {
       if (user) {
         var isAnonymous = user.isAnonymous;
         $rootScope.user_uid = user.uid;
@@ -189,7 +168,7 @@ Pyramid.controller('root', function($state, $scope, $rootScope, $stateParams){
       }
     });  
     $rootScope.soundEffect = new Audio();      
-});
+}]);
 
 Pyramid.controller('header', ['$state', '$scope', '$rootScope', '$stateParams', function($state, $scope, $rootScope, $stateParams){}]);
 
@@ -200,7 +179,7 @@ Pyramid.controller('start', ['$state', '$scope', '$rootScope', '$stateParams', f
 		currentGame = null;
 		canContinue = false;
 	}
-    firebase.analytics().logEvent('ViewedSplash');
+    analytics.logEvent('ViewedSplash');
 	
 }]);
 

@@ -978,3 +978,5 @@ var Deck = (function () {
 
   return Deck;
 })();
+
+export default Deck;

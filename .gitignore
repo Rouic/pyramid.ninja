@@ -1,7 +1,9 @@
 bower_components
+node_modules
 functions/node_modules
 functions/firebase-debug.log
 firebase-debug.log
 .firebase/
 .DS_Store
 *.cache
+dist
