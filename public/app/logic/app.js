@@ -88,7 +88,10 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
 	    $urlRouterProvider.otherwise('/start');
     }
     
-    $locationProvider.html5Mode(true);
+    $locationProvider.html5Mode({
+      enabled: true,
+      requireBase: false
+    });
     $locationProvider.hashPrefix('!');        
     
     $stateProvider   
