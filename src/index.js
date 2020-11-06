@@ -1,4 +1,4 @@
-import './bower_components/bootstrap/dist/css/bootstrap.min.css';
+import './assets/css/bootstrap.min.css';
 import './assets/css/material-kit.css';
 import './assets/css/style.css';
 

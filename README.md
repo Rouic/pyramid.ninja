@@ -9,18 +9,17 @@ A digital version of the popular drinking game "pyramid". Live version can be fo
 * Find out how to play Pyramid the game at https://pyramid.ninja/about
 
 ## Dependancies
+* Webpack
 * Firebase
-* Bower
-* Node > 8 (for Firebase functions)
+* Node > 10
 
 ## Install Instructions
-* First you need an active Firebase project and account to deploy to - a free one will work fine as the firebase functions are only for generating dynamic avatars and are not a requirement for functionality. It's also recommended to have a local Firebase environment setup for testing.
+* You will need an active Firebase project to deploy to. It's also recommended to have a local Firebase environment setup for testing, this project relies upon Firestore.
 * Clone the repo into a lovely folder of your choosing.
-* Run `bower install` from the public folder to install public bower components.
-* Run `npm install` from the functions folder to install node modules for Firebase functions.
-* Run `firebase serve` to start the local server, default port is 5000.
+* Run `npm install` from the `root` folder and `functions` folder to install relevant node modules.
+* Run `webpack` to package and populate the `dist` folder.
+* Run `firebase serve` to start a local server, the default port is 5000.
 * Navigate to http://localhost:5000 in your favourite modern browser to see pretty things.
-
 
 
 If you can't tell, this thing is a bit beta, so feel free to submit issues and other fun stuff!
