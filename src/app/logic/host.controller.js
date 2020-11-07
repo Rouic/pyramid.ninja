@@ -1,3 +1,5 @@
+import SeededShuffle from 'seededshuffle';
+
 Pyramid.controller('host', ['$state', '$scope', '$rootScope', '$stateParams', '$interval', function($state, $scope, $rootScope, $stateParams, $interval){
 	$rootScope.pageClass = 'signup-page';
 	$.material.init();
@@ -32,7 +34,7 @@ Pyramid.controller('host', ['$state', '$scope', '$rootScope', '$stateParams', '$
 					case 12: return {x:37, y:65};
 					case 13: return {x:-57, y:65};
 					case 14: return {x:-10, y:-59};
-					default: return {x:-10, y:-59};
+					default: return {x:-1000, y:-1000};
 				}					
 			};
 			 
@@ -64,24 +66,26 @@ Pyramid.controller('host', ['$state', '$scope', '$rootScope', '$stateParams', '$
 		
 		$scope.deck = Deck();
 		$scope.temp_deck = Deck();
-		$scope.deck.shuffle();
+		
+		$scope.deck.cards = SeededShuffle.shuffle($scope.deck.cards, $scope.roomPIN.toUpperCase());
+				
 		$scope.pyramidCards = $scope.deck.cards.splice(0, 15);
 		$scope.deckArray = [];
 		$scope.cardsArray = [];
 		$scope.drink_log = [];
 		
+				
 		$scope.deck.cards.forEach(function (card, i) {
 			$scope.deckArray.push(card.i);
 		});
+		
 		$scope.pyramidCards.forEach(function (card, i) {
 			$scope.cardsArray.push({
 				id: card.i,
 				shown: false
 			});
 		});
-		
-		
-		//TO-DO: Cache the PIN on reload?
+				
 		
 		db.collection("games").doc($scope.roomPIN).set({
 		    '__pyramid.meta': {
@@ -90,8 +94,8 @@ Pyramid.controller('host', ['$state', '$scope', '$rootScope', '$stateParams', '$
 				created_at: new Date(),
 				fancy_shown: false
 			},
-			'__pyramid.cards': $scope.cardsArray,
-			'__pyramid.deck': $scope.deckArray
+			'__pyramid.cards': angular.copy($scope.cardsArray),
+			'__pyramid.deck': angular.copy($scope.deckArray)
 		}, {merge: true})
 		.then(function() {
 			$scope.roomCode = $scope.roomPIN.toUpperCase();
@@ -126,40 +130,52 @@ Pyramid.controller('host', ['$state', '$scope', '$rootScope', '$stateParams', '$
 
 				if($scope.gameStarted != true){
 					$scope.pyramidDeck = Deck();
+					$scope.pyramidDeck.cards = SeededShuffle.shuffle($scope.pyramidDeck.cards, $scope.roomPIN.toUpperCase());
 				}
-
+				
 				$scope.information = "Time to get Wrecked...";
 				$scope.step = 2;
 				$scope.cardsleft = doc.data()['__pyramid.deck'].length;
 
+
+					function genPyramid(){
+						if($scope.gameStarted != true){
+							$scope.pyramidDeck.cards.forEach(function (card, i) {
+								if(card){														 
+									card.disableDragging();
+									card.disableFlipping();					
+									if(i <= 15){
+										card.mount($scope.$container);
+										card.animateTo({
+											delay: 1000 + i * 2, // wait 1 second + i * 2 ms
+											duration: 500,
+											ease: 'quartOut',
+											x: $scope.pyramidCoords(i).x,
+											y: $scope.pyramidCoords(i).y
+										});
+									}
+								} 
+							});
+						}
+					};
+
+					//convert entire new deck to match cards store in Firebase
+					var cardCycle = 0;
 					$scope.pyramidDeck.cards.forEach(function(card, i) {
 						
 						let a = doc.data()['__pyramid.cards'].find(m=>m.id===card.i);			
 						if(!a){
-							$scope.pyramidDeck.cards = $.grep($scope.pyramidDeck.cards, function(e){ 
+							$scope.pyramidDeck.cards = jQuery.grep($scope.pyramidDeck.cards, function(e){ 
 							     return e.i != card.i; 
-							});										
-						} else if(a.shown) card.setSide('front'); 
+							});	
+						} else {
+							cardCycle++;
+							if(a.shown) card.setSide('front');
+							if(cardCycle == doc.data()['__pyramid.cards'].length) genPyramid();
+						}
+						
 					});
-			
-				
-					if($scope.gameStarted != true){
-						$scope.pyramidDeck.cards.forEach(function (card, i) {
-																					 
-						 card.disableDragging();
-						 card.disableFlipping();					
-						 
-						 card.mount($scope.$container);
-						 card.animateTo({
-								 delay: 1000 + i * 2, // wait 1 second + i * 2 ms
-								 duration: 500,
-								 ease: 'quartOut',
-								 x: $scope.pyramidCoords(i).x,
-								 y: $scope.pyramidCoords(i).y
-							 });
-						});
-					}
-						 
+									 
 						$scope.gameStarted = true;
 						console.log("Game update!");						 
 						$scope.drink_log = [];
@@ -227,7 +243,7 @@ Pyramid.controller('host', ['$state', '$scope', '$rootScope', '$stateParams', '$
 						}							
 						
 						 
-						$('.playingcard').each(function(x) {
+						$('#cardcontainer .playingcard').each(function(x) {
 							$($('.playingcard')[x]).off();
 							$($('.playingcard')[x]).bind("click touchstart", function(){
 									 
@@ -251,7 +267,10 @@ Pyramid.controller('host', ['$state', '$scope', '$rootScope', '$stateParams', '$
 													id: card.i,
 													shown: (i == x || doc.data()['__pyramid.cards'][i].shown == true) ? true : false
 												});
-											});											
+											});
+											
+											console.log(updateDeck);
+																				
 											db.collection("games").doc($scope.roomPIN).set({
 												'__pyramid.currentRound':{
 													round_number: $scope.round_number,
@@ -292,7 +311,7 @@ Pyramid.controller('host', ['$state', '$scope', '$rootScope', '$stateParams', '$
 						$('#roundModal').on('hidden.bs.modal', function () {
 							
 							db.collection("games").doc($scope.roomPIN).set({
-								'__pyramid.currentRound': firebase.default.firestore.FieldValue.delete()
+								'__pyramid.currentRound': firebaseAll.firestore.FieldValue.delete()
 							}, {merge: true});
 						
 							 $scope.information = 'Select another card from the pyramid to continue...';

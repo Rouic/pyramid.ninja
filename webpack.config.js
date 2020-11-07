@@ -1,12 +1,18 @@
 const path = require('path');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const glob = require('glob');
 const {
   CleanWebpackPlugin
 } = require('clean-webpack-plugin');
 const GoogleFontsPlugin = require("@beyonk/google-fonts-webpack-plugin");
 const CopyPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const PurgecssPlugin = require('purgecss-webpack-plugin');
+
+const PATHS = {
+	  src: path.join(__dirname, 'src')
+	}
 
 module.exports = {
   entry: {
@@ -26,6 +32,12 @@ module.exports = {
 	  maxInitialRequests: Infinity,
 	  minSize: 0,
 	  cacheGroups: {
+		  styles: {
+				name: 'styles',
+				test: /\.css$/,
+				chunks: 'all',
+				enforce: true
+			  },
 		vendor: {
 		  test: /[\\/]node_modules[\\/]/,
 		  name(module) {
@@ -83,7 +95,11 @@ module.exports = {
 		  context: './src/assets/sounds/bullshit'
 		},
 	  ],
-	})
+	}),
+	new PurgecssPlugin({
+		  paths: glob.sync(`${PATHS.src}/**/*`,  { nodir: true }),
+		  safelist: ['playingcard']
+		}),
   ],
   module: {
 	rules: [{

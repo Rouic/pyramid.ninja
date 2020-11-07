@@ -1,7 +1,4 @@
-'use strict';
-
-var Deck = (function () {
-  'use strict';
+export default function Deck() {
 
   var ticking;
   var animations = [];
@@ -977,6 +974,4 @@ var Deck = (function () {
   Deck.translate = translate;
 
   return Deck;
-})();
-
-export default Deck;
+};

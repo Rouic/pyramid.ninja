@@ -1,10 +1,9 @@
-import './assets/css/bootstrap.min.css';
+import './bower_components/bootstrap/dist/css/bootstrap.min.css';
 import './assets/css/material-kit.css';
 import './assets/css/style.css';
 
 import './assets/js/jquery.min.js';
 import './assets/js/bootstrap.min.js';
-// import './assets/js/jasny-bootstrap.min.js';
 import './assets/js/material.min.js';
 import './assets/js/material-kit.js';
 
@@ -36,9 +35,10 @@ global.perf = firebase.default.performance();
 global.analytics = firebase.default.analytics();
 global.db = firebase.default.firestore();
 global.auth = firebase.default.auth();
+global.firebaseAll = firebase.default;
 /* Firebase config end */
 
-global.Deck = Deck;
+global.Deck = Deck();
 
 global.Pyramid = angular.module('Pyramid', [uirouter, ngCookies]);
 global.currentGame = null;

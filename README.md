@@ -17,7 +17,7 @@ A digital version of the popular drinking game "pyramid". Live version can be fo
 * You will need an active Firebase project to deploy to. It's also recommended to have a local Firebase environment setup for testing, this project relies upon Firestore.
 * Clone the repo into a lovely folder of your choosing.
 * Run `npm install` from the `root` folder and `functions` folder to install relevant node modules.
-* Run `webpack` to package and populate the `dist` folder.
+* Run `webpack` or `npm run build` to package and populate the `dist` folder.
 * Run `firebase serve` to start a local server, the default port is 5000.
 * Navigate to http://localhost:5000 in your favourite modern browser to see pretty things.
 
