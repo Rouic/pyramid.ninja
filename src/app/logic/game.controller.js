@@ -73,7 +73,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 			  card = null;
 		  }
 		  return card;
-	}		
+	};		
 		
 	$rootScope.title = '| '+title+' Loading...';	
 	if(!$stateParams.gameID){
@@ -115,7 +115,6 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 								}
 							}, {merge: true})
 							.then(function() {
-								console.log("Player cards successfully updated!");
 							})
 							.catch(function(error) {
 								console.error("Error writing game: ", error);
@@ -132,7 +131,6 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 						$rootScope.title = '| '+title+' Waiting...';
 						
 						if(doc.data()['__pyramid.meta'].started == true){
-							console.log("Game Started!");	
 							$scope.instruction = 'Waiting on host...';		
 							$scope.continueButton = false;
 							
@@ -153,14 +151,12 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 									}
 								}, {merge: true})
 								.then(function() {
-									console.log("Player cards successfully updated!");
 								})
 								.catch(function(error) {
 									console.error("Error writing game: ", error);
 								});									
 								
 							} else {
-								console.log("Wrote myCards");
 								$scope.myCards = doc.data()[$rootScope.user_uid].cards;
 								
 									$scope.gameStarted = true;
@@ -260,9 +256,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 										$scope.instruction = 'To call someone to drink use the button below!';
 									}									
 									
-									if(doc.data()['__pyramid.currentRound'] && doc.data()['__pyramid.currentRound'].round_number && doc.data()['__pyramid.rounds'] && doc.data()['__pyramid.rounds'][doc.data()['__pyramid.currentRound'].round_number] && doc.data()['__pyramid.rounds'][doc.data()['__pyramid.currentRound'].round_number].round_transactions && doc.data()['__pyramid.rounds'][doc.data()['__pyramid.currentRound'].round_number].round_transactions.length > 0){
-										console.log("New transaction data!");		
-										
+									if(doc.data()['__pyramid.currentRound'] && doc.data()['__pyramid.currentRound'].round_number && doc.data()['__pyramid.rounds'] && doc.data()['__pyramid.rounds'][doc.data()['__pyramid.currentRound'].round_number] && doc.data()['__pyramid.rounds'][doc.data()['__pyramid.currentRound'].round_number].round_transactions && doc.data()['__pyramid.rounds'][doc.data()['__pyramid.currentRound'].round_number].round_transactions.length > 0){										
 										
 										doc.data()['__pyramid.rounds'][doc.data()['__pyramid.currentRound'].round_number].round_transactions.forEach(function(transaction, i) {
 											if(transaction.t_to == $rootScope.user_uid && transaction.status == 'accepted'){
@@ -288,7 +282,6 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 												'__pyramid.rounds': temp_rounds
 											}, {merge: true})
 											.then(function() {
-												console.log("Round data updated!");
 											})
 											.catch(function(error) {
 												console.error("Error writing game data: ", error);
@@ -326,7 +319,6 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 											$scope.instruction = 'You have sent drinks already - please wait for round to finish...';
 											
 											if($scope.allowNewCard == true){
-												console.log('Get card');
 												$scope.allowDecision = false;
 												$scope.allowCalling = false;
 												$scope.instruction = 'Looks like you need more cards! Click the button below to get a new one, or wait until the end of the round.';	
@@ -426,7 +418,6 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 																	$scope.allowDecision = false;
 																	$scope.allowCalling = false;
 																	$scope.allowNewCard = true;
-																	console.log("Round data updated!");
 																})
 																.catch(function(error) {
 																	console.error("Error writing game data: ", error);
@@ -450,13 +441,11 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 										
 									}
 									if(doc.data()['__pyramid.summary']){
-										$scope.information = 'The game is over! Check your cards below!';
-										console.log(doc.data()['__pyramid.summary'][$rootScope.user_uid]); 
+										$scope.ended = true;
 										$('.playingcard').off();
 										$scope.clientDeck.cards.forEach(function (card, i) {
 											card.setSide('front');
 										});
-										console.log("Game already ended!");
 									}
 
 								
@@ -513,7 +502,6 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 			}
 		}, {merge: true})
 		.then(function() {
-			console.log("Submitting transactions");
 			$scope.allowCalling = false;
 		})
 		.catch(function(error) {
@@ -562,7 +550,6 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 				}
 			}, {merge: true})
 			.then(function() {
-				console.log("Updated card set with seen values!");
 			})
 			.catch(function(error) {
 				console.error("Error writing card data: ", error);
