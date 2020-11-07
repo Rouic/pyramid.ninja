@@ -1,4 +1,4 @@
-	<div class="page-header header-filter" filter-color="red" style="background-image: url('assets/img/abstract-background-PUZKTEQ(1).jpg'); background-size: cover; background-position: top center;">
+	<div class="page-header header-filter" filter-color="black" style="background-image: url('assets/img/{{randomBackground}}.jpg'); background-size: cover; background-position: top center;">
     	<div class="container">
 			<div class="row">
     			<div class="col-md-10 col-md-offset-1">
@@ -8,7 +8,7 @@
                         <h2 ng-if="!(players.length > 2)" class="card-title text-center">Waiting for more players...</h2>
                         <h2 ng-if="(players.length > 2)" class="card-title text-center">Press Continue when ready...</h2>
 						<h3 class="text-center" ng-if="!roomCode">Generating new game...</h3>
-                        <h3 class="text-center" ng-if="roomCode">Open {{domain}} on your devices and enter <span class="card-title">{{roomCode}}</span> to join this game.</h3>
+                        <h3 class="text-center" ng-if="roomCode">Open <span class="text-black">{{domain}}</span> on your devices and enter <span class="card-title text-rose">{{roomCode}}</span> to join this game.</h3>
                         <div class="row">
 		    				<div class="col-md-8 col-md-offset-2 text-center">
 			    				<div class="game-player" ng-repeat="x in players" ng-if="x.type != 'host'">

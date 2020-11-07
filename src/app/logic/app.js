@@ -154,6 +154,8 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
 }]);
 
 Pyramid.controller('root', ['$state', '$scope', '$rootScope', '$stateParams', function($state, $scope, $rootScope, $stateParams){
+  
+    $rootScope.randomBackground = Math.floor(Math.random() * 10) + 1;
     auth.signInAnonymously().catch(function(error) {
       var errorCode = error.code;
       var errorMessage = error.message;
@@ -172,7 +174,7 @@ Pyramid.controller('root', ['$state', '$scope', '$rootScope', '$stateParams', fu
 
 Pyramid.controller('header', ['$state', '$scope', '$rootScope', '$stateParams', function($state, $scope, $rootScope, $stateParams){}]);
 
-Pyramid.controller('start', ['$state', '$scope', '$rootScope', '$stateParams', function($state, $scope, $rootScope, $stateParams){
+Pyramid.controller('start', ['$state', '$scope', '$rootScope', '$stateParams', '$timeout', function($state, $scope, $rootScope, $stateParams, $timeout){
 	$rootScope.pageClass = 'signup-page';
 	$.material.init();
 	if(currentGame){
@@ -181,6 +183,7 @@ Pyramid.controller('start', ['$state', '$scope', '$rootScope', '$stateParams', f
 	}
     analytics.logEvent('ViewedSplash');
 	
+  
 }]);
 
 Pyramid.controller('join', ['$cookies', '$state', '$scope','$rootScope', '$stateParams', function($cookies, $state, $scope, $rootScope, $stateParams){
