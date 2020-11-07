@@ -98,7 +98,9 @@ module.exports = {
 	}),
 	new PurgecssPlugin({
 		  paths: glob.sync(`${PATHS.src}/**/*`,  { nodir: true }),
-		  safelist: ['playingcard']
+		  safelist: {
+			  greedy: ['playingcard', 'face']
+		}
 		}),
   ],
   module: {

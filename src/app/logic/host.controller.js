@@ -17,6 +17,55 @@ Pyramid.controller('host', ['$state', '$scope', '$rootScope', '$stateParams', '$
 		 
 		 var pyramidCards = [];
 
+			$scope.cardIndexTranslation = function(value){
+				var card = null;
+				value = value+1;
+				  switch(value) {
+					case 1: case 14: case 27: case 40:
+					  card = "an Ace";
+					  break;
+					case 2: case 15: case 28: case 41:
+					  card = "a Two";
+					  break;
+					case 3: case 16: case 29: case 42:
+					  card = "a Three";
+					  break;
+					case 4: case 17: case 30: case 43:
+					  card = "a Four";
+					  break;
+					case 5: case 18: case 31: case 44:
+					  card = "a Five";
+					  break;
+					case 6: case 19: case 32: case 45:
+					  card = "a Six";
+					  break;
+					case 7: case 20: case 33: case 46:
+					  card = "a Seven";
+					  break;
+					case 8: case 21: case 34: case 47:
+					  card = "an Eight";
+					  break;
+					case 9: case 22: case 35: case 48:
+					  card = "a Nine";
+					  break;
+					case 10: case 23: case 36: case 49:
+					  card = "a Ten";
+					  break;
+					case 11: case 24: case 37: case 50:
+					  card = "a Jack";
+					  break;
+					case 12: case 25: case 38: case 51:
+					  card = "a Queen";
+					  break;
+					case 13: case 26: case 39: case 52:
+					  card = "a King";
+					  break;
+					default:
+					  card = null;
+				  }
+				  return card;
+			};
+
 	 		$scope.pyramidCoords = function(i){
 			 	switch(i) {
 					case 0: return {x:179, y:442};
@@ -48,6 +97,32 @@ Pyramid.controller('host', ['$state', '$scope', '$rootScope', '$stateParams', '$
 					default: return 1;
 				}					
 		 	};	
+			 
+			$scope.randoString = function(arr){
+				return SeededShuffle.shuffle(arr, $scope.roomPIN.toUpperCase())[0];
+			};
+			 
+			$scope.roundTaunt = function(i){
+				switch(i) {
+					case 0: return $scope.randoString(['Time to get wrecked!', 'Time to turn our livers to coral!']);
+					case 1: return $scope.randoString(['I hear round 2 is spicy!', 'Why don’t you smoke a whole carton of cigarettes?']);
+					case 2: return $scope.randoString(['Your liver will thank you!', 'Q: Whats the difference between a dog and a fox? A: 2 drinks.']);
+					case 3: return $scope.randoString(['Sponsored by crippling depression.', 'Bring your wellies, because we’re going to be knee deep in clunge!']);
+					case 4: return $scope.randoString(['You alcoholic!', 'So a dyslexic walks into a bra...', 'I wonder if this is how Scientology started?']);
+					case 5: return $scope.randoString(['Who lives in a pineapple under the sea?', 'I got so pissed last night I don’t know if I found some keys or lost a car.']);
+					case 6: return $scope.randoString(['Round 6 is going to get heated!', 'Beauty is in the eye of the beer holder.']);
+					case 7: return $scope.randoString(['Yay lockdown!', 'Two men walked into a bar. The third one ducked.']);
+					case 8: return $scope.randoString(['The youngest person should double their drinks...', 'Ever thought about a career in politics?']);
+					case 9: return $scope.randoString(['Ready to die?', 'The past, present, and future walk into a bar. It was tense.']);
+					case 10: return $scope.randoString(['Green is not a creative colour.', 'Not drunk enough? Time to call bullshit on everything!']);
+					case 11: return $scope.randoString(['Vote liver failure!', 'Just drink hand sanitiser...']);
+					case 12: return $scope.randoString(['The drinks get serious now.', 'Alcohol is a perfect solvent: It dissolves marriages, families and careers.']);
+					case 13: return $scope.randoString(['Someone is going to be sick...', 'Why don’t we call your ex?']);
+					case 14: return $scope.randoString(['Nearly there!', 'Vodka isn’t always the answer. But it’s worth a shot.']);
+					case 15: return $scope.randoString(['Last one!', 'You\'ve climbed the alcoholic mountain!']);
+					default: return '';
+				}
+			};
 	
 		
 	$scope.players = [];
@@ -125,42 +200,38 @@ Pyramid.controller('host', ['$state', '$scope', '$rootScope', '$stateParams', '$
 		if(doc.data()['__pyramid.summary']){
 			$scope.information = 'That\'s the end of the game! Let\'s look at our cards!'; 
 			$('.playingcard').off();
-			console.log("Game already ended!");
 		} else if(doc.data()['__pyramid.meta'].started == true){
 
 				if($scope.gameStarted != true){
 					$scope.pyramidDeck = Deck();
 					$scope.pyramidDeck.cards = SeededShuffle.shuffle($scope.pyramidDeck.cards, $scope.roomPIN.toUpperCase());
 				}
-				
-				$scope.information = "Time to get Wrecked...";
+				$scope.information = $scope.roundTaunt((doc.data()['__pyramid.rounds']) ? Object.keys(doc.data()['__pyramid.rounds']).length : 0)+" Pick a card from below to continue...";
 				$scope.step = 2;
 				$scope.cardsleft = doc.data()['__pyramid.deck'].length;
 
 
 					function genPyramid(){
 						if($scope.gameStarted != true){
+							$scope.pyramidDeck.cards = $scope.pyramidDeck.cards.splice(0, 15);
 							$scope.pyramidDeck.cards.forEach(function (card, i) {
-								if(card){														 
+								if(card){													 
 									card.disableDragging();
-									card.disableFlipping();					
-									if(i <= 15){
-										card.mount($scope.$container);
-										card.animateTo({
-											delay: 1000 + i * 2, // wait 1 second + i * 2 ms
-											duration: 500,
-											ease: 'quartOut',
-											x: $scope.pyramidCoords(i).x,
-											y: $scope.pyramidCoords(i).y
-										});
-									}
+									card.disableFlipping();		
+									card.mount($scope.$container);
+									card.animateTo({
+										delay: 1000 + i * 2, // wait 1 second + i * 2 ms
+										duration: 500,
+										ease: 'quartOut',
+										x: $scope.pyramidCoords(i).x,
+										y: $scope.pyramidCoords(i).y
+									});
 								} 
 							});
 						}
 					};
 
 					//convert entire new deck to match cards store in Firebase
-					var cardCycle = 0;
 					$scope.pyramidDeck.cards.forEach(function(card, i) {
 						
 						let a = doc.data()['__pyramid.cards'].find(m=>m.id===card.i);			
@@ -169,15 +240,16 @@ Pyramid.controller('host', ['$state', '$scope', '$rootScope', '$stateParams', '$
 							     return e.i != card.i; 
 							});	
 						} else {
-							cardCycle++;
 							if(a.shown) card.setSide('front');
-							if(cardCycle == doc.data()['__pyramid.cards'].length) genPyramid();
+							if(i+1 == doc.data()['__pyramid.cards'].length) {
+								genPyramid();
+								$('#maingamecontainer').height($('#cardcontainer').height() + 400);
+							}
 						}
 						
 					});
 									 
 						$scope.gameStarted = true;
-						console.log("Game update!");						 
 						$scope.drink_log = [];
 						$scope.round_transactions = [];
 						if($scope.round_number && doc.data()['__pyramid.rounds'] && doc.data()['__pyramid.rounds'][$scope.round_number] && doc.data()['__pyramid.rounds'][$scope.round_number].round_transactions){
@@ -250,6 +322,7 @@ Pyramid.controller('host', ['$state', '$scope', '$rootScope', '$stateParams', '$
 									 $scope.round_number++;
 									 $scope.information = '';
 									 $scope.round_row = $scope.pyramidRow(x);
+									
 									 $scope.drink_log = [];
 									 
 									 $scope.pyramidDeck.cards[x].setSide('front');
@@ -269,7 +342,7 @@ Pyramid.controller('host', ['$state', '$scope', '$rootScope', '$stateParams', '$
 												});
 											});
 											
-											console.log(updateDeck);
+											$scope.currentCard = $scope.cardIndexTranslation($scope.showCards[0].i);
 																				
 											db.collection("games").doc($scope.roomPIN).set({
 												'__pyramid.currentRound':{
@@ -288,7 +361,7 @@ Pyramid.controller('host', ['$state', '$scope', '$rootScope', '$stateParams', '$
 												'__pyramid.cards':updateDeck
 											}, {merge: true})
 											.then(function() {
-												console.log("Card successfully updated!");	
+												
 											})
 											.catch(function(error) {
 												console.error("Error writing card: ", error);
@@ -369,6 +442,21 @@ Pyramid.controller('host', ['$state', '$scope', '$rootScope', '$stateParams', '$
 		$scope.$apply();
 		
     });
+
+	$rootScope.$on('$stateChangeStart', 
+	  function(event, toState, toParams, fromState, fromParams){ 
+		db.collection("games").doc($scope.roomCode).set({
+			'__pyramid.meta': {
+				finished: true
+			}
+		}, {merge: true})
+		.then(function() {
+			return null;
+		})
+		.catch(function(error) {
+			console.error("Error writing game data: ", error);
+		});
+	});
 
 	window.addEventListener("beforeunload", function(e){
 		db.collection("games").doc($scope.roomCode).set({
