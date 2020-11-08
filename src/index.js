@@ -1,9 +1,10 @@
-import './bower_components/bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import './assets/css/material-kit.css';
 import './assets/css/style.css';
 
-import './assets/js/jquery.min.js';
-import './assets/js/bootstrap.min.js';
+import 'jquery';
+import 'bootstrap';
+
 import './assets/js/material.min.js';
 import './assets/js/material-kit.js';
 
