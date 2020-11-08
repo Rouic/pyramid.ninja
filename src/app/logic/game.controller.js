@@ -174,7 +174,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 									var hiddenCardNum = 0;
 									function callback(){
 										if(hiddenCardNum == 4){
-											if($scope.roundsStarted == false && $scope.hasIntialLooked == false){ //poopy
+											if($scope.roundsStarted == false && $scope.hasIntialLooked == false){
 												$scope.instruction = 'Press the button below to view your cards. You will have just 10 seconds to remember them! Tip: You can drag your cards around to re-order them.';
 												if(!doc.data()['__pyramid.currentRound']) $scope.allowViewAll = true;
 												$scope.allowCalling = false;
@@ -526,7 +526,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 	$scope.revealNewCard = function(){
 		$scope.doingCardShow = true;
 		$scope.allowNewCard = false;
-		$scope.countdown = 5;
+		$scope.countdown = 15;
 		$scope.instruction = 'Remember your new card! You will NOT be able to view it again!';
 	};
 	
