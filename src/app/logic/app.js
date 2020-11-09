@@ -95,7 +95,7 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
  		        templateUrl: '/templates/start.html',
 		        controller: 'start'
 		    }
-        }        
+        }     
     })
     .state('host', {
  	    parent: 'root',
@@ -106,7 +106,12 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
  		        templateUrl: '/templates/host.html',
 		        controller: 'host'
 		    }
-        }        
+        },
+        resolve: {
+           title: function(){
+             return 'Host Game';
+         }
+       }     
     })
     .state('join', {
  	    parent: 'root',
@@ -117,7 +122,12 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
  		        templateUrl: '/templates/join.html',
 		        controller: 'join'
 		    }
-        }        
+        },
+        resolve: {
+           title:  function(){
+              return 'Join Game';
+          }
+       }      
     })    
     .state('game', {
  	    parent: 'root',
@@ -148,7 +158,12 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
  		        templateUrl: '/templates/about.html',
 		        controller: 'about'
 		    }
-        }        
+        },
+        resolve: {
+           title:  function(){
+             return 'About';
+         }
+       },       
     });    
   
 }]);

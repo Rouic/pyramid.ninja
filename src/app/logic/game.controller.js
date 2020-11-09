@@ -14,6 +14,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 	$scope.allowCalling = false;
 	$scope.newRoundLock = true;
 	$scope.hasIntialLooked = false;
+	$scope.transactionLock = false;
 	
 	$scope.myCardsCoords = function(i){
 		switch(i) {
@@ -336,48 +337,56 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 																						
 											if(transaction.t_to == $rootScope.user_uid && transaction.status == 'waiting'){
 												//someone sent us a transaction! Need to block all options until we reply.
-												
-												$scope.transactionIteration = i;
-												$scope.currentDecision = {
-													from_player: doc.data()[transaction.t_from].name,
-													to_player: doc.data()[transaction.t_to].name
-												};	
-												
-												callsOnUs++;
-												if(callsOnUs > 1){
-													$scope.instruction = 'several_drink';
-													$scope.allowDecision = true;
-													$scope.allowCalling = false;
-												} else {
-													$scope.instruction = 'drink';
-													$scope.allowDecision = true;
-													$scope.allowCalling = false;
-												}												
-												
+												if($scope.transactionLock == false){
+													$scope.transactionIteration = i;
+													$scope.currentDecision = {
+														from_player: doc.data()[transaction.t_from].name,
+														to_player: doc.data()[transaction.t_to].name
+													};	
+																										
+													$rootScope.soundEffect.src = '/assets/sounds/notification/1.mp3';
+													
+													if(!$scope.soundsLock){
+														$rootScope.soundEffect.play();
+														$scope.soundsLock = true;
+													}
+													
+													callsOnUs++;
+													if(callsOnUs > 1){
+														$scope.instruction = 'several_drink';
+														$scope.allowDecision = true;
+														$scope.allowCalling = false;
+													} else {
+														$scope.instruction = 'drink';
+														$scope.allowDecision = true;
+														$scope.allowCalling = false;
+													}												
+												}	
 											}
 											if(transaction.t_from == $rootScope.user_uid && transaction.status == 'bullshit'){
+												if($scope.transactionLock == false){
+													$scope.transactionLock = true;
+													$scope.transactionIteration = i;
+													$scope.currentDecision = {
+														from_player: doc.data()[transaction.t_from].name,
+														to_player: doc.data()[transaction.t_to].name
+													};	
+													
+													var randomBullshit = Math.floor(Math.random() * 7) + 1;
+													
+													$rootScope.soundEffect.src = '/assets/sounds/bullshit/'+randomBullshit+'.mp3'
+													
+													if(!$scope.soundsLock){
+														$rootScope.soundEffect.play();
+														$scope.soundsLock = true;
+													}
+													
+													$scope.instruction = 'bullshit';
+													$scope.allowDecision = false;
+													$scope.allowCalling = false;
+													$scope.bullshitReply = true;
 												
-												$scope.transactionIteration = i;
-												$scope.currentDecision = {
-													from_player: doc.data()[transaction.t_from].name,
-													to_player: doc.data()[transaction.t_to].name
-												};	
-												
-												var randomBullshit = Math.floor(Math.random() * 7) + 1;
-												
-												$rootScope.soundEffect.src = '/assets/sounds/'+randomBullshit+'.mp3'
-												
-												if(!$scope.soundsLock){
-													$rootScope.soundEffect.play();
-													$scope.soundsLock = true;
-												}
-												
-												$scope.instruction = 'bullshit';
-												$scope.allowDecision = false;
-												$scope.allowCalling = false;
-												$scope.bullshitReply = true;
-												
-												$('.playingcard').each(function(x) {
+													$('.playingcard').each(function(x) {
 													var xIndex = x;
 													$scope.selectedIndex = x;
 													$($('.playingcard')[xIndex]).off();
@@ -393,6 +402,27 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 															})[0];
 																														
 															var updated_rounds = angular.copy(doc.data()['__pyramid.rounds']);
+															
+															if($scope.clientDeck.cards[$scope.selectedCard].rank == currentCardRank.rank){
+																var randomWrong = Math.floor(Math.random() * 2) + 1;
+																
+																$rootScope.soundEffect.src = '/assets/sounds/wrong/'+randomWrong+'.mp3'
+																
+																if(!$scope.soundsLock){
+																	$rootScope.soundEffect.play();
+																	$scope.soundsLock = true;
+																}
+															} else {
+																var randomSuccess = Math.floor(Math.random() * 3) + 1;
+																
+																$rootScope.soundEffect.src = '/assets/sounds/success/'+randomSuccess+'.mp3'
+																
+																if(!$scope.soundsLock){
+																	$rootScope.soundEffect.play();
+																	$scope.soundsLock = true;
+																}
+															}
+															
 															updated_rounds[doc.data()['__pyramid.currentRound'].round_number].round_transactions[$scope.transactionIteration].status = ($scope.clientDeck.cards[$scope.selectedCard].rank == currentCardRank.rank) ? 'bullshit_correct' : 'bullshit_wrong';
 																																
 																var updatedCardSet = [];
@@ -418,6 +448,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 																	$scope.allowDecision = false;
 																	$scope.allowCalling = false;
 																	$scope.allowNewCard = true;
+																	$scope.transactionLock = false;
 																})
 																.catch(function(error) {
 																	console.error("Error writing game data: ", error);
@@ -431,7 +462,8 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 														
 													});							
 													
-												});																								
+												});																						
+												}		
 												
 											}
 		

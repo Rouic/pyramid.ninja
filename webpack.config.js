@@ -90,9 +90,9 @@ module.exports = {
 		  context: './src/assets/img/'
 		},
 		{
-		  from: '*',
+		  from: '**',
 		  to: 'assets/sounds/',
-		  context: './src/assets/sounds/bullshit'
+		  context: './src/assets/sounds/'
 		},
 	  ],
 	}),
