@@ -17,7 +17,7 @@ const PATHS = {
 module.exports = {
   entry: {
 	main: './src/index.js',
-	app: './src/app/logic/app.js',
+	app: './src/app/app.js',
   },
   output: {
 	filename: '[name].[contenthash:8].js',
