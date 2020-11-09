@@ -132,7 +132,7 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
   	 	    title: ['$stateParams', function($stateParams){
   		 	    return 'Game '+$stateParams.gameID.toUpperCase();
   		 	  }],
-        }
+        },
         params: {
           itemList: {
             showContinue: null
