@@ -17,7 +17,7 @@ Contact: hello@rouic.com
 
 */
 
-Pyramid.run(['$window', '$rootScope', '$state', '$stateParams', function($window, $rootScope, $state, $stateParams){
+Pyramid.run(['$window', '$rootScope', '$state', '$stateParams', '$transitions', function($window, $rootScope, $state, $stateParams, $transitions){
 	$rootScope.$state = $state;
 	$rootScope.$stateParams = $stateParams;
   
@@ -27,9 +27,9 @@ Pyramid.run(['$window', '$rootScope', '$state', '$stateParams', function($window
     	$window.history.back();
 	};	
 	
-    $rootScope.$on('$stateChangeSuccess', function (event, current, previous) {       
-        $rootScope.title = '| '+$state.current.title || 'Pyramid.Ninja';
-    });			
+  $transitions.onSuccess({}, function($transition){
+    $rootScope.title = '| '+ $state.current.title || 'Unknown Page';
+  });		
 	
 }]);
 Pyramid.directive('onSizeChanged', ['$window', function ($window) {
@@ -88,7 +88,7 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
   	})	                
     .state('start', {
  	    parent: 'root',
- 	    title: 'Start',
+ 	    title: 'Online version of the drinking card game.',
         url: '/',
         views: {
 	        'view': {
@@ -106,12 +106,7 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
  		        templateUrl: '/templates/host.html',
 		        controller: 'host'
 		    }
-        },
-        resolve: {
-           title: function(){
-             return 'Host Game';
-         }
-       }     
+        }     
     })
     .state('join', {
  	    parent: 'root',
@@ -122,12 +117,7 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
  		        templateUrl: '/templates/join.html',
 		        controller: 'join'
 		    }
-        },
-        resolve: {
-           title:  function(){
-              return 'Join Game';
-          }
-       }      
+        }     
     })    
     .state('game', {
  	    parent: 'root',
@@ -138,11 +128,9 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
 		        controller: 'game'
 		    }
         },
- 	    resolve: {
 	 	    title: ['$stateParams', function($stateParams){
 		 	    return 'Game '+$stateParams.gameID.toUpperCase();
-		 	}]
-	 	},        
+		 	  }],
         params: {
           itemList: {
             showContinue: null
@@ -158,12 +146,7 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
              templateUrl: '/templates/privacy.html',
             controller: 'privacy'
         }
-        },
-        resolve: {
-           title:  function(){
-             return 'Privacy';
-         }
-       },       
+        }    
     }) 
     .state('about', {
  	    parent: 'root',
@@ -174,12 +157,7 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
  		        templateUrl: '/templates/about.html',
 		        controller: 'about'
 		    }
-        },
-        resolve: {
-           title:  function(){
-             return 'About';
-         }
-       },       
+        }      
     });    
   
 }]);
