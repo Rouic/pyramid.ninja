@@ -206,34 +206,31 @@ Pyramid.controller('join', ['$cookies', '$state', '$scope','$rootScope', '$state
 	$scope.joinGame = function(){
 		if($scope.join.roomcode && $scope.join.name){
             
-            db.collection("games").doc($scope.join.roomcode.toUpperCase()).get().then((docSnapshot) => {
-              if (docSnapshot.exists) {
+            db.collection("games").doc($scope.join.roomcode.toUpperCase()).get().then((gameSnapshot) => {
+              if (gameSnapshot.exists) {
                 db.collection("games").doc($scope.join.roomcode.toUpperCase()).set({
-                  [$rootScope.user_uid]: {
-                      admin: true,
-                      uid: $rootScope.user_uid,
-                      name: $scope.join.name.toUpperCase(),
-                      drinks: 0
-                  }
-              }, {merge: true})
-              .then(function() {
-                  console.log("Player data successfully written!");
-                  currentGame = $scope.join.roomcode;
-                  $cookies.put('name', $scope.join.name.toUpperCase());
-                  $rootScope.soundEffect.play();
-                  $state.go('game', {gameID: $scope.join.roomcode, showContinue: true});
-              })
-              .catch(function(error) {
-                  $scope.joinError = error;
-                  console.error("Error writing game: ", error);
-              });
+                    [$rootScope.user_uid]: {
+                        admin: true,
+                        uid: $rootScope.user_uid,
+                        name: $scope.join.name.toUpperCase(),
+                        drinks: 0
+                    }
+                }, {merge: true})
+                .then(function() {
+                    currentGame = $scope.join.roomcode;
+                    $cookies.put('name', $scope.join.name.toUpperCase());
+                    $rootScope.soundEffect.play();
+                    $state.go('game', {gameID: $scope.join.roomcode, showContinue: true});
+                })
+                .catch(function(error) {
+                    $scope.joinError = error;
+                    console.error("Error writing game: ", error);
+                });
               } else {
                 $scope.joinError = 'Cannot find game with that code!';
               }
             });
             
-                            
-
 		} else {
 			$scope.joinError = 'Name or Code cannot be empty.';
 		}	

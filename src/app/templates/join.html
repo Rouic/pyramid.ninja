@@ -27,12 +27,12 @@
 										</div>
 									</div>
 									<div class="col-sm-4">
-										<button ng-click="joinGame()" ng-disabled="!(join.roomcode.length == 4)" type="button" class="btn btn-info btn-block">Join</button>
+										<button ng-click="joinGame()" type="button" class="btn btn-info btn-block">Join</button>
 									</div>
 								</div>
 								<div class="row" ng-if="joinError">
 									<div class="col-12">
-										<h4 class="text-danger text-center title">{{joinError}}</h4>
+										<h4 class="text-center" style="color: #e91e63;font-weight: 800;">{{joinError}}</h4>
 									</div>
 								</div>
 							</form>
