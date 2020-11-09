@@ -22,7 +22,7 @@ module.exports = {
 	host: './src/app/logic/host.controller.js'
   },
   output: {
-	filename: 'bundle.[name].[contenthash:8].js',
+	filename: '[name].[contenthash:8].js',
 	path: path.resolve(__dirname, 'dist'),
   },
   optimization: {
@@ -50,7 +50,7 @@ module.exports = {
   },
   plugins: [
 	new MiniCssExtractPlugin({
-	  filename: 'app.bundle.[contenthash].css',
+	  filename: 'style.[contenthash:8].css',
 	  chunkFilename: '[id].css',
 	}),
 	new CleanWebpackPlugin(),
