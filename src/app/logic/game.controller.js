@@ -317,17 +317,19 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 											
 											
 										if ((doc.data()['__pyramid.rounds'][doc.data()['__pyramid.currentRound'].round_number].round_transactions).filter(e => e.t_from === $rootScope.user_uid).length > 0) {
-											$scope.instruction = 'You have sent drinks already - please wait for round to finish...';
+											$scope.instruction = 'You have already sent drinks - send again or please wait for round to finish...';
 											
 											if($scope.allowNewCard == true){
 												$scope.allowDecision = false;
 												$scope.allowCalling = false;
 												$scope.instruction = 'Looks like you need more cards! Click the button below to get a new one, or wait until the end of the round.';	
 
+											} else {
+												$scope.allowCalling = true;
+												$scope.allowDecision = true;
 											}
 											
-											$scope.allowCalling = false;
-											$scope.allowDecision = false;
+											
 										}
 																				
 										
