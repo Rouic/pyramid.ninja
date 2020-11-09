@@ -8,7 +8,7 @@
 
 					<div class="card card-raised card-form-horizontal" style="margin-bottom: 0px;">
 						<div class="content">
-							<form method="" action="">
+							<form method="" ng-submit="joinGame()">
 								<div class="row">
 									<div class="col-sm-8">
 
@@ -27,7 +27,7 @@
 										</div>
 									</div>
 									<div class="col-sm-4">
-										<button ng-click="joinGame()" type="button" class="btn btn-info btn-block">Join</button>
+										<button ng-click="joinGame()" type="submit" class="btn btn-info btn-block">Join</button>
 									</div>
 								</div>
 								<div class="row" ng-if="joinError">

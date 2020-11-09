@@ -225,9 +225,11 @@ Pyramid.controller('join', ['$cookies', '$state', '$scope','$rootScope', '$state
                 .catch(function(error) {
                     $scope.joinError = error;
                     console.error("Error writing game: ", error);
+                    $scope.$apply();
                 });
               } else {
                 $scope.joinError = 'Cannot find game with that code!';
+                $scope.$apply();
               }
             });
             
