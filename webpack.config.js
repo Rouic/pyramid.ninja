@@ -18,8 +18,6 @@ module.exports = {
   entry: {
 	main: './src/index.js',
 	app: './src/app/logic/app.js',
-	game: './src/app/logic/game.controller.js',
-	host: './src/app/logic/host.controller.js'
   },
   output: {
 	filename: '[name].[contenthash:8].js',
