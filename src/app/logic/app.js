@@ -148,7 +148,23 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
             showContinue: null
           }
         }        
-    })       
+    })      
+    .state('privacy', {
+       parent: 'root',
+       title: 'Privacy',
+        url: '/privacy',
+        views: {
+          'view': {
+             templateUrl: '/templates/privacy.html',
+            controller: 'privacy'
+        }
+        },
+        resolve: {
+           title:  function(){
+             return 'Privacy';
+         }
+       },       
+    }) 
     .state('about', {
  	    parent: 'root',
  	    title: 'About',
@@ -240,4 +256,12 @@ Pyramid.controller('join', ['$cookies', '$state', '$scope','$rootScope', '$state
 Pyramid.controller('about', ['$state', '$scope', '$rootScope', '$stateParams', function($state, $scope, $rootScope, $stateParams){
 	$rootScope.pageClass = 'about-us';
     $.material.init();
+}]);
+
+Pyramid.controller('privacy', ['$state', '$scope', '$rootScope', '$stateParams', function($state, $scope, $rootScope, $stateParams){
+  $rootScope.pageClass = 'about-us';
+    $.material.init();
+    $timeout(function(){
+      (function (w,d) {var loader = function () {var s = d.createElement("script"), tag = d.getElementsByTagName("script")[0]; s.src="https://cdn.iubenda.com/iubenda.js"; tag.parentNode.insertBefore(s,tag);}; if(w.addEventListener){w.addEventListener("load", loader, false);}else if(w.attachEvent){w.attachEvent("onload", loader);}else{w.onload = loader;}})(window, document);
+    });
 }]);
