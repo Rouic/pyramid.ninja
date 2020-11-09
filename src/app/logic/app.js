@@ -64,7 +64,7 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
     if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && !window.MSStream) {
 	    $urlRouterProvider.otherwise('/join');
     } else {
-	    $urlRouterProvider.otherwise('/start');
+	    $urlRouterProvider.otherwise('/');
     }
     
     $locationProvider.html5Mode({
@@ -89,7 +89,7 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
     .state('start', {
  	    parent: 'root',
  	    title: 'Start',
-        url: '/start',
+        url: '/',
         views: {
 	        'view': {
  		        templateUrl: '/templates/start.html',
