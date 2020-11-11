@@ -51,6 +51,12 @@ module.exports = {
 	  filename: 'style.[contenthash:8].css',
 	  chunkFilename: '[id].css',
 	}),
+	new PurgecssPlugin({
+		  paths: glob.sync(`${PATHS.src}/**/*`,  { nodir: true }),
+		  safelist: {
+			  greedy: [/playingcard/, /face/]
+		}
+		}),
 	new CleanWebpackPlugin(),
 	new HtmlWebpackPlugin({
 	  template: './src/app/index.html',
@@ -94,12 +100,6 @@ module.exports = {
 		},
 	  ],
 	}),
-	new PurgecssPlugin({
-		  paths: glob.sync(`${PATHS.src}/**/*`,  { nodir: true }),
-		  safelist: {
-			  greedy: ['playingcard', 'face']
-		}
-		}),
   ],
   module: {
 	rules: [{
@@ -139,7 +139,7 @@ module.exports = {
 		  loader: 'file-loader',
 		  options: {
 			name: '[name].[ext]',
-			outputPath: 'fonts/'
+			outputPath: 'assets/fonts/'
 		  }
 		}]
 	  }

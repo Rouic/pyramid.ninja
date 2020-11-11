@@ -2,12 +2,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './assets/css/material-kit.css';
 import './assets/css/style.css';
 
-import 'jquery';
 import 'bootstrap';
-
-import './assets/js/material.min.js';
-import './assets/js/material-kit.js';
-
 import angular from 'angular';
 import uirouter from 'angular-ui-router';
 import ngCookies from 'angular-cookies';
@@ -18,6 +13,8 @@ import 'firebase/performance';
 import 'firebase/analytics';
 import 'firebase/firestore';
 
+import './assets/js/material.min.js';
+import './assets/js/material-kit.js';
 import Deck from './assets/js/deck.js';
 
 /* Firebase config start */
