@@ -199,6 +199,7 @@ Pyramid.controller('host', ['$state', '$scope', '$rootScope', '$stateParams', '$
 		
 		if(doc.data()['__pyramid.summary']){
 			$scope.information = 'That\'s the end of the game! Let\'s look at our cards!'; 
+			$scope.gameEnded = true;
 			$('.playingcard').off();
 		} else if(doc.data()['__pyramid.meta'].started == true){
 
@@ -206,7 +207,7 @@ Pyramid.controller('host', ['$state', '$scope', '$rootScope', '$stateParams', '$
 					$scope.pyramidDeck = Deck();
 					$scope.pyramidDeck.cards = SeededShuffle.shuffle($scope.pyramidDeck.cards, $scope.roomPIN.toUpperCase());
 				}
-				$scope.information = $scope.roundTaunt((doc.data()['__pyramid.rounds']) ? Object.keys(doc.data()['__pyramid.rounds']).length : 0)+" Pick a card from below to continue...";
+				$scope.information = $scope.roundTaunt((doc.data()['__pyramid.rounds']) ? Object.keys(doc.data()['__pyramid.rounds']).length : 0);
 				$scope.step = 2;
 				$scope.cardsleft = doc.data()['__pyramid.deck'].length;
 
@@ -393,7 +394,7 @@ Pyramid.controller('host', ['$state', '$scope', '$rootScope', '$stateParams', '$
 							 
 							 if($scope.round_number == 15){
 								 $scope.information = 'That\'s the end of the game! Let\'s look at our cards!';
-								 
+								 $scope.gameEnded = true;
 								 $('.playingcard').off();
 								 
 								 var summary = {};

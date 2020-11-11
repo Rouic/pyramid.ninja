@@ -42,7 +42,7 @@
 						</div>		
                         <div class="row">
 		    				<div class="col-md-8 col-md-offset-2 text-center">
-								<h3 ng-hide="currentRound" style="padding: 0px 40px;" class="text-center card-title">{{information}}</h3>					    				
+								<h3 style="padding: 0px 40px;" class="text-center card-title">{{information}} <span ng-if="!gameEnded">Pick a card from below to continue...</span></h3>					    				
 		    				</div>      
                 		</div>
 						 <div class="row">
@@ -96,7 +96,7 @@
     </div>
 	
 
-<div class="modal fade" id="roundModal" tabindex="-1" role="dialog">
+<div class="modal fade" id="roundModal" tabindex="-1" role="dialog" style="zoom: 1.3;-moz-transform: scale(1.3);">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="card card-plain" style="background-color: #12101a;margin-bottom: 0px">
@@ -110,7 +110,7 @@
             </div>
 
             <div class="col-sm-6 mr-auto">
-				<p class="text-muted">The card on the left is currently in play. Use your device to call a drink to another player.</p>
+				<p>{{information}} <span class="text-muted">The card on the left is currently in play. Use your device to call a drink to another player.</span></p>
 				<h6 ng-if="round_transactions.length > 0">Round Log:</h6>
 				<table class="table">
 				    <tbody>
