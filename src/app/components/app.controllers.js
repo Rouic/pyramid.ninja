@@ -36,14 +36,6 @@ Pyramid.controller('about', ['$state', '$scope', '$rootScope', '$stateParams', f
 	$.material.init();
 }]);
 
-Pyramid.controller('privacy', ['$state', '$scope', '$rootScope', '$stateParams', function($state, $scope, $rootScope, $stateParams){
-  $rootScope.pageClass = 'about-us';
-	$.material.init();
-	$timeout(function(){
-	  (function (w,d) {var loader = function () {var s = d.createElement("script"), tag = d.getElementsByTagName("script")[0]; s.src="https://cdn.iubenda.com/iubenda.js"; tag.parentNode.insertBefore(s,tag);}; if(w.addEventListener){w.addEventListener("load", loader, false);}else if(w.attachEvent){w.attachEvent("onload", loader);}else{w.onload = loader;}})(window, document);
-	});
-}]);
-
 import './controllers/app.controllers.host';
 import './controllers/app.controllers.client';
 import './controllers/app.controllers.join';
