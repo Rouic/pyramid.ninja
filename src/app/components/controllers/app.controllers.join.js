@@ -19,7 +19,7 @@ Pyramid.controller('join', ['$cookies', '$state', '$scope','$rootScope', '$state
 				}, {merge: true})
 				.then(function() {
 					currentGame = $scope.join.roomcode;
-					$cookies.put('name', $scope.join.name.toUpperCase());
+					$cookies.put('name', $scope.join.name.toUpperCase(), {samesite: 'strict'});
 					$rootScope.soundEffect.play();
 					$state.go('game', {gameID: $scope.join.roomcode, showContinue: true});
 				})
