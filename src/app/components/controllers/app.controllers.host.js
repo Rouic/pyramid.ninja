@@ -105,19 +105,19 @@ Pyramid.controller('host', ['$state', '$scope', '$rootScope', '$stateParams', '$
 			$scope.roundTaunt = function(i){
 				switch(i) {
 					case 0: return $scope.randoString(['Time to get wrecked!', 'Time to turn our livers to coral!']);
-					case 1: return $scope.randoString(['I hear round 2 is spicy!', 'Why don’t you smoke a whole carton of cigarettes?']);
+					case 1: return $scope.randoString(['I hear round 2 is spicy!', 'Enjoy the hangover!']);
 					case 2: return $scope.randoString(['Your liver will thank you!', 'Q: Whats the difference between a dog and a fox? A: 2 drinks.']);
-					case 3: return $scope.randoString(['Sponsored by crippling depression.', 'Bring your wellies, because we’re going to be knee deep in clunge!']);
+					case 3: return $scope.randoString(['Sponsored by crippling depression.', 'Be kind to your friends!']);
 					case 4: return $scope.randoString(['You alcoholic!', 'So a dyslexic walks into a bra...', 'I wonder if this is how Scientology started?']);
-					case 5: return $scope.randoString(['Who lives in a pineapple under the sea?', 'I got so pissed last night I don’t know if I found some keys or lost a car.']);
+					case 5: return $scope.randoString(['Who lives in a pineapple under the sea?', 'Try to gang up on eachother.']);
 					case 6: return $scope.randoString(['Round 6 is going to get heated!', 'Beauty is in the eye of the beer holder.']);
 					case 7: return $scope.randoString(['Yay lockdown!', 'Two men walked into a bar. The third one ducked.']);
 					case 8: return $scope.randoString(['The youngest person should double their drinks...', 'Ever thought about a career in politics?']);
 					case 9: return $scope.randoString(['Ready to die?', 'The past, present, and future walk into a bar. It was tense.']);
 					case 10: return $scope.randoString(['Green is not a creative colour.', 'Not drunk enough? Time to call bullshit on everything!']);
-					case 11: return $scope.randoString(['Vote liver failure!', 'Just drink hand sanitiser...']);
+					case 11: return $scope.randoString(['Vote liver failure!', 'Ran out? Just drink hand sanitiser...']);
 					case 12: return $scope.randoString(['The drinks get serious now.', 'Alcohol is a perfect solvent: It dissolves marriages, families and careers.']);
-					case 13: return $scope.randoString(['Someone is going to be sick...', 'Why don’t we call your ex?']);
+					case 13: return $scope.randoString(['Someone is going to be sick...', 'Nanananana Batman.']);
 					case 14: return $scope.randoString(['Nearly there!', 'Vodka isn’t always the answer. But it’s worth a shot.']);
 					case 15: return $scope.randoString(['Last one!', 'You\'ve climbed the alcoholic mountain!']);
 					default: return '';

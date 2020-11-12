@@ -96,7 +96,7 @@
     </div>
 	
 
-<div class="modal fade" id="roundModal" tabindex="-1" role="dialog" style="zoom: 1.3;-moz-transform: scale(1.3);">
+<div class="modal fade" id="roundModal" tabindex="-1" role="dialog" style="zoom: 1.3;-moz-transform: scale(1.3);overflow: scroll;"> <!-- Testing new scale -->
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="card card-plain" style="background-color: #12101a;margin-bottom: 0px">
@@ -116,12 +116,12 @@
 				    <tbody>
 				        <tr ng-repeat="x in round_transactions">
 				            <td>
-								<span><b>{{x.from_player}}</b> has called on <b>{{x.to_player}}</b> to drink!</span> 
-								<span ng-if="!x.result">Waiting on response from <b>{{x.to_player}}</b>...</span>
-								<span ng-if="x.result == 'accepted'"><br><b>{{x.to_player}}</b> <b class="text-success">ACCEPTED</b> the drinks!</span>
-								<span ng-if="x.result == 'bullshit'"><b><br>{{x.to_player}}</b> has called <b class="text-rose">BULLSHIT! </b> Waiting for <b>{{x.from_player}}</b> to show a card...</span>
-								<span ng-if="x.result == 'bullshit_wrong'"><br><b>{{x.to_player}}</b> has called <b class="text-rose">BULLSHIT! </b> <b>{{x.from_player}}</b> turned over a card with the <b class="text-danger">WRONG</b> rank!</span>
-								<span ng-if="x.result == 'bullshit_correct'"><br><b>{{x.to_player}}</b> has called <b class="text-rose">BULLSHIT! </b><b>{{x.from_player}}</b> turned over a card with the <b class="text-success">CORRECT</b> rank!</span>
+								<span><b><img class="log-avatar" ng-src="https://us-central1-pyramid-ninja.cloudfunctions.net/avatars/70/{{x.from_player}}.png">{{x.from_player}}</b> has called on <b><img class="log-avatar" ng-src="https://us-central1-pyramid-ninja.cloudfunctions.net/avatars/70/{{x.to_player}}.png">{{x.to_player}}</b> to drink!</span> 
+								<span ng-if="!x.result">Waiting on response from <b><img class="log-avatar" ng-src="https://us-central1-pyramid-ninja.cloudfunctions.net/avatars/70/{{x.to_player}}.png">{{x.to_player}}</b>...</span>
+								<span ng-if="x.result == 'accepted'"><br><b><img class="log-avatar" ng-src="https://us-central1-pyramid-ninja.cloudfunctions.net/avatars/70/{{x.to_player}}.png">{{x.to_player}}</b> <b class="text-success">ACCEPTED</b> the drinks!</span>
+								<span ng-if="x.result == 'bullshit'"><b><br><img class="log-avatar" ng-src="https://us-central1-pyramid-ninja.cloudfunctions.net/avatars/70/{{x.to_player}}.png">{{x.to_player}}</b> has called <b class="text-rose">BULLSHIT! </b> Waiting for <b><img class="log-avatar" ng-src="https://us-central1-pyramid-ninja.cloudfunctions.net/avatars/70/{{x.from_player}}.png">{{x.from_player}}</b> to show a card...</span>
+								<span ng-if="x.result == 'bullshit_wrong'"><br><b><img class="log-avatar" ng-src="https://us-central1-pyramid-ninja.cloudfunctions.net/avatars/70/{{x.to_player}}.png">{{x.to_player}}</b> has called <b class="text-rose">BULLSHIT! </b> <b>{{x.from_player}}</b> turned over a card with the <b class="text-danger">WRONG</b> rank!</span>
+								<span ng-if="x.result == 'bullshit_correct'"><br><b><img class="log-avatar" ng-src="https://us-central1-pyramid-ninja.cloudfunctions.net/avatars/70/{{x.to_player}}.png">{{x.to_player}}</b> has called <b class="text-rose">BULLSHIT! </b><b><img class="log-avatar" ng-src="https://us-central1-pyramid-ninja.cloudfunctions.net/avatars/70/{{x.from_player}}.png">{{x.from_player}}</b> turned over a card with the <b class="text-success">CORRECT</b> rank!</span>
 							</td>
 				        </tr>
 				    </tbody>
@@ -129,10 +129,10 @@
 				<h6 ng-if="round_transactions.length == 0" class="waiting">No updates yet...</h6>	
             </div>		
           </div>
-		  <div class="row text-center" style="margin-top:70px">
+		  <div class="row text-center" style="border-top: solid 1px;margin: 0px 5px; padding-top: 20px;">
 			  <div class="col-sm-12">
 			  	<h6 ng-if="drink_log.length > 0">Round Results:</h6>
-				<p><span ng-repeat="y in drink_log"><b>{{y.name}}</b> drinks <b>{{y.drinks}}</b>{{($last) ? '!' : ', '}}</span></p>
+				<p><span ng-repeat="y in drink_log"><b><img class="log-avatar" ng-src="https://us-central1-pyramid-ninja.cloudfunctions.net/avatars/70/{{y.name}}.png">{{y.name}}</b> drinks <b>{{y.drinks}}</b>{{($last) ? '!' : ', '}}</span></p>
 			  </div>
 		  </div>
 		  <div class="row">
