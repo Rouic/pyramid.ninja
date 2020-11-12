@@ -42,8 +42,9 @@
 						</div>		
                         <div class="row">
 		    				<div class="col-md-8 col-md-offset-2 text-center">
-								<h3 style="padding: 0px 40px;" class="text-center card-title">{{information}} <span ng-if="!gameEnded">Pick a card from below to continue...</span></h3>					    				
-		    				</div>      
+								<h3 style="padding: 0px 40px;" class="text-center card-title">{{information}} <span ng-if="!gameEnded">Pick a card from below to continue...</span></h3>			
+								<a href="." ng-if="gameEnded"><button class="btn btn-rose btn-round join-button">Start new Game</button></a>		    				
+		    				</div>    
                 		</div>
 						 <div class="row">
 							 <div on-size-changed="logResize" class="col-md-8 col-md-offset-2 text-center" id="containerparent" style="min-height: 75vh;position: inherit;overflow: hidden;">

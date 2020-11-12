@@ -9,6 +9,9 @@ const GoogleFontsPlugin = require("@beyonk/google-fonts-webpack-plugin");
 const CopyPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const PurgecssPlugin = require('purgecss-webpack-plugin');
+const WorkboxPlugin = require('workbox-webpack-plugin');
+var WebpackPwaManifest = require('webpack-pwa-manifest');
+
 
 const PATHS = {
 	  src: path.join(__dirname, 'src')
@@ -17,7 +20,7 @@ const PATHS = {
 module.exports = {
   entry: {
 	main: './src/index.js',
-	app: './src/app/app.js',
+	app: './src/app/app.js'
   },
   output: {
 	filename: '[name].[contenthash:8].js',
@@ -79,10 +82,7 @@ module.exports = {
 	  path: 'fonts/'
 	}),
 	new CopyPlugin({
-	  patterns: [{
-		  from: 'src/manifest.json',
-		  to: 'manifest.json'
-		},
+	  patterns: [
 		{
 		  from: '*',
 		  to: 'templates/',
@@ -100,6 +100,48 @@ module.exports = {
 		},
 	  ],
 	}),
+	new WebpackPwaManifest({
+		name: '"Pyramid.ninja',
+		short_name: '"Pyramid.ninja',
+		description: 'A digital version of the drinking game Pyramid.',
+		background_color: '#e91e63',
+		crossorigin: 'use-credentials',
+		orientation: "portrait",
+		inject: true,
+		ios: true,
+		publicPath: '/',
+		display: "standalone",
+		start_url: "/start",
+		icons: [
+		  {
+			src: path.resolve('src/assets/img/icon_dark@4x.png'),
+			sizes: [96, 128, 192, 256, 384, 512, 1024, 2048],
+			destination: 'assets/img/icons/',
+			ios: true
+		  },
+		  {
+			  src: path.resolve('src/assets/img/icon_dark@4x.png'),
+			  sizes: [96, 128, 192, 256, 384, 512, 1024, 2048],
+			  destination: 'assets/img/icons/',
+			},
+		  {
+			src: path.resolve('src/assets/img/icon_dark@3x.png'),
+			size: '1024x1024',
+			destination: 'assets/img/icons/',
+		  },
+		  {
+			src: path.resolve('src/assets/img/icon_dark@3x.png'),
+			size: '1024x1024',
+			purpose: 'maskable',
+			destination: 'assets/img/icons/',
+		  }
+		]
+	  }),
+	new WorkboxPlugin.GenerateSW({
+		   clientsClaim: true,
+		   skipWaiting: true,
+	}),
+	
   ],
   module: {
 	rules: [{
