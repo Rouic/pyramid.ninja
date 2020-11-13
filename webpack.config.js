@@ -101,8 +101,8 @@ module.exports = {
 	  ],
 	}),
 	new WebpackPwaManifest({
-		name: '"Pyramid.ninja',
-		short_name: '"Pyramid.ninja',
+		name: 'Pyramid.ninja',
+		short_name: 'Pyramid.ninja',
 		description: 'A digital version of the drinking game Pyramid.',
 		background_color: '#e91e63',
 		crossorigin: 'use-credentials',
@@ -111,7 +111,7 @@ module.exports = {
 		ios: true,
 		publicPath: '/',
 		display: "standalone",
-		start_url: "/start",
+		start_url: "/",
 		icons: [
 		  {
 			src: path.resolve('src/assets/img/icon_dark@4x.png'),
@@ -138,8 +138,25 @@ module.exports = {
 		]
 	  }),
 	new WorkboxPlugin.GenerateSW({
-		   clientsClaim: true,
-		   skipWaiting: true,
+		navigationPreload: true,
+		offlineGoogleAnalytics: true,
+		runtimeCaching: [{
+			urlPattern: /\.(?:png|jpg|jpeg|svg)$/,
+			handler: 'CacheFirst',
+			options: {
+			  cacheName: 'images',
+			  expiration: {
+				maxEntries: 20,
+			  },
+			},
+		  },{
+			urlPattern: '.',
+			handler: 'NetworkFirst',
+			
+		}],
+		clientsClaim: true,
+		skipWaiting: true,
+		cacheId: 'pyramid.ninja'
 	}),
 	
   ],
