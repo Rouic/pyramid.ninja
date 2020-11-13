@@ -1,6 +1,6 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './assets/css/material-kit.css';
-import './assets/css/style.css';
+import './assets/css/style.scss';
 
 import 'bootstrap';
 import angular from 'angular';

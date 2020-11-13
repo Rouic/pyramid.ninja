@@ -67,18 +67,6 @@ module.exports = {
 	  $: 'jquery',
 	  jquery: 'jquery',
 	}),
-	new GoogleFontsPlugin({
-	  fonts: [{
-		  family: "Roboto",
-		  variants: ["300", "400", "500", "700"]
-		},
-		{
-		  family: "Roboto Slab",
-		  variants: ["400", "700"]
-		},
-	  ],
-	  path: 'fonts/'
-	}),
 	new CopyPlugin({
 	  patterns: [
 		{
@@ -144,7 +132,11 @@ module.exports = {
 	  }),
   ],
   module: {
-	rules: [{
+	rules: [
+		{
+			test: /\.scss$/,
+			loader: 'style-loader!css-loader!sass-loader'
+		  },{
 		test: /\.css$/,
 		use: [{
 			loader: MiniCssExtractPlugin.loader,
