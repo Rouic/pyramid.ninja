@@ -1,15 +1,12 @@
 import { CacheableResponsePlugin } from 'workbox-cacheable-response/CacheableResponsePlugin';
 import { CacheFirst } from 'workbox-strategies/CacheFirst';
-
 import { ExpirationPlugin } from 'workbox-expiration/ExpirationPlugin';
 import { NavigationRoute } from 'workbox-routing/NavigationRoute';
 import { precacheAndRoute } from 'workbox-precaching/precacheAndRoute';
 import { registerRoute } from 'workbox-routing/registerRoute';
 import { setCacheNameDetails } from 'workbox-core/setCacheNameDetails';
-
 import {createHandlerBoundToURL} from 'workbox-precaching/createHandlerBoundToURL';
 
-	
 setCacheNameDetails({
   prefix: 'pyramid-client',
   suffix: 'v2',
@@ -26,7 +23,7 @@ registerRoute(navigationRoute);
 registerRoute(
   /^https:\/\/googletagmanager\.com/,
   new CacheFirst({
-	cacheName: 'medium-cache',
+	cacheName: 'pyramid-tagmanager',
 	matchOptions: {
 	  ignoreVary: true,
 	},
@@ -43,27 +40,8 @@ registerRoute(
   })
 );
 
-registerRoute(
-  /^https:\/\/mylibrary\.io\/graphql\?.+cache%22:9/,
-  new CacheFirst({
-	cacheName: 'max-cache',
-	matchOptions: {
-	  ignoreVary: true,
-	},
-	plugins: [
-	  new ExpirationPlugin({
-		maxEntries: 500,
-		maxAgeSeconds: 63072e3,
-		purgeOnQuotaError: true,
-	  }),
-	  new CacheableResponsePlugin({
-		statuses: [0, 200]
-	  })]
-  })
-);
-
 registerRoute(/^https:\/\/us-central1-pyramid-ninja.cloudfunctions.net\/avatars/, new CacheFirst({
-  cacheName: 'local-images1',
+  cacheName: 'pyramid-avatars',
   matchOptions: {
 	ignoreVary: true,
   },
