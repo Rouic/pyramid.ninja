@@ -2,15 +2,14 @@ Pyramid.run(['$window', '$rootScope', '$state', '$stateParams', '$transitions', 
 	$rootScope.$state = $state;
 	$rootScope.$stateParams = $stateParams;
   
-if ('serviceWorker' in navigator) {
+  	if ('serviceWorker' in navigator) {
 	   window.addEventListener('load', () => {
-		 navigator.serviceWorker.register('/sw10.js').then(registration => {
-		   //console.log('SW registered: ', registration);
+		 navigator.serviceWorker.register('/sw.js').then(registration => {
 		 }).catch(registrationError => {
 		   console.log('SW registration failed: ', registrationError);
 		 });
 	   });
-	 }
+	}
   
   $rootScope.year = new Date().getFullYear();
 	

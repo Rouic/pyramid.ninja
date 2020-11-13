@@ -113,23 +113,23 @@ module.exports = {
 		start_url: "/",
 		icons: [
 		  {
-			src: path.resolve('src/assets/img/icon_dark@4x.png'),
+			src: path.resolve('src/assets/icons/icon_dark@4x.png'),
 			sizes: [96, 128, 192, 256, 384, 512, 1024, 2048],
 			destination: 'assets/img/icons/',
 			ios: true
 		  },
 		  {
-			  src: path.resolve('src/assets/img/icon_dark@4x.png'),
+			  src: path.resolve('src/assets/icons/icon_dark@4x.png'),
 			  sizes: [96, 128, 192, 256, 384, 512, 1024, 2048],
 			  destination: 'assets/img/icons/',
 			},
 		  {
-			src: path.resolve('src/assets/img/icon_dark@3x.png'),
+			src: path.resolve('src/assets/icons/icon_dark@3x.png'),
 			size: '1024x1024',
 			destination: 'assets/img/icons/',
 		  },
 		  {
-			src: path.resolve('src/assets/img/icon_dark@3x.png'),
+			src: path.resolve('src/assets/icons/icon_dark@3x.png'),
 			size: '1024x1024',
 			purpose: 'maskable',
 			destination: 'assets/img/icons/',
@@ -138,7 +138,7 @@ module.exports = {
 	  }),
 	  new workbox.InjectManifest({
 		  swSrc: './src/service-worker.js',
-		  swDest: 'sw10.js',
+		  swDest: 'sw.js',
 		  compileSrc: true,
 		  
 	  }),
