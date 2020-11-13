@@ -1,10 +1,10 @@
-![pyramid.ninja logo](https://pyramid-ninja.web.app/assets/img/pyramid.ninja.png)
+![pyramid.ninja logo](https://pyramid-ninja.web.app/assets/img/logo.png)
 
 # Pyramid.Ninja (v2) 🔺
 A digital version of the popular drinking game "pyramid". Live version can be found at https://pyramid.ninja.
 
 ## How it Works
-* Pyramid.ninja is powered by Firebase and uses Firestore to hold and sync game data across devices. A host's screen should be seen by all players who join with a random generated game code.
+* Pyramid.ninja is a PWA game powered by Firebase. It primarily uses Firestore to hold and sync game data across clients. The host's screen should be seen by all players who join with a random generated game code.
 * Firebase uses anonymous accounts but could be extended with login and history.
 * Find out how to play Pyramid the game at https://pyramid.ninja/about
 
