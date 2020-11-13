@@ -8,7 +8,7 @@ const CopyPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const PurgecssPlugin = require('purgecss-webpack-plugin');
 const workbox = require('workbox-webpack-plugin');
-var WebpackPwaManifest = require('webpack-pwa-manifest');
+var WebpackPwaManifest = require('webpack-pwa-manifest-contrib');
 
 
 const PATHS = {
