@@ -2,14 +2,12 @@ const path = require('path');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const glob = require('glob');
-const {
-  CleanWebpackPlugin
-} = require('clean-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const GoogleFontsPlugin = require("@beyonk/google-fonts-webpack-plugin");
 const CopyPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const PurgecssPlugin = require('purgecss-webpack-plugin');
-const WorkboxPlugin = require('workbox-webpack-plugin');
+const workbox = require('workbox-webpack-plugin');
 var WebpackPwaManifest = require('webpack-pwa-manifest');
 
 
@@ -50,9 +48,12 @@ module.exports = {
 	},
   },
   plugins: [
+	new HtmlWebpackPlugin({
+		template: './src/app/index.html',
+	}),
 	new MiniCssExtractPlugin({
 	  filename: 'style.[contenthash:8].css',
-	  chunkFilename: '[id].css',
+	  chunkFilename: 'style.[contenthash:8].css',
 	}),
 	new PurgecssPlugin({
 		  paths: glob.sync(`${PATHS.src}/**/*`,  { nodir: true }),
@@ -61,9 +62,6 @@ module.exports = {
 		}
 		}),
 	new CleanWebpackPlugin(),
-	new HtmlWebpackPlugin({
-	  template: './src/app/index.html',
-	}),
 	new webpack.ProvidePlugin({
 	  jQuery: 'jquery',
 	  $: 'jquery',
@@ -137,28 +135,12 @@ module.exports = {
 		  }
 		]
 	  }),
-	new WorkboxPlugin.GenerateSW({
-		navigationPreload: true,
-		offlineGoogleAnalytics: true,
-		runtimeCaching: [{
-			urlPattern: /\.(?:png|jpg|jpeg|svg)$/,
-			handler: 'CacheFirst',
-			options: {
-			  cacheName: 'images',
-			  expiration: {
-				maxEntries: 20,
-			  },
-			},
-		  },{
-			urlPattern: '.',
-			handler: 'NetworkFirst',
-			
-		}],
-		clientsClaim: true,
-		skipWaiting: true,
-		cacheId: 'pyramid.ninja'
-	}),
-	
+	  new workbox.InjectManifest({
+		  swSrc: './src/service-worker.js',
+		  swDest: 'sw10.js',
+		  compileSrc: true,
+		  
+	  }),
   ],
   module: {
 	rules: [{
@@ -169,7 +151,9 @@ module.exports = {
 			  publicPath: '/',
 			},
 		  },
-		  'css-loader',
+		  {
+		  loader: 'css-loader',
+	  	  }
 		],
 	  },
 	  {
