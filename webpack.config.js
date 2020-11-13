@@ -105,6 +105,7 @@ module.exports = {
 		background_color: '#e91e63',
 		crossorigin: 'use-credentials',
 		orientation: "portrait",
+		theme_color: '#e91e63',
 		inject: true,
 		ios: true,
 		publicPath: '/',
