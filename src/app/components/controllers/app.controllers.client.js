@@ -221,7 +221,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 										card.mount($scope.$container);			
 									});	
 									$scope.initalLoad = false;
-									$scope.$apply();	
+									$scope.$evalAsync();
 									
 									const peopleArray = Object.keys(doc.data()).map(i => doc.data()[i]);
 									$scope.players = peopleArray.filter(function(el){
@@ -457,7 +457,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 
 															$scope.clientDeck.cards[$scope.selectedCard].setSide('front');
 															$scope.needsNewCard = true;
-															$scope.$apply();
+															$scope.$evalAsync();
 														}
 														
 													});							
@@ -489,7 +489,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 							}
 						}
 						
-						$scope.$apply();
+						$scope.$evalAsync();
 						
 						
 						

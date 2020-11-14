@@ -1,64 +1,64 @@
-<div class="row">
-    			<div class="col-md-10 col-md-offset-1">
+	<div class="row">
+    	<div class="col-md-10 col-md-offset-1">
 
-					<!--WAITING CARD START -->
-					<div ng-hide="gameStarted" class="card card-signup" style="margin-bottom: 0px">
-                        <h2 ng-if="!(players.length > 2)" class="card-title text-center">Waiting for more players...</h2>
-                        <h2 ng-if="(players.length > 2)" class="card-title text-center">Press Continue when ready...</h2>
-						<h3 class="text-center" ng-if="!roomCode">Generating new game...</h3>
-                        <h3 class="text-center" ng-if="roomCode">Open <span class="text-black">{{domain}}</span> on your devices and enter <span class="card-title text-rose">{{roomCode}}</span> to join this game.</h3>
-                        <div class="row">
-		    				<div class="col-md-8 col-md-offset-2 text-center">
-			    				<div class="game-player" ng-repeat="x in players" ng-if="x.type != 'host'">
-			    					<img ng-src="https://us-central1-pyramid-ninja.cloudfunctions.net/avatars/70/{{x.name}}.png" alt="Connected User" class="img-rounded img-responsive img-raised" style="max-width: 100px">
-									<p>{{x.name}}</p>
-			    				</div>	    					    				
-		    				</div>  
-		    				<div class="col-md-8 col-md-offset-2 text-center">
-			    				<button ng-click="startGame()" ng-if="players.length && players.length > 1" class="btn btn-rose btn-round join-button">Continue <i class="material-icons">navigate_next</i></button>
-		    				</div>                        					
-                		</div>
-            		</div>
-            		<!--WAITING CARD END -->
+			<!--WAITING CARD START -->
+			<div ng-hide="gameStarted" class="card card-signup" style="margin-bottom: 0px">
+                <h2 ng-if="!(players.length > 2)" class="card-title text-center">Waiting for more players...</h2>
+                <h2 ng-if="(players.length > 2)" class="card-title text-center">Press Continue when ready...</h2>
+				<h3 class="text-center" ng-if="!roomCode">Generating new game...</h3>
+                <h3 class="text-center" ng-if="roomCode">Open <span class="text-black">{{::domain}}</span> on your devices and enter <span class="card-title text-rose">{{::roomCode}}</span> to join this game.</h3>
+                <div class="row">
+    				<div class="col-md-8 col-md-offset-2 text-center">
+	    				<div class="game-player" ng-repeat="x in players" ng-if="x.type != 'host'">
+	    					<img ng-src="https://us-central1-pyramid-ninja.cloudfunctions.net/avatars/70/{{::x.name}}.png" alt="Connected User" class="img-rounded img-responsive img-raised" style="max-width: 100px">
+							<p>{{::x.name}}</p>
+	    				</div>	    					    				
+    				</div>  
+    				<div class="col-md-8 col-md-offset-2 text-center">
+	    				<button ng-click="startGame()" ng-if="players.length && players.length > 1" class="btn btn-rose btn-round join-button">Continue <i class="material-icons">navigate_next</i></button>
+    				</div>                        					
+        		</div>
+    		</div>
+        	<!--WAITING CARD END -->
             		
-            		<!--GAME CARD START -->
-					<div ng-show="gameStarted" class="card card-signup" id="maingamecontainer" style="margin-bottom: 0px">
-						<div class="room-code-holder">
-							<h2 class="title">{{roomCode}}</h2>
-						</div>
-						<div ng-if="cardsleft" class="room-cards-left-holder">
-							<h2 class="title">{{cardsleft}} Card{{(cardsleft == 1) ? '' : 's'}} Left - {{players.length}} Player{{(players.length == 1) ? '' : 's'}}</h2>
-						</div>							
-						<div ng-if="countdown > 0" class="room-countdown-holder">
-							<h2 class="title">{{countdown}}</h2>
-						</div>			
-						<div class="players-container">
-			    			<div ng-repeat="x in players" ng-if="x.type != 'host'" class="in-progress-user">
-								<img ng-src="https://us-central1-pyramid-ninja.cloudfunctions.net/avatars/70/{{x.name}}.png" alt="user-avatar-{{x.name}}" class="img-rounded img-responsive img-raised in-progress-avatar">
-								<p style="display: inline-block">{{x.name}}</p>
-							</div>								
-						</div>		
-                        <div class="row">
-		    				<div class="col-md-8 col-md-offset-2 text-center">
-								<h3 style="padding: 0px 40px;" class="text-center card-title">{{information}} <span ng-if="!gameEnded">Pick a card from below to continue...</span></h3>			
-								<a href="." ng-if="gameEnded"><button class="btn btn-rose btn-round join-button">Start new Game</button></a>		    				
-		    				</div>    
-                		</div>
-						 <div class="row">
-							 <div on-size-changed="logResize" class="col-md-8 col-md-offset-2 text-center" id="containerparent" style="min-height: 75vh;position: inherit;overflow: hidden;">
-								 <div id="cardcontainer"></div>
-							 </div>
-						 </div>               		
-            		</div>
-            		<!--GAME CARD END -->            		
-            		
-	    		<div class="text-center">
-					<a ui-sref="start" class="btn btn-white btn-simple">
-						<i class="material-icons">exit_to_app</i> Exit Game
-					</a>
-				</div>	
-		</div>
+        	<!--GAME CARD START -->
+			<div ng-show="gameStarted" class="card card-signup" id="maingamecontainer" style="margin-bottom: 0px">
+				<div class="room-code-holder">
+					<h2 class="title">{{::roomCode}}</h2>
+				</div>
+				<div ng-if="cardsleft" class="room-cards-left-holder">
+					<h2 class="title">{{cardsleft}} Card{{(cardsleft == 1) ? '' : 's'}} Left - {{players.length}} Player{{(players.length == 1) ? '' : 's'}}</h2>
+				</div>							
+				<div ng-if="countdown > 0" class="room-countdown-holder">
+					<h2 class="title">{{countdown}}</h2>
+				</div>			
+				<div class="players-container">
+	    			<div ng-repeat="x in players" ng-if="x.type != 'host'" class="in-progress-user">
+						<img ng-src="https://us-central1-pyramid-ninja.cloudfunctions.net/avatars/70/{{x.name}}.png" alt="user-avatar-{{x.name}}" class="img-rounded img-responsive img-raised in-progress-avatar">
+						<p style="display: inline-block">{{x.name}}</p>
+					</div>								
+				</div>		
+                <div class="row">
+    				<div class="col-md-8 col-md-offset-2 text-center">
+						<h3 style="padding: 0px 40px;" class="text-center card-title">{{information}} <span ng-if="!gameEnded">Pick a card from below to continue...</span></h3>			
+						<a href="." ng-if="gameEnded"><button class="btn btn-rose btn-round join-button">Start new Game</button></a>		    				
+    				</div>    
+        		</div>
+				 <div class="row">
+					 <div on-size-changed="logResize" class="col-md-8 col-md-offset-2 text-center" id="containerparent" style="min-height: 75vh;position: inherit;overflow: hidden;">
+						 <div id="cardcontainer"></div>
+					 </div>
+				 </div>               		
+    		</div>
+        	<!--GAME CARD END -->            		
+        		
+    		<div class="text-center">
+				<a ui-sref="start" class="btn btn-white btn-simple">
+					<i class="material-icons">exit_to_app</i> Exit Game
+				</a>
 			</div>	
+		</div>
+	</div>	
 
 <div class="modal fade" id="roundModal" tabindex="-1" role="dialog" style="zoom: 1.3;-moz-transform: scale(1.3);overflow: scroll;"> <!-- Testing new scale -->
   <div class="modal-dialog" role="document">

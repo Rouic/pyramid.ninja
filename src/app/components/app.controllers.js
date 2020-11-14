@@ -2,10 +2,10 @@ Pyramid.controller('root', ['$state', '$scope', '$rootScope', '$stateParams', fu
   
 	$rootScope.randomBackground = Math.floor(Math.random() * 10) + 1;
 	auth.signInAnonymously().catch(function(error) {
-	  var errorCode = error.code;
-	  var errorMessage = error.message;
-	  console.log(error);
-	});    
+		var errorCode = error.code;
+		var errorMessage = error.message;
+		console.log(error);
+	});
 	auth.onAuthStateChanged(function(user) {
 	  if (user) {
 		var isAnonymous = user.isAnonymous;
@@ -14,7 +14,7 @@ Pyramid.controller('root', ['$state', '$scope', '$rootScope', '$stateParams', fu
 		$rootScope.user_uid = null;
 	  }
 	});  
-	$rootScope.soundEffect = new Audio();      
+	$rootScope.soundEffect = new Audio();
 }]);
 
 Pyramid.controller('header', ['$state', '$scope', '$rootScope', '$stateParams', function($state, $scope, $rootScope, $stateParams){}]);

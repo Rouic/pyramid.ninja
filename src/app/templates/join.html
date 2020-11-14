@@ -18,13 +18,13 @@
 											<div class="row">
 												<div class="col-sm-6">
 													<div class="form-group form-info is-empty">
-														<input required name="joincode" ng-model="join.roomcode" type="text" maxlength="4" value="" placeholder="Game Code..." class="form-control join-room-input">
+														<input ng-model-options="{debounce:200}" required name="joincode" ng-model="join.roomcode" type="text" maxlength="4" value="" placeholder="Game Code..." class="form-control join-room-input">
 														<span class="material-input"></span>
 													</div>
 												</div>
 												<div class="col-sm-6">
 													<div class="form-group form-info is-empty">
-														<input required name="joinname" ng-model="join.name" type="text" maxlength="10" value="" placeholder="Your Name..." class="form-control join-room-input">
+														<input ng-model-options="{debounce:200}" required name="joinname" ng-model="join.name" type="text" maxlength="10" value="" placeholder="Your Name..." class="form-control join-room-input">
 														<span class="material-input"></span>
 													</div>
 												</div>

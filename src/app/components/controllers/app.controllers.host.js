@@ -174,7 +174,7 @@ Pyramid.controller('host', ['$state', '$scope', '$rootScope', '$stateParams', '$
 		}, {merge: true})
 		.then(function() {
 			$scope.roomCode = $scope.roomPIN.toUpperCase();
-			$scope.$apply();			
+			$scope.$evalAsync();			
 		})
 		.catch(function(error) {
 		    console.error("Error writing game: ", error);
@@ -379,7 +379,7 @@ Pyramid.controller('host', ['$state', '$scope', '$rootScope', '$stateParams', '$
 											$scope.showCards[0].mount($scope.$modalcontainer);
 											$scope.showCards[0].setSide('front');				
 											 
-											$scope.$apply();
+											$scope.$evalAsync();
 							});
 						});	
 						$('#roundModal').on('hidden.bs.modal', function () {
@@ -440,7 +440,7 @@ Pyramid.controller('host', ['$state', '$scope', '$rootScope', '$stateParams', '$
 		}
 		
 		
-		$scope.$apply();
+		$scope.$evalAsync();
 		
     });
 
