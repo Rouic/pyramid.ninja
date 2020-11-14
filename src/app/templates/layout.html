@@ -1,1 +1,5 @@
-<div ui-view="view"></div>
+<div class="page-header header-filter" filter-color="black" style="background-image: url('assets/img/{{randomBackground}}.jpg'); background-size: cover; background-position: top center;">
+	<div ui-view="header"></div>
+	<div class="container" ui-view="view" style="padding-top: 50px"></div>
+	<div class="container" ui-view="footer" style="padding: 0px"></div>
+</div>

@@ -19,10 +19,6 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
 				   templateUrl: '/templates/layout.html',
 				   controller: 'root',
 			  },
-			  'header': {
-				  templateUrl: '/templates/header.html',
-				  controller: 'header'
-			  }
 		  }
 	  })	                
 	.state('start', {
@@ -33,6 +29,13 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
 			'view': {
 				 templateUrl: '/templates/start.html',
 				controller: 'start'
+			},
+			'header': {
+				  templateUrl: '/templates/header.html',
+				  controller: 'header'
+			},
+			'footer': {
+					templateUrl: '/templates/footer.html'
 			}
 		}     
 	})
@@ -44,7 +47,14 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
 			'view': {
 				 templateUrl: '/templates/host.html',
 				controller: 'host'
-			}
+			},
+			'header': {
+				  templateUrl: '/templates/header.html',
+				  controller: 'header'
+			  },
+			  'footer': {
+					  templateUrl: '/templates/footer.html'
+			  }
 		}     
 	})
 	.state('join', {
@@ -55,7 +65,14 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
 			'view': {
 				 templateUrl: '/templates/join.html',
 				controller: 'join'
-			}
+			},
+			'header': {
+				  templateUrl: '/templates/header.html',
+				  controller: 'header'
+			  },
+			  'footer': {
+					  templateUrl: '/templates/footer.html'
+			  }
 		}     
 	})    
 	.state('game', {
@@ -65,7 +82,14 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
 			'view': {
 				 templateUrl: '/templates/game.html',
 				controller: 'game'
-			}
+			},
+			'header': {
+				  templateUrl: '/templates/header.html',
+				  controller: 'header'
+			  },
+			  'footer': {
+					  templateUrl: '/templates/footer.html'
+			  }
 		},
 		resolve: {
 			   title: ['$stateParams', function($stateParams){
@@ -78,17 +102,6 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
 		  }
 		}        
 	})      
-	.state('privacy', {
-	   parent: 'root',
-	   title: 'Privacy',
-		url: '/privacy',
-		views: {
-		  'view': {
-			 templateUrl: '/templates/privacy.html',
-			controller: 'privacy'
-		}
-		}    
-	}) 
 	.state('about', {
 		 parent: 'root',
 		 title: 'About',
@@ -97,7 +110,14 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
 			'view': {
 				 templateUrl: '/templates/about.html',
 				controller: 'about'
-			}
+			},
+			'header': {
+				  templateUrl: '/templates/header.html',
+				  controller: 'header'
+			  },
+			  'footer': {
+					  templateUrl: '/templates/footer.html'
+			  }
 		}      
 	});    
   

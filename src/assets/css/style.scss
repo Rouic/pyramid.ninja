@@ -468,10 +468,24 @@ margin-left: -27px
     margin-bottom: 30px;
     width: 40% !important;
 }
+@media only screen and (max-height: 400px) {
+  .footer-bottom-alt {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    left: 0px;
+}
+}
 @media only screen and (max-width: 600px) {
   .main-logo {
      width: 70% !important;
   }
+  .footer-bottom-alt {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    left: 0px;
+}
 }
 .icon-logo {
     max-width: 25px;
