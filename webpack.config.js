@@ -9,6 +9,8 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const PurgecssPlugin = require('purgecss-webpack-plugin');
 const workbox = require('workbox-webpack-plugin');
 var WebpackPwaManifest = require('webpack-pwa-manifest-contrib');
+var WebpackAutoInject = require('webpack-auto-inject-version');
+
 
 
 const PATHS = {
@@ -48,6 +50,7 @@ module.exports = {
 	},
   },
   plugins: [
+	new WebpackAutoInject(),
 	new HtmlWebpackPlugin({
 		template: './src/app/index.html',
 	}),

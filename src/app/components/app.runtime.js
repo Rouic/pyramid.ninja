@@ -1,6 +1,7 @@
 Pyramid.run(['$window', '$rootScope', '$state', '$stateParams', '$transitions', function($window, $rootScope, $state, $stateParams, $transitions){
 	$rootScope.$state = $state;
 	$rootScope.$stateParams = $stateParams;
+	$rootScope.version = '[AIV]{version}[/AIV]';
   
   	if ('serviceWorker' in navigator) {
 	   window.addEventListener('load', () => {
@@ -9,10 +10,7 @@ Pyramid.run(['$window', '$rootScope', '$state', '$stateParams', '$transitions', 
 		   console.log('SW registration failed: ', registrationError);
 		 });
 	   });
-	}
-  
-  $rootScope.year = new Date().getFullYear();
-	
+	}	
 	$rootScope.goBack = function(){
 		$window.history.back();
 	};	
