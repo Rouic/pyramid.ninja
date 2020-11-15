@@ -147,7 +147,13 @@ module.exports = {
 				  }
 			  },
 			  'extract-loader', 
-			  'html-loader'
+			  {
+				loader: 'html-loader',
+				options: {
+					attributes: false,
+					
+				}
+			  }
 		  ],
 		},
 		{
