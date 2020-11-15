@@ -14,7 +14,7 @@ Pyramid.controller('root', ['$state', '$scope', '$rootScope', '$stateParams', fu
 		$rootScope.user_uid = null;
 	  }
 	});  
-	$rootScope.soundEffect = new Audio();      
+	$rootScope.soundEffect = new Audio();
 }]);
 
 Pyramid.controller('header', ['$state', '$scope', '$rootScope', '$stateParams', function($state, $scope, $rootScope, $stateParams){}]);

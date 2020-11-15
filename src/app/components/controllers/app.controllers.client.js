@@ -127,7 +127,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 					
 					$rootScope.title = '| '+title+' Waiting...';
 					
-					if(doc.data()['__pyramid.meta'].started == true){
+					if(doc.data()['__pyramid.meta'] && doc.data()['__pyramid.meta'].started == true){
 						$scope.instruction = 'Waiting on host...';		
 						$scope.continueButton = false;
 						
@@ -338,8 +338,14 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 													to_player: doc.data()[transaction.t_to].name
 												};	
 												
-												if(!(transaction.seenby.includes($rootScope.user_uid))){
+												if(transaction.seenby && !transaction.seenby.includes($rootScope.user_uid)){
 													var updated_rounds = angular.copy(doc.data()['__pyramid.rounds']);
+													if(updated_rounds[doc.data()['__pyramid.currentRound'].round_number].round_transactions[$scope.transactionIteration].seenby){
+														updated_rounds[doc.data()['__pyramid.currentRound'].round_number].round_transactions[$scope.transactionIteration].seenby.push($rootScope.user_uid); 
+													} else {
+														updated_rounds[doc.data()['__pyramid.currentRound'].round_number].round_transactions[$scope.transactionIteration].seenby = []; 
+														updated_rounds[doc.data()['__pyramid.currentRound'].round_number].round_transactions[$scope.transactionIteration].seenby.push($rootScope.user_uid); 
+													}
 													updated_rounds[doc.data()['__pyramid.currentRound'].round_number].round_transactions[$scope.transactionIteration].seenby.push($rootScope.user_uid); 
 													db.collection("games").doc($scope.roomCode).set({
 														'__pyramid.rounds': updated_rounds
@@ -355,7 +361,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 																									
 												$rootScope.soundEffect.src = '/assets/sounds/notification/1.mp3';
 												
-												if(!$scope.soundsLock && (transaction.seenby.includes($rootScope.user_uid))){
+												if(!$scope.soundsLock && transaction.seenby && !transaction.seenby.includes($rootScope.user_uid)){
 													$rootScope.soundEffect.play();
 													$scope.soundsLock = true;
 												}
@@ -378,8 +384,14 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 													to_player: doc.data()[transaction.t_to].name
 												};	
 												
-												if(!(transaction.seenby.includes($rootScope.user_uid))){
+												if(transaction.seenby && !transaction.seenby.includes($rootScope.user_uid)){
 													var updated_rounds = angular.copy(doc.data()['__pyramid.rounds']);
+													if(updated_rounds[doc.data()['__pyramid.currentRound'].round_number].round_transactions[$scope.transactionIteration].seenby){
+														updated_rounds[doc.data()['__pyramid.currentRound'].round_number].round_transactions[$scope.transactionIteration].seenby.push($rootScope.user_uid); 
+													} else {
+														updated_rounds[doc.data()['__pyramid.currentRound'].round_number].round_transactions[$scope.transactionIteration].seenby = []; 
+														updated_rounds[doc.data()['__pyramid.currentRound'].round_number].round_transactions[$scope.transactionIteration].seenby.push($rootScope.user_uid); 
+													}
 													updated_rounds[doc.data()['__pyramid.currentRound'].round_number].round_transactions[$scope.transactionIteration].seenby.push($rootScope.user_uid); 
 													db.collection("games").doc($scope.roomCode).set({
 														'__pyramid.rounds': updated_rounds
@@ -397,7 +409,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 												
 												$rootScope.soundEffect.src = '/assets/sounds/bullshit/'+randomBullshit+'.mp3'
 												
-												if(!$scope.soundsLock && (transaction.seenby.includes($rootScope.user_uid))){
+												if(!$scope.soundsLock && transaction.seenby && !transaction.seenby.includes($rootScope.user_uid)){
 													$rootScope.soundEffect.play();
 													$scope.soundsLock = true;
 												}
@@ -427,18 +439,19 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 														if($scope.clientDeck.cards[$scope.selectedCard].rank == currentCardRank.rank){
 															var randomWrong = Math.floor(Math.random() * 2) + 1;
 															
-															$rootScope.soundEffect.src = '/assets/sounds/wrong/'+randomWrong+'.mp3'
 															
-															if(!$scope.soundsLock){
+															$rootScope.soundEffect.src = '/assets/sounds/success/'+randomSuccess+'.mp3';
+															
+															if(!$scope.soundsLock && transaction.seenby && !transaction.seenby.includes($rootScope.user_uid)){
 																$rootScope.soundEffect.play();
 																$scope.soundsLock = true;
 															}
 														} else {
+															$rootScope.soundEffect.src = '/assets/sounds/wrong/'+randomWrong+'.mp3';
+															
 															var randomSuccess = Math.floor(Math.random() * 3) + 1;
 															
-															$rootScope.soundEffect.src = '/assets/sounds/success/'+randomSuccess+'.mp3'
-															
-															if(!$scope.soundsLock){
+															if(!$scope.soundsLock && transaction.seenby && !transaction.seenby.includes($rootScope.user_uid)){
 																$rootScope.soundEffect.play();
 																$scope.soundsLock = true;
 															}

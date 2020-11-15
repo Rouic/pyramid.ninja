@@ -19,13 +19,7 @@ precacheAndRoute(self.__WB_MANIFEST);
 
 const handler = createHandlerBoundToURL('/index.html');
 const navigationRoute = new NavigationRoute(handler);
-registerRoute(navigationRoute);
-
-
-registerRoute(
-  ({url}) => url.pathname.startsWith('/index.html'),
-  new NetworkFirst()
-);
+registerRoute(navigationRoute, new NetworkFirst());
 
 registerRoute(
   /^https:\/\/googletagmanager\.com/,
