@@ -16,7 +16,7 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
 	  .state('root', {
 		  views: {
 			  '@' : {
-				   templateUrl: '/templates/layout.html',
+				   templateUrl: require('../templates/layout.html'),
 				   controller: 'root',
 			  },
 		  }
@@ -27,15 +27,15 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
 		url: '/',
 		views: {
 			'view': {
-				 templateUrl: '/templates/start.html',
+				 templateUrl: require('../templates/start.html'),
 				controller: 'start'
 			},
 			'header': {
-				  templateUrl: '/templates/header.html',
+				  templateUrl: require('../templates/header.html'),
 				  controller: 'header'
 			},
 			'footer': {
-					templateUrl: '/templates/footer.html'
+					templateUrl: require('../templates/footer.html')
 			}
 		}     
 	})
@@ -45,15 +45,15 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
 		url: '/host',
 		views: {
 			'view': {
-				 templateUrl: '/templates/host.html',
+				 templateUrl: require('../templates/host.html'),
 				controller: 'host'
 			},
 			'header': {
-				  templateUrl: '/templates/header.html',
+				  templateUrl: require('../templates/header.html'),
 				  controller: 'header'
 			  },
 			  'footer': {
-					  templateUrl: '/templates/footer.html'
+					  templateUrl: require('../templates/footer.html')
 			  }
 		}     
 	})
@@ -67,11 +67,11 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
 				controller: 'join'
 			},
 			'header': {
-				  templateUrl: '/templates/header.html',
+				  templateUrl: require('../templates/header.html'),
 				  controller: 'header'
 			  },
 			  'footer': {
-					  templateUrl: '/templates/footer.html'
+					  templateUrl: require('../templates/footer.html')
 			  }
 		}     
 	})    
@@ -80,15 +80,15 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
 		url: '/game/:gameID?',
 		views: {
 			'view': {
-				 templateUrl: '/templates/game.html',
+				 templateUrl: require('../templates/game.html'),
 				controller: 'game'
 			},
 			'header': {
-				  templateUrl: '/templates/header.html',
+				  templateUrl: require('../templates/header.html'),
 				  controller: 'header'
 			  },
 			  'footer': {
-					  templateUrl: '/templates/footer.html'
+					  templateUrl: require('../templates/footer.html')
 			  }
 		},
 		resolve: {
@@ -108,15 +108,15 @@ Pyramid.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', fun
 		url: '/about',
 		views: {
 			'view': {
-				 templateUrl: '/templates/about.html',
+				 templateUrl: require('../templates/about.html'),
 				controller: 'about'
 			},
 			'header': {
-				  templateUrl: '/templates/header.html',
+				  templateUrl: require('../templates/header.html'),
 				  controller: 'header'
 			  },
 			  'footer': {
-					  templateUrl: '/templates/footer.html'
+					  templateUrl: require('../templates/footer.html')
 			  }
 		}      
 	});    

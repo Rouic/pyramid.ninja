@@ -50,7 +50,11 @@ module.exports = {
 	},
   },
   plugins: [
-	new WebpackAutoInject(),
+	new WebpackAutoInject({
+		components: {
+			InjectAsComment: false
+		  },
+	}),
 	new HtmlWebpackPlugin({
 		template: './src/app/index.html',
 	}),
@@ -72,11 +76,6 @@ module.exports = {
 	}),
 	new CopyPlugin({
 	  patterns: [
-		{
-		  from: '*',
-		  to: 'templates/',
-		  context: './src/app/templates/'
-		},
 		{
 		  from: '*',
 		  to: 'assets/img/',
@@ -137,9 +136,25 @@ module.exports = {
   module: {
 	rules: [
 		{
+		  test: /\.html$/,
+		  exclude: /index\.html$/,
+		  use: [
+			  {
+				  loader: 'file-loader',
+				  options: {
+					  name: 'template.[contenthash:8].html',
+					  outputPath: 'templates/'
+				  }
+			  },
+			  'extract-loader', 
+			  'html-loader'
+		  ],
+		},
+		{
 			test: /\.scss$/,
 			loader: 'style-loader!css-loader!sass-loader'
-		  },{
+		},
+		{
 		test: /\.css$/,
 		use: [{
 			loader: MiniCssExtractPlugin.loader,

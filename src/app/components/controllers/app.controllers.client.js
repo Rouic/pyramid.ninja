@@ -330,17 +330,32 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 									var callsOnUs = 0;
 									(doc.data()['__pyramid.rounds'][doc.data()['__pyramid.currentRound'].round_number].round_transactions).forEach(function(transaction, i) {
 										
-										if(transaction.t_to == $rootScope.user_uid && transaction.status == 'waiting'){
+											if(transaction.t_to == $rootScope.user_uid && transaction.status == 'waiting'){
 											//someone sent us a transaction! Need to block all options until we reply.
 												$scope.transactionIteration = i;
 												$scope.currentDecision = {
 													from_player: doc.data()[transaction.t_from].name,
 													to_player: doc.data()[transaction.t_to].name
 												};	
+												
+												if(!(transaction.seenby.includes($rootScope.user_uid))){
+													var updated_rounds = angular.copy(doc.data()['__pyramid.rounds']);
+													updated_rounds[doc.data()['__pyramid.currentRound'].round_number].round_transactions[$scope.transactionIteration].seenby.push($rootScope.user_uid); 
+													db.collection("games").doc($scope.roomCode).set({
+														'__pyramid.rounds': updated_rounds
+													}, {merge: true})
+													.then(function() {
+		
+													})
+													.catch(function(error) {
+														console.error("Error writing game data: ", error);
+													});
+												}
+												
 																									
 												$rootScope.soundEffect.src = '/assets/sounds/notification/1.mp3';
 												
-												if(!$scope.soundsLock){
+												if(!$scope.soundsLock && (transaction.seenby.includes($rootScope.user_uid))){
 													$rootScope.soundEffect.play();
 													$scope.soundsLock = true;
 												}
@@ -355,19 +370,34 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 													$scope.allowDecision = true;
 													//$scope.allowCalling = false;
 												}												
-										}
-										if(transaction.t_from == $rootScope.user_uid && transaction.status == 'bullshit'){
+											}
+											if(transaction.t_from == $rootScope.user_uid && transaction.status == 'bullshit'){
 												$scope.transactionIteration = i;
 												$scope.currentDecision = {
 													from_player: doc.data()[transaction.t_from].name,
 													to_player: doc.data()[transaction.t_to].name
 												};	
 												
+												if(!(transaction.seenby.includes($rootScope.user_uid))){
+													var updated_rounds = angular.copy(doc.data()['__pyramid.rounds']);
+													updated_rounds[doc.data()['__pyramid.currentRound'].round_number].round_transactions[$scope.transactionIteration].seenby.push($rootScope.user_uid); 
+													db.collection("games").doc($scope.roomCode).set({
+														'__pyramid.rounds': updated_rounds
+													}, {merge: true})
+													.then(function() {
+		
+													})
+													.catch(function(error) {
+														console.error("Error writing game data: ", error);
+													});
+												}
+												
+												
 												var randomBullshit = Math.floor(Math.random() * 7) + 1;
 												
 												$rootScope.soundEffect.src = '/assets/sounds/bullshit/'+randomBullshit+'.mp3'
 												
-												if(!$scope.soundsLock){
+												if(!$scope.soundsLock && (transaction.seenby.includes($rootScope.user_uid))){
 													$rootScope.soundEffect.play();
 													$scope.soundsLock = true;
 												}
@@ -455,7 +485,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 											});																						
 											
 										}
-	
+		
 									});
 									
 									

@@ -191,9 +191,9 @@ Pyramid.controller('host', ['$state', '$scope', '$rootScope', '$stateParams', '$
 	db.collection("games").doc($scope.roomPIN).onSnapshot(function(doc) {
 				
 		const peopleArray = Object.keys(doc.data()).map(i => doc.data()[i]);
-		$scope.players = peopleArray.filter(function(el){
+		$scope.players = SeededShuffle.shuffle(peopleArray.filter(function(el){
 			 return el.name;
-		});
+		}), $scope.roomPIN.toUpperCase());
 		
 		$scope.allRounds = doc.data()['__pyramid.rounds'];
 		
