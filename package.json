@@ -1,12 +1,12 @@
 {
   "name": "pyramid.ninja",
-  "version": "2.1.7",
+  "version": "2.1.19",
   "description": "![pyramid.ninja logo](https://pyramid-ninja.web.app/assets/img/pyramid.ninja.png)",
   "private": true,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npm version patch --no-git-tag-version && webpack",
-    "deploy": "firebase deploy -only hosting"
+    "build": "webpack",
+    "deploy": "npm run build & npm version patch --no-git-tag-version & firebase deploy --only hosting"
   },
   "repository": {
     "type": "git",

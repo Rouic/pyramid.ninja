@@ -36,11 +36,12 @@
 									
 								<button ng-click="getNewCard()" ng-show="allowNewCard" class="btn btn-rose btn-round join-button">Get New Cards <i class="material-icons">visibility</i></button>									
 									
-								<button ng-click="callPlayer()" ng-show="allowCalling" class="btn btn-rose btn-round join-button">Select Player <i class="material-icons">local_bar</i></button>		
-									
-								<button ng-click="decision(1)" ng-show="allowDecision" class="btn btn-success btn-round join-button">Accept Drinks <i class="material-icons">done</i></button>		
-									
-								<button ng-click="decision(2)" ng-show="allowDecision" class="btn btn-danger btn-round join-button">Bullshit! <i class="material-icons">report</i></button>									
+								<button ng-click="callPlayer()" ng-show="allowCalling" class="btn btn-rose btn-round join-button">Select Player <i class="material-icons">local_bar</i></button>	
+									<div class="row" ng-show="allowDecision">
+										<button ng-click="decision(1)" class="btn btn-success btn-round join-button">Accept Drinks <i class="material-icons">done</i></button>		
+											
+										<button ng-click="decision(2)" class="btn btn-danger btn-round join-button">Bullshit! <i class="material-icons">report</i></button>		
+									</div>							
 								
 	
 																
@@ -64,12 +65,12 @@
 
 
 <div class="modal fade" tabindex="-1" role="dialog" id="callModel">
-  <div class="modal-dialog modal-small" role="document">
+  <div class="modal-dialog modal-small" role="document" style="color: black;font-weight: 800">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Select Player to Drink!</h5>
       </div>
-      <div class="modal-body">
+      <div class="modal-body" style="margin-top: 0px;">
        	<p>Select a different player below to send a drink to. They can either believe you or call your bluff!</p>
 				
 				<h6 ng-if="otherPlayersCopy.length < 1">Oh no! No other players to send drinks to! :(</h6>
