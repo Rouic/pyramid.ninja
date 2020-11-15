@@ -1,6 +1,6 @@
 {
   "name": "pyramid.ninja",
-  "version": "2.1.32",
+  "version": "2.1.40",
   "description": "![pyramid.ninja logo](https://pyramid-ninja.web.app/assets/img/pyramid.ninja.png)",
   "private": true,
   "scripts": {
@@ -32,6 +32,7 @@
     "html-webpack-plugin": "^4.5.0",
     "mini-css-extract-plugin": "^1.3.0",
     "purgecss-webpack-plugin": "^3.0.0",
+    "robotstxt-webpack-plugin": "^7.0.0",
     "sass": "^1.29.0",
     "sass-loader": "^10.1.0",
     "style-loader": "^2.0.0",

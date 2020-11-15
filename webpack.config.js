@@ -8,8 +8,10 @@ const CopyPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const PurgecssPlugin = require('purgecss-webpack-plugin');
 const workbox = require('workbox-webpack-plugin');
-var WebpackPwaManifest = require('webpack-pwa-manifest-contrib');
-var WebpackAutoInject = require('webpack-auto-inject-version');
+const RobotstxtPlugin = require("robotstxt-webpack-plugin");
+const WebpackPwaManifest = require('webpack-pwa-manifest-contrib');
+const WebpackAutoInject = require('webpack-auto-inject-version');
+
 
 
 
@@ -50,6 +52,25 @@ module.exports = {
 	},
   },
   plugins: [
+	new RobotstxtPlugin({
+		host: "https://pyramid.ninja",	
+		policy: [
+			{
+			  userAgent: "Googlebot",
+			  allow: "/",
+			  disallow: ["/game", "/host"],
+			},
+			{
+			  userAgent: "OtherBot",
+			  allow: "/",
+			  disallow: ["/game", "/host"],
+			},
+			{
+			  userAgent: "*",
+			  allow: "/",
+			},
+		  ],
+	}),
 	new WebpackAutoInject({
 		components: {
 			InjectAsComment: false

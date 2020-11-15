@@ -370,11 +370,11 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 												if(callsOnUs > 1){
 													$scope.instruction = 'several_drink';
 													$scope.allowDecision = true;
-													// $scope.allowCalling = false;
+													$scope.allowCalling = false;
 												} else {
 													$scope.instruction = 'drink';
 													$scope.allowDecision = true;
-													//$scope.allowCalling = false;
+													$scope.allowCalling = false;
 												}												
 											}
 											if(transaction.t_from == $rootScope.user_uid && transaction.status == 'bullshit'){
