@@ -1,6 +1,6 @@
 import { CacheableResponsePlugin } from 'workbox-cacheable-response/CacheableResponsePlugin';
 import { CacheFirst } from 'workbox-strategies/CacheFirst';
-import { StaleWhileRevalidate } from 'workbox-strategies/StaleWhileRevalidate';
+import { NetworkFirst } from 'workbox-strategies/NetworkFirst';
 import { ExpirationPlugin } from 'workbox-expiration/ExpirationPlugin';
 import { NavigationRoute } from 'workbox-routing/NavigationRoute';
 import { precacheAndRoute } from 'workbox-precaching/precacheAndRoute';
@@ -17,14 +17,14 @@ setCacheNameDetails({
 	
 precacheAndRoute(self.__WB_MANIFEST);
 
-// const handler = createHandlerBoundToURL('/index.html');
-// const navigationRoute = new NavigationRoute(handler);
-// registerRoute(navigationRoute);
+const handler = createHandlerBoundToURL('/index.html');
+const navigationRoute = new NavigationRoute(handler);
+registerRoute(navigationRoute);
 
 
 registerRoute(
   ({url}) => url.pathname.startsWith('/index.html'),
-  new StaleWhileRevalidate()
+  new NetworkFirst()
 );
 
 registerRoute(

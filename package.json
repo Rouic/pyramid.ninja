@@ -1,6 +1,6 @@
 {
   "name": "pyramid.ninja",
-  "version": "2.1.19",
+  "version": "2.1.21",
   "description": "![pyramid.ninja logo](https://pyramid-ninja.web.app/assets/img/pyramid.ninja.png)",
   "private": true,
   "scripts": {
