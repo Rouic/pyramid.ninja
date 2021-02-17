@@ -4,13 +4,20 @@
     "indexes": "firestore.indexes.json"
   },
   "hosting": {
+    "site": "pyramid-ninja",
     "public": "dist",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
     ],
-    "rewrites": [
+    "appAssociation": "AUTO",
+    "rewrites": [    
+      {
+        "source": "/avatar/**",
+        "function": "avatars",
+        "dynamicLinks": true
+      },
       {
         "source": "**",
         "destination": "/index.html"
@@ -18,3 +25,4 @@
     ]
   }
 }
+
