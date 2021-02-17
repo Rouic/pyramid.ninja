@@ -281,7 +281,6 @@ if (mode === 'development') {
 				  injectProperty: '__prerender',
 				   inject: {},
 				   renderAfterDocumentEvent: 'render-ready',
-				   headless: false,
 					 defaultViewport: {
 						 width: 1920,
 						 height: 1080

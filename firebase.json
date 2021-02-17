@@ -12,6 +12,13 @@
       "**/node_modules/**"
     ],
     "appAssociation": "AUTO",
+    "headers": [{
+      "source": "**/*.@(jpg|jpeg|gif|png)",
+      "headers": [ {
+        "key": "Cache-Control",
+        "value": "max-age=31536000"
+      } ]
+    }],
     "rewrites": [    
       {
         "source": "/avatar/**",
