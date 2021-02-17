@@ -34,8 +34,8 @@
 				</div>			
 				<div class="players-container">
 	    			<div ng-repeat="x in players" ng-if="x.type != 'host'" class="in-progress-user">
-						<img ng-src="https://us-central1-pyramid-ninja.cloudfunctions.net/avatars/70/{{x.name}}.png" alt="user-avatar-{{x.name}}" class="img-rounded img-responsive img-raised in-progress-avatar">
-						<p style="display: inline-block">{{x.name}}</p>
+						<img ng-src="https://us-central1-pyramid-ninja.cloudfunctions.net/avatars/70/{{::x.name}}.png" alt="user-avatar-{{x.name}}" class="img-rounded img-responsive img-raised in-progress-avatar">
+						<p style="display: inline-block;font-weight: 800;" class="text-muted">{{::x.name}}</p>
 					</div>								
 				</div>		
                 <div class="row">

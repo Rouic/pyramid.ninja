@@ -4,6 +4,8 @@ Pyramid.controller('host', ['$state', '$scope', '$rootScope', '$stateParams', '$
 	$rootScope.pageClass = 'signup-page';
 	$.material.init();
 	$scope.domain = window.location.hostname;
+	const event = new Event('render-ready');
+	document.dispatchEvent(event);
 	
 		$interval(function(){
 			if($scope.countdown > 0) $scope.countdown--;
@@ -104,8 +106,8 @@ Pyramid.controller('host', ['$state', '$scope', '$rootScope', '$stateParams', '$
 			 
 			$scope.roundTaunt = function(i){
 				switch(i) {
-					case 0: return $scope.randoString(['Time to get wrecked!', 'Time to turn our livers to coral!']);
-					case 1: return $scope.randoString(['I hear round 2 is spicy!', 'Enjoy the hangover!']);
+					case 0: return $scope.randoString(['Time to get wrecked!', 'Time to turn our livers to coral!', 'Drink Responsibly, yeah']);
+					case 1: return $scope.randoString(['I hear round 2 is spicy!', 'Enjoy the hangover!', 'Drinking may cause memory loss and... may also cause memory loss.']);
 					case 2: return $scope.randoString(['Your liver will thank you!', 'Q: Whats the difference between a dog and a fox? A: 2 drinks.']);
 					case 3: return $scope.randoString(['Sponsored by crippling depression.', 'Be kind to your friends!']);
 					case 4: return $scope.randoString(['You alcoholic!', 'So a dyslexic walks into a bra...', 'I wonder if this is how Scientology started?']);
@@ -119,7 +121,7 @@ Pyramid.controller('host', ['$state', '$scope', '$rootScope', '$stateParams', '$
 					case 12: return $scope.randoString(['The drinks get serious now.', 'Alcohol is a perfect solvent: It dissolves marriages, families and careers.']);
 					case 13: return $scope.randoString(['Someone is going to be sick...', 'Nanananana Batman.']);
 					case 14: return $scope.randoString(['Nearly there!', 'Vodka isn’t always the answer. But it’s worth a shot.']);
-					case 15: return $scope.randoString(['Last one!', 'You\'ve climbed the alcoholic mountain!']);
+					case 15: return $scope.randoString(['Last one!', 'You\'ve climbed the alcoholic mountain!', 'You all look so pretty now!']);
 					default: return '';
 				}
 			};
