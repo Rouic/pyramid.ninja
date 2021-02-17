@@ -28,12 +28,14 @@ const firebaseConfig = {
   appId: "1:668178102663:web:bc247d167d2cab96adfb22",
   measurementId: "G-VCPEBG1XK7"
 };
-firebase.default.initializeApp(firebaseConfig);
-global.perf = firebase.default.performance();
-global.analytics = firebase.default.analytics();
-global.db = firebase.default.firestore();
-global.auth = firebase.default.auth();
-global.firebaseAll = firebase.default;
+if(!window.__prerender){
+  firebase.default.initializeApp(firebaseConfig);
+  global.perf = firebase.default.performance();
+  global.analytics = firebase.default.analytics();
+  global.db = firebase.default.firestore();
+  global.auth = firebase.default.auth();
+  global.firebaseAll = firebase.default;
+}
 /* Firebase config end */
 
 global.Deck = Deck();

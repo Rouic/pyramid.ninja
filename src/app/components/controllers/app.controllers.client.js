@@ -1,13 +1,20 @@
 Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$stateParams', 'title', '$interval', function($cookies, $state, $scope, $rootScope, $stateParams, title, $interval){
+	
+	//Init layout
 	$rootScope.pageClass = 'signup-page';
 	$.material.init();
+	const event = new Event('render-ready');
+	document.dispatchEvent(event);
 	
+	//Setup page containers for Deck() library
 	$scope.$container = document.getElementById('clientcardcontainer');
 	$scope.$containerparent = document.getElementById('clientcontainerparent');		
 	
+	//Generate initial unordered Decks
 	$scope.clientDeck = Deck();
 	$scope.temp_deck = Deck();
 	
+	//Setup scope booleans, probably don't even need this but meh
 	$scope.initalLoad = true;
 	$scope.roundsStarted = false;
 	$scope.continueButton = false;
@@ -15,6 +22,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 	$scope.newRoundLock = true;
 	$scope.hasIntialLooked = false;
 	
+	//Initial positioning for Client game cards.
 	$scope.myCardsCoords = function(i){
 		switch(i) {
 			case 0: return {x:49, y:0};
@@ -22,10 +30,10 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 			case 2: return {x:49, y:175};
 			case 3: return {x:-89, y:175};
 			default: return {x:49, y:0};			
-			
 		}					
 	};	
-		
+	
+	//Translate card value (1-52) into English version
 	$scope.cardIndexTranslation = function(value){
 		var card = null;
 		value = value+1;
@@ -74,16 +82,22 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		  }
 		  return card;
 	};		
-		
+	
+	//Set Game title
 	$rootScope.title = '| '+title+' Loading...';	
+	
+	//If we don't have a GameID for some reason go back to the start
 	if(!$stateParams.gameID){
 		$state.go('start');
 	} else {
+		
+		//Set starting game values
 		$scope.myName = $cookies.get('name');
 		$scope.roomCode = $stateParams.gameID.toUpperCase();
 		$scope.instruction = 'Waiting for deck!';
 		$scope.cardSet = [];
 		
+		//GameCycle function to run each database tick
 		$scope.gameCycle = function(doc){
 			if(doc.data()){
 				if(doc.data()[$rootScope.user_uid]){
@@ -533,6 +547,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		};
 		
 		
+		//If gameID and name, join game and start streaming updates
 		if($cookies.get('name')){		
 			analytics.logEvent('JoinedGame');
 			db.collection("games").doc($scope.roomCode).onSnapshot(function(doc) {
@@ -544,14 +559,17 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		}					
 	}
 	
+	//Countdown runner
 	$interval(function(){
 		if($scope.countdown > 0) $scope.countdown--;
 	}, 1000);	
 	
+	//Translate selected player to scope variable
 	$scope.selectP = function(player){
 		$scope.selectedplayer = player;
 	};
 	
+	//Show call player modal
 	$scope.callPlayer = function(){
 		$scope.selectedplayer = null;
 		$('#callModel').modal();
@@ -559,15 +577,18 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		$.material.init();
 	};
 	
+	//Confirm selected call player
 	$scope.confirmCall = function(){
 		$scope.lockNewCall = true;
 		
+		//Push into game round transactions
 		$scope.roundTransactions.push({
 			t_to: $scope.selectedplayer.uid,
 			t_from: $rootScope.user_uid,
 			status: 'waiting'
 		});
 		
+		//Merge update into game database
 		db.collection("games").doc($scope.roomCode).set({
 			'__pyramid.rounds': {
 				[$scope.currentRound]: {
@@ -576,15 +597,17 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 			}
 		}, {merge: true})
 		.then(function() {
+			//Allow calling again
 			$scope.allowCalling = false;
 		})
 		.catch(function(error) {
 			console.error("Error writing game data: ", error);
 		});			
-		
+		//Hide call player modal
 		$('#callModel').modal('hide');
 	};
 	
+	//Initial show-call-cards button if there
 	$scope.showAllMyCards = function(){
 		$scope.hasIntialLooked = true;
 		$scope.allowViewAll = false;
@@ -597,6 +620,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		});
 	};
 	
+	//Show new card function
 	$scope.revealNewCard = function(){
 		$scope.doingCardShow = true;
 		$scope.allowNewCard = false;
@@ -604,6 +628,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		$scope.instruction = 'Remember your new card! You will NOT be able to view it again!';
 	};
 	
+	//Watch global countdown and respond if need be
 	$scope.$watch('countdown', function() {
 		if(($scope.doingCardShow || ($scope.selectedCard !== undefined || $scope.selectedCard !== null)) && $scope.countdown == 0){
 			$scope.doingCardShow = false;
@@ -632,6 +657,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 		}
 	});
 	
+	//Override host to start game if first player
 	$scope.startGame = function(){
 		db.collection("games").doc($scope.roomCode).set({
 			'__pyramid.meta': {

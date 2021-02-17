@@ -1,7 +1,8 @@
 Pyramid.controller('root', ['$state', '$scope', '$rootScope', '$stateParams', function($state, $scope, $rootScope, $stateParams){
   
 	$rootScope.randomBackground = Math.floor(Math.random() * 10) + 1;
-	auth.signInAnonymously().catch(function(error) {
+	if(!window.__prerender){
+		auth.signInAnonymously().catch(function(error) {
 	  var errorCode = error.code;
 	  var errorMessage = error.message;
 	  console.log(error);
@@ -15,6 +16,7 @@ Pyramid.controller('root', ['$state', '$scope', '$rootScope', '$stateParams', fu
 	  }
 	});  
 	$rootScope.soundEffect = new Audio();
+	}
 }]);
 
 Pyramid.controller('header', ['$state', '$scope', '$rootScope', '$stateParams', function($state, $scope, $rootScope, $stateParams){}]);
@@ -26,14 +28,17 @@ Pyramid.controller('start', ['$state', '$scope', '$rootScope', '$stateParams', '
 		currentGame = null;
 		canContinue = false;
 	}
-	analytics.logEvent('ViewedSplash');
-	
+	if(!window.__prerender) analytics.logEvent('ViewedSplash');
+	const event = new Event('render-ready');
+	 document.dispatchEvent(event);
   
 }]);
 
 Pyramid.controller('about', ['$state', '$scope', '$rootScope', '$stateParams', function($state, $scope, $rootScope, $stateParams){
 	$rootScope.pageClass = 'about-us';
 	$.material.init();
+	const event = new Event('render-ready');
+	document.dispatchEvent(event);
 }]);
 
 import './controllers/app.controllers.host';

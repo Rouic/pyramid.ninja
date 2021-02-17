@@ -1,12 +1,14 @@
 {
   "name": "pyramid.ninja",
-  "version": "2.1.43",
+  "version": "2.1.55",
   "description": "![pyramid.ninja logo](https://pyramid-ninja.web.app/assets/img/pyramid.ninja.png)",
   "private": true,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack",
-    "deploy": "npm run build & npm version patch --no-git-tag-version & firebase deploy --only hosting"
+    "watch": "NODE_ENV=development webpack --watch",
+    "build": "NODE_ENV=development webpack",
+    "build:prod": "NODE_ENV=production webpack",
+    "deploy": "NODE_ENV=production npm run build & npm version patch --no-git-tag-version & firebase deploy --only hosting"
   },
   "repository": {
     "type": "git",
@@ -56,6 +58,7 @@
     "jquery": "^3.5.1",
     "material-design-icons": "^3.0.1",
     "node-sass": "^5.0.0",
+    "prerender-spa-plugin": "^3.4.0",
     "seededshuffle": "^0.2.0"
   }
 }

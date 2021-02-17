@@ -4,6 +4,9 @@ Pyramid.controller('join', ['$cookies', '$state', '$scope','$rootScope', '$state
 	
 	$scope.join = {};
 	
+	const event = new Event('render-ready');
+	document.dispatchEvent(event);
+	
 	$scope.joinGame = function(){
 		if($scope.join.roomcode && $scope.join.name){
 			

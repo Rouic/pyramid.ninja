@@ -12,6 +12,18 @@
     ],
     "rewrites": [
       {
+        "source": "/host",
+        "destination": "/host/index.html"
+      },
+      {
+        "source": "/join",
+        "destination": "/join/index.html"
+      },
+      {
+        "source": "/about",
+        "destination": "/about/index.html"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
