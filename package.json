@@ -1,6 +1,6 @@
 {
   "name": "pyramid.ninja",
-  "version": "2.1.55",
+  "version": "2.1.60",
   "description": "![pyramid.ninja logo](https://pyramid-ninja.web.app/assets/img/pyramid.ninja.png)",
   "private": true,
   "scripts": {
@@ -8,7 +8,7 @@
     "watch": "NODE_ENV=development webpack --watch",
     "build": "NODE_ENV=development webpack",
     "build:prod": "NODE_ENV=production webpack",
-    "deploy": "NODE_ENV=production npm run build & npm version patch --no-git-tag-version & firebase deploy --only hosting"
+    "deploy": "NODE_ENV=production webpack & npm version patch --no-git-tag-version & firebase deploy"
   },
   "repository": {
     "type": "git",

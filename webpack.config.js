@@ -277,11 +277,12 @@ if (mode === 'development') {
 		new PrerenderSPAPlugin({
 			  staticDir: path.join(__dirname, 'dist'),
 			  indexPath: path.join(__dirname, 'dist', 'index.html'),
-			  routes: [ '/', '/join', '/about', '/host'],
+			  routes: [ '/', '/join', '/about'],
 			  renderer: new Renderer({
 				  injectProperty: '__prerender',
 				   inject: {},
 				   renderAfterDocumentEvent: 'render-ready',
+				   headless: false,
 				   renderAfterTime: 5000,
 					 defaultViewport: {
 						 width: 1920,
