@@ -2,20 +2,20 @@ Pyramid.controller('root', ['$state', '$scope', '$rootScope', '$stateParams', fu
   
 	$rootScope.randomBackground = Math.floor(Math.random() * 10) + 1;
 	if(!window.__prerender){
-		auth.signInAnonymously().catch(function(error) {
-	  var errorCode = error.code;
-	  var errorMessage = error.message;
-	  console.log(error);
-	});    
-	auth.onAuthStateChanged(function(user) {
-	  if (user) {
-		var isAnonymous = user.isAnonymous;
-		$rootScope.user_uid = user.uid;
-	  } else {
-		$rootScope.user_uid = null;
-	  }
-	});  
-	$rootScope.soundEffect = new Audio();
+			auth.signInAnonymously().catch(function(error) {
+		  var errorCode = error.code;
+		  var errorMessage = error.message;
+		  console.log(error);
+		});    
+		auth.onAuthStateChanged(function(user) {
+		  if (user) {
+			var isAnonymous = user.isAnonymous;
+			$rootScope.user_uid = user.uid;
+		  } else {
+			$rootScope.user_uid = null;
+		  }
+		});  
+		$rootScope.soundEffect = new Audio();
 	}
 }]);
 
@@ -30,7 +30,7 @@ Pyramid.controller('start', ['$state', '$scope', '$rootScope', '$stateParams', '
 	}
 	if(!window.__prerender) analytics.logEvent('ViewedSplash');
 	const event = new Event('render-ready');
-	 document.dispatchEvent(event);
+	document.dispatchEvent(event);
   
 }]);
 

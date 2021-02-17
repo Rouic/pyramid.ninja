@@ -273,7 +273,6 @@ if (mode === 'development') {
 				  greedy: [/playingcard/, /face/]
 			}
 			}),
-		new CleanWebpackPlugin(),
 		new PrerenderSPAPlugin({
 			  staticDir: path.join(__dirname, 'dist'),
 			  indexPath: path.join(__dirname, 'dist', 'index.html'),
@@ -283,7 +282,6 @@ if (mode === 'development') {
 				   inject: {},
 				   renderAfterDocumentEvent: 'render-ready',
 				   headless: false,
-				   renderAfterTime: 5000,
 					 defaultViewport: {
 						 width: 1920,
 						 height: 1080
@@ -297,6 +295,7 @@ if (mode === 'development') {
 				  sortAttributes: true
 				}
 		}),
+		new CleanWebpackPlugin(),
 		new webpack.ProvidePlugin({
 		  jQuery: 'jquery',
 		  $: 'jquery',
