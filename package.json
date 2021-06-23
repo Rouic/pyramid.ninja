@@ -52,7 +52,7 @@
     "angular": "^1.8.2",
     "angular-cookies": "^1.8.2",
     "angular-ui-router": "^1.0.28",
-    "bootstrap": "^3.4.1",
+    "bootstrap": "^5.0.2",
     "firebase": "^8.0.1",
     "jquery": "^3.5.1",
     "material-design-icons": "^3.0.1",
