@@ -46,7 +46,7 @@
     "webpack-material-design-icons": "^0.1.0",
     "webpack-pwa-manifest": "^4.2.0",
     "webpack-pwa-manifest-contrib": "^4.2.1",
-    "workbox-webpack-plugin": "^5.1.4"
+    "workbox-webpack-plugin": "^6.2.0"
   },
   "dependencies": {
     "angular": "^1.8.2",
