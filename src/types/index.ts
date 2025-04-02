@@ -7,6 +7,7 @@ export interface Card {
   suit: number; // 0: spades, 1: hearts, 2: clubs, 3: diamonds
   rank: number; // 0: ace, 1-9: 2-10, 10: jack, 11: queen, 12: king
   i: number; // 0-51, unique identifier for each card
+  newCard?: boolean; // Whether this card is new (dealt after a bullshit call)
 }
 
 export interface PlayerCard {

@@ -1,7 +1,7 @@
 // src/components/cards/Pyramid.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Card from "./Card";
-import { getPyramidCoordinates } from "../../lib/deckUtils";
+import { getPyramidCoordinates, getPyramidRow } from "../../lib/deckUtils";
 import { PyramidCard } from "../../types";
 
 interface PyramidProps {
@@ -25,6 +25,7 @@ const Pyramid: React.FC<PyramidProps> = ({
   const [shownCards, setShownCards] = useState<boolean[]>(
     Array(15).fill(false)
   );
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Update shown cards when props change
   useEffect(() => {
@@ -51,7 +52,7 @@ const Pyramid: React.FC<PyramidProps> = ({
       );
 
     if (isActive && !shownCards[index] && !gameEnded) {
-      if (debug) console.log("Selecting card:", index);
+      if (debug) console.log("Selecting card:", index, "ID:", cards[index].id);
       onCardSelect(index);
     }
   };
@@ -62,6 +63,7 @@ const Pyramid: React.FC<PyramidProps> = ({
 
   return (
     <div
+      ref={containerRef}
       className={`relative mx-auto ${className}`}
       style={{
         width: `${containerWidth}px`,
@@ -74,6 +76,7 @@ const Pyramid: React.FC<PyramidProps> = ({
         // Center the pyramid in the container
         const adjustedX = coords.x + containerWidth / 2 - 50; // 50 is half card width
         const adjustedY = coords.y;
+        const row = getPyramidRow(index);
 
         return (
           <Card
@@ -82,7 +85,7 @@ const Pyramid: React.FC<PyramidProps> = ({
             position={{ x: adjustedX, y: adjustedY }}
             faceUp={shownCards[index]}
             onClick={() => handleCardClick(index)}
-            className={`transition-transform duration-500 ease-out ${
+            className={`transition-all duration-500 ${
               isActive && !shownCards[index] && !gameEnded
                 ? "hover:scale-105 cursor-pointer"
                 : ""
@@ -142,6 +145,12 @@ const Pyramid: React.FC<PyramidProps> = ({
         {/* Right diagonal line */}
         <line x1="450" y1="490" x2="250" y2="0" stroke="#888" strokeWidth="1" />
       </svg>
+
+      {isActive && !gameEnded && (
+        <div className="absolute bottom-2 left-0 right-0 text-center text-white text-sm bg-black bg-opacity-50 p-1 rounded-lg mx-auto w-max">
+          Click any face-down card to reveal it
+        </div>
+      )}
     </div>
   );
 };

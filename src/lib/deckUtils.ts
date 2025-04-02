@@ -8,6 +8,7 @@ export const createDeck = (): number[] => {
   for (let i = 0; i < 52; i++) {
     deck.push(i);
   }
+  console.log("Created new deck of 52 cards");
   return deck;
 };
 
@@ -21,11 +22,14 @@ export const generateGameCode = (): string => {
     result += characters.charAt(randomIndex);
   }
   
-  return result.toUpperCase();
+  const code = result.toUpperCase();
+  console.log(`Generated game code: ${code}`);
+  return code;
 };
 
 // Shuffle a deck using a seed
 export const shuffleDeck = (seed: string): number[] => {
+  console.log(`Shuffling deck with seed: ${seed}`);
   const rng = seedrandom(seed);
   const deck = createDeck();
   
@@ -35,11 +39,18 @@ export const shuffleDeck = (seed: string): number[] => {
     [deck[i], deck[j]] = [deck[j], deck[i]];
   }
   
+  console.log("Deck shuffled successfully");
   return deck;
 };
 
 // Convert card index to suit and rank
 export const getCardDetails = (cardIndex: number): Card => {
+  if (cardIndex < 0 || cardIndex >= 52) {
+    console.error(`Invalid card index: ${cardIndex}`);
+    // Default to ace of spades if invalid
+    return { suit: 0, rank: 0, i: 0 };
+  }
+  
   const suit = Math.floor(cardIndex / 13);
   const rank = cardIndex % 13;
   
@@ -62,6 +73,11 @@ export const cardIndexToString = (cardIndex: number): string => {
 
 // Convert card index to English text
 export const cardIndexToText = (cardIndex: number): string => {
+  if (cardIndex === undefined || cardIndex === null) {
+    console.error("Undefined or null card index passed to cardIndexToText");
+    return "an unknown card";
+  }
+  
   const card = getCardDetails(cardIndex);
   
   const ranks = [
@@ -141,7 +157,8 @@ export const getRandomTaunt = (roundNumber: number, seed: string): string => {
     ['Last one!', 'You\'ve climbed the alcoholic mountain!', 'You all look so pretty now!'],
   ];
   
-  const tauntList = taunts[Math.min(roundNumber, taunts.length - 1)];
+  const adjustedRound = Math.min(roundNumber, taunts.length - 1);
+  const tauntList = taunts[adjustedRound];
   const randomIndex = Math.floor(rng() * tauntList.length);
   
   return tauntList[randomIndex];

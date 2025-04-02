@@ -1,113 +1,97 @@
-// src/components/cards/Card.tsx
-import React, { useState, useEffect } from "react";
-import { getCardDetails } from "../../lib/deckUtils";
+import Image from "next/image";
+import { useState, useEffect } from "react";
 
-interface CardProps {
-  index: number;
-  position?: { x: number; y: number };
-  faceUp?: boolean;
-  draggable?: boolean;
+type CardProps = {
+  card?: {
+    suit: string;
+    value: string;
+  };
+  flipped?: boolean;
   onClick?: () => void;
   className?: string;
-}
+};
 
-const Card: React.FC<CardProps> = ({
-  index,
-  position = { x: 0, y: 0 },
-  faceUp = false,
-  draggable = false,
+export function Card({
+  card,
+  flipped = false,
   onClick,
   className = "",
-}) => {
-  const [isFaceUp, setIsFaceUp] = useState(faceUp);
+}: CardProps) {
+  const [isFlipped, setIsFlipped] = useState(flipped);
 
-  // Update face-up state when props change
   useEffect(() => {
-    console.log(`Card ${index} faceUp prop changed to:`, faceUp);
-    setIsFaceUp(faceUp);
-  }, [faceUp, index]);
+    setIsFlipped(flipped);
+  }, [flipped]);
 
-  // Get card details
-  const { suit, rank } = getCardDetails(index);
+  const handleClick = () => {
+    if (onClick) onClick();
+  };
 
-  // Determine suit and rank display
-  const ranks = [
-    "A",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "10",
-    "J",
-    "Q",
-    "K",
-  ];
-  const suits = ["♠", "♥", "♣", "♦"];
-  const rankDisplay = ranks[rank];
-  const suitDisplay = suits[suit];
-  const isRed = suit === 1 || suit === 3; // hearts or diamonds
+  // Card dimensions with proper aspect ratio (poker card is 2.5:3.5)
+  const baseClass = `relative w-24 h-32 rounded-lg overflow-hidden cursor-pointer transform transition-transform duration-300 ${className}`;
 
   return (
     <div
-      className={`absolute ${className}`}
+      className={`${baseClass} ${onClick ? "hover:scale-105" : ""}`}
+      onClick={handleClick}
       style={{
-        width: "100px",
-        height: "140px",
-        transform: `translate(${position.x}px, ${position.y}px)`,
-        transition: "transform 0.3s ease",
-        cursor: draggable ? "move" : "pointer",
+        perspective: "1000px",
+        transformStyle: "preserve-3d",
       }}
-      onClick={onClick}
     >
-      {isFaceUp ? (
-        // Card Front
-        <div className="w-full h-full bg-white rounded-lg border-2 border-gray-300 shadow-md p-2">
-          {/* Top left rank and suit */}
-          <div
-            className={`absolute top-1 left-1 font-bold ${
-              isRed ? "text-red-600" : "text-black"
-            }`}
-          >
-            <div>{rankDisplay}</div>
-            <div>{suitDisplay}</div>
-          </div>
-
-          {/* Bottom right rank and suit (inverted) */}
-          <div
-            className={`absolute bottom-1 right-1 font-bold ${
-              isRed ? "text-red-600" : "text-black"
-            } rotate-180`}
-          >
-            <div>{rankDisplay}</div>
-            <div>{suitDisplay}</div>
-          </div>
-
-          {/* Center display */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span
-              className={`text-3xl ${isRed ? "text-red-600" : "text-black"}`}
-            >
-              {rankDisplay}
-              {suitDisplay}
-            </span>
-          </div>
+      <div
+        className="absolute w-full h-full transition-transform duration-500"
+        style={{
+          transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
+          transformStyle: "preserve-3d",
+          backfaceVisibility: "hidden",
+        }}
+      >
+        {/* Card Back */}
+        <div
+          className="absolute w-full h-full flex items-center justify-center bg-white rounded-lg shadow-md"
+          style={{ backfaceVisibility: "hidden" }}
+        >
+          <Image
+            src="/images/card-back.png"
+            alt="Card Back"
+            layout="fill"
+            objectFit="cover"
+            className="rounded-lg"
+          />
         </div>
-      ) : (
-        // Card Back
-        <div className="w-full h-full bg-indigo-600 rounded-lg border-2 border-gray-300 shadow-md">
-          <div className="w-full h-full flex items-center justify-center">
-            <div className="w-3/4 h-3/4 border-4 border-indigo-300 rounded-lg flex items-center justify-center">
-              <div className="text-white text-2xl">🔺</div>
-            </div>
-          </div>
+
+        {/* Card Front */}
+        <div
+          className="absolute w-full h-full bg-white rounded-lg shadow-md flex flex-col items-center justify-center"
+          style={{
+            transform: "rotateY(180deg)",
+            backfaceVisibility: "hidden",
+          }}
+        >
+          {card ? (
+            <>
+              <div className="absolute top-2 left-2 text-xl font-bold">
+                {card.value}
+              </div>
+              <div className="text-4xl">
+                {card.suit === "hearts"
+                  ? "♥️"
+                  : card.suit === "diamonds"
+                  ? "♦️"
+                  : card.suit === "clubs"
+                  ? "♣️"
+                  : "♠️"}
+              </div>
+              <div className="absolute bottom-2 right-2 text-xl font-bold transform rotate-180">
+                {card.value}
+              </div>
+            </>
+          ) : (
+            <div className="text-gray-400">Empty</div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
-};
-
-export default Card;
+}

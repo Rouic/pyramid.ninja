@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="336" viewBox="0 0 240 336">
+  <!-- Card background -->
+  <rect width="240" height="336" rx="16" fill="#1e40af" />
+  
+  <!-- Pattern overlay -->
+  <defs>
+    <pattern id="pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="10" cy="10" r="8" fill="none" stroke="#2563eb" stroke-width="1.5" />
+    </pattern>
+  </defs>
+  <rect width="240" height="336" fill="url(#pattern)" opacity="0.7" />
+  
+  <!-- Card center emblem -->
+  <circle cx="120" cy="168" r="60" fill="#1e3a8a" stroke="#3b82f6" stroke-width="2" />
+  <path d="M120 128 L140 188 L100 188 Z" fill="#3b82f6" />
+  <path d="M120 208 L100 148 L140 148 Z" fill="#3b82f6" />
+</svg>

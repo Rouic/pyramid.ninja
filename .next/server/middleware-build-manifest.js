@@ -1,1 +1,50 @@
-globalThis.__BUILD_MANIFEST={polyfillFiles:["static/chunks/polyfills-42372ed130431b0a.js"],devFiles:[],ampDevFiles:[],lowPriorityFiles:[],rootMainFiles:[],rootMainFilesTree:{},pages:{"/":["static/chunks/webpack-edd7f090adf4a6de.js","static/chunks/framework-84d6ee64cdf12741.js","static/chunks/main-e6602eb6bd38d35c.js","static/chunks/8-fd0c493a642e766e.js","static/chunks/pages/index-a16cd10eb0a93a12.js"],"/_app":["static/chunks/webpack-edd7f090adf4a6de.js","static/chunks/framework-84d6ee64cdf12741.js","static/chunks/main-e6602eb6bd38d35c.js","static/css/276055fd43bdd64c.css","static/chunks/pages/_app-eba8667555670a4b.js"],"/_error":["static/chunks/webpack-edd7f090adf4a6de.js","static/chunks/framework-84d6ee64cdf12741.js","static/chunks/main-e6602eb6bd38d35c.js","static/chunks/pages/_error-41608b100cc61246.js"],"/about":["static/chunks/webpack-edd7f090adf4a6de.js","static/chunks/framework-84d6ee64cdf12741.js","static/chunks/main-e6602eb6bd38d35c.js","static/chunks/8-fd0c493a642e766e.js","static/chunks/pages/about-67a110229b816b6c.js"],"/game/[gameId]":["static/chunks/webpack-edd7f090adf4a6de.js","static/chunks/framework-84d6ee64cdf12741.js","static/chunks/main-e6602eb6bd38d35c.js","static/chunks/8-fd0c493a642e766e.js","static/chunks/675-4c2329b8107400b1.js","static/chunks/pages/game/[gameId]-d06d8cf0a958e222.js"],"/host":["static/chunks/webpack-edd7f090adf4a6de.js","static/chunks/framework-84d6ee64cdf12741.js","static/chunks/main-e6602eb6bd38d35c.js","static/chunks/8-fd0c493a642e766e.js","static/chunks/675-4c2329b8107400b1.js","static/chunks/pages/host-7d8771c46a24f309.js"],"/join":["static/chunks/webpack-edd7f090adf4a6de.js","static/chunks/framework-84d6ee64cdf12741.js","static/chunks/main-e6602eb6bd38d35c.js","static/chunks/8-fd0c493a642e766e.js","static/chunks/pages/join-439ece4a774936b7.js"]},ampFirstPages:[]},globalThis.__BUILD_MANIFEST.lowPriorityFiles=["/static/"+process.env.__NEXT_BUILD_ID+"/_buildManifest.js",,"/static/"+process.env.__NEXT_BUILD_ID+"/_ssgManifest.js"];
+globalThis.__BUILD_MANIFEST = {
+  "polyfillFiles": [
+    "static/chunks/polyfills.js"
+  ],
+  "devFiles": [
+    "static/chunks/react-refresh.js"
+  ],
+  "ampDevFiles": [],
+  "lowPriorityFiles": [],
+  "rootMainFiles": [],
+  "rootMainFilesTree": {},
+  "pages": {
+    "/": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/index.js"
+    ],
+    "/_app": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/_app.js"
+    ],
+    "/_error": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/_error.js"
+    ],
+    "/game/[id]": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/game/[id].js"
+    ],
+    "/host": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/host.js"
+    ],
+    "/join": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/join.js"
+    ]
+  },
+  "ampFirstPages": []
+};
+globalThis.__BUILD_MANIFEST.lowPriorityFiles = [
+"/static/" + process.env.__NEXT_BUILD_ID + "/_buildManifest.js",
+,"/static/" + process.env.__NEXT_BUILD_ID + "/_ssgManifest.js",
+
+];

@@ -1,486 +1,154 @@
-// src/pages/host.tsx
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
-import Layout from "../components/layout/Layout";
-import PlayerList from "../components/game/PlayerList";
-import Pyramid from "../components/cards/Pyramid";
-import { useGame } from "../contexts/GameContext";
-import { getRandomTaunt, cardIndexToText } from "../lib/deckUtils";
-import { Round, DisplayTransaction } from "../types";
+import { useRouter } from "next/router";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "../lib/firebase/firebase";
+import { usePlayerContext } from "../context/PlayerContext";
+import { v4 as uuidv4 } from "uuid";
 
-const DEBUG = true;
+const HostPage = () => {
+  const router = useRouter();
+  const { playerId, setPlayerId, setIsHost } = usePlayerContext();
 
-const HostPage: React.FC = () => {
-  const { createGame, gameId, gameData, players, startGame, selectCard } =
-    useGame();
+  const [gameName, setGameName] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const [isGameStarted, setIsGameStarted] = useState(false);
-  const [gameEnded, setGameEnded] = useState(false);
-  const [currentRound, setCurrentRound] = useState<number | null>(null);
-  const [currentCard, setCurrentCard] = useState<number | null>(null);
-  const [currentRow, setCurrentRow] = useState<number | null>(null);
-  const [information, setInformation] = useState("Generating Game...");
-  const [roundTransactions, setRoundTransactions] = useState<
-    DisplayTransaction[]
-  >([]);
-  const [showModal, setShowModal] = useState(false);
-  const [drinkLog, setDrinkLog] = useState<{ name: string; drinks: number }[]>(
-    []
-  );
-
+  // Generate a host ID if one doesn't exist
   useEffect(() => {
-    // Check localStorage for game state
-    if (gameId) {
-      const localStarted = localStorage.getItem(`game_${gameId}_started`);
-      if (localStarted === "true") {
-        console.log("Found local state, starting game");
-        setIsGameStarted(true);
-      }
+    if (!playerId) {
+      const newPlayerId = uuidv4();
+      setPlayerId(newPlayerId);
     }
-  }, [gameId]);
+  }, [playerId, setPlayerId]);
 
-  // Initialize game on component mount
-  useEffect(() => {
-    const initGame = async () => {
-      if (!gameId) {
-        try {
-          await createGame();
-          setInformation("Waiting for players to join...");
-        } catch (error) {
-          console.error("Failed to create game:", error);
-          setInformation("Error creating game. Please try again.");
-        }
-      }
-    };
+  const handleCreateGame = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-    initGame();
-
-    // Cleanup on unmount - could add code to end game here
-    return () => {
-      // Handle game cleanup
-    };
-  }, [createGame, gameId]);
-
-  // Watch for game data changes
-  useEffect(() => {
-    if (gameData) {
-      const hasStartedValue = gameData["__pyramid.meta"]?.started;
-      console.log(
-        "Game state update - Started value:",
-        hasStartedValue,
-        "isGameStarted state:",
-        isGameStarted
-      );
-
-      // Force isGameStarted to true if Firebase says it's started
-      if (
-        gameData["__pyramid.meta"] &&
-        typeof gameData["__pyramid.meta"] === "object" &&
-        gameData["__pyramid.meta"].started === true &&
-        !isGameStarted
-      ) {
-        console.log("Forcing game started state to true");
-        setIsGameStarted(true);
-        setInformation("Select a card from the pyramid to continue...");
-      }
+    if (!gameName.trim()) {
+      setError("Please enter a game name");
+      return;
     }
-  }, [gameData, isGameStarted]);
 
+    setIsCreating(true);
+    setError(null);
 
-  // Process transactions for display
-  const processTransactions = (
-    round: Round,
-    roundNumber: number,
-    rowNumber: number
-  ) => {
-    const transactions: DisplayTransaction[] = [];
-    const drinks: { name: string; drinks: number }[] = [];
+    try {
+      // Generate a new game ID
+      const gameId = uuidv4().substring(0, 8);
 
-    round.round_transactions.forEach((transaction) => {
-      // Find player names
-      const fromPlayer = players.find((p) => p.uid === transaction.t_from);
-      const toPlayer = players.find((p) => p.uid === transaction.t_to);
+      // Create game document in Firestore
+      await setDoc(doc(db, "games", gameId), {
+        id: gameId,
+        name: gameName,
+        hostId: playerId,
+        createdAt: serverTimestamp(),
+        players: [], // Host is not a player in the game
+        gameState: "waiting", // waiting, memorizing, playing, ended
+      });
 
-      if (fromPlayer && toPlayer) {
-        // Add transaction to display list
-        transactions.push({
-          from_player: fromPlayer.name,
-          to_player: toPlayer.name,
-          result: transaction.status,
-        });
+      // Mark this user as the host
+      setIsHost(true);
 
-        // Calculate drinks
-        if (transaction.status === "accepted") {
-          addToDrinkLog(drinks, toPlayer.name, rowNumber);
-        } else if (transaction.status === "bullshit_wrong") {
-          addToDrinkLog(drinks, fromPlayer.name, rowNumber * 2);
-        } else if (transaction.status === "bullshit_correct") {
-          addToDrinkLog(drinks, toPlayer.name, rowNumber * 2);
-        }
-      }
-    });
-
-    setRoundTransactions(transactions);
-    setDrinkLog(drinks);
-  };
-
-  // Helper to update drink log
-  const addToDrinkLog = (
-    log: { name: string; drinks: number }[],
-    name: string,
-    drinks: number
-  ) => {
-    const existingEntry = log.find((entry) => entry.name === name);
-    if (existingEntry) {
-      existingEntry.drinks += drinks;
-    } else {
-      log.push({ name, drinks });
+      // Navigate to the game page
+      router.push(`/game/${gameId}`);
+    } catch (error) {
+      console.error("Error creating game:", error);
+      setError("Failed to create game. Please try again.");
+      setIsCreating(false);
     }
   };
-
-  // Handle starting the game
-  const handleStartGame = async () => {
-    if (gameId) {
-      try {
-        console.log("Starting game with ID:", gameId);
-
-        // First save to localStorage as backup
-        localStorage.setItem(`game_${gameId}_started`, "true");
-
-        // Then update UI
-        setIsGameStarted(true);
-        setInformation("Game is starting! Pick a card to begin...");
-
-        // Then try to update Firebase
-        await startGame(gameId);
-
-        console.log("Game started successfully in Firebase");
-      } catch (error) {
-        console.error("Failed to start game in Firebase:", error);
-        // Continue with local state since we already updated UI
-        // The next Firebase sync should correct any discrepancies
-      }
-    }
-  };
-
-  // Handle card selection in pyramid
-  const handleCardSelect = async (index: number) => {
-    if (gameId && isGameStarted && !gameEnded && !showModal) {
-      try {
-        console.log("Selecting card at index:", index);
-
-        // Update UI first for better responsiveness
-        setShowModal(true);
-
-        // Then update Firebase
-        await selectCard(gameId, index);
-
-        console.log("Card selected successfully in Firebase");
-      } catch (error) {
-        console.error("Failed to select card in Firebase:", error);
-
-        // Revert UI if Firebase update failed
-        setShowModal(false);
-      }
-    }
-  };
-
-  // Handle closing the round modal
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setRoundTransactions([]);
-    setDrinkLog([]);
-  };
-
-  // Get domain for display
-  const domain =
-    typeof window !== "undefined" ? window.location.hostname : "pyramid.ninja";
 
   return (
-    <Layout pageTitle="Host Game">
-      <div className="container mx-auto px-4 pt-6 pb-20">
-        <div className="bg-white bg-opacity-90 rounded-xl shadow-lg overflow-hidden">
-          {/* Game room header with code */}
-          {gameId && (
-            <div className="bg-indigo-800 text-white p-4 flex justify-between items-center">
-              <h2 className="text-xl font-bold">Room Code: {gameId}</h2>
-              {gameData && (
-                <div className="text-sm">
-                  {gameData["__pyramid.deck"]?.length || 0} Cards Left •{" "}
-                  {players.length} Players
-                </div>
-              )}
-            </div>
-          )}
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
+        <h1 className="text-3xl font-bold text-center text-gray-800 dark:text-white mb-6">
+          Host a Game
+        </h1>
 
-          {/* Waiting for players screen */}
-          {!isGameStarted ? (
-            <div className="p-8 text-center">
-              <h2 className="text-2xl font-bold mb-6">{information}</h2>
+        <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-blue-800 dark:text-blue-200">
+          <h2 className="font-medium text-lg mb-1">Host Information</h2>
+          <p className="text-sm">
+            As the host, you'll control the game flow and display the pyramid
+            for all players. Hosts don't participate with their own cards.
+          </p>
+        </div>
 
-              {gameId && (
-                <div className="mb-8">
-                  <p className="text-lg mb-4">
-                    Open <span className="font-bold">{domain}</span> on your
-                    devices and enter{" "}
-                    <span className="font-bold text-rose-600">{gameId}</span> to
-                    join this game.
-                  </p>
-
-                  <div className="my-8">
-                    <PlayerList players={players} displayMode="grid" />
-                  </div>
-
-                  {players.length > 1 && (
-                    <button
-                      onClick={handleStartGame}
-                      className="bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 px-8 rounded-full transition duration-300"
-                    >
-                      Continue
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 ml-2 inline"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="p-4">
-              {/* Connected players */}
-              <div className="mb-4 overflow-x-auto whitespace-nowrap py-2">
-                <PlayerList
-                  players={players}
-                  displayMode="horizontal"
-                  showDrinks={true}
-                />
-              </div>
-
-              {/* Game information */}
-              <div className="text-center mb-6">
-                <h3 className="text-xl font-bold">{information}</h3>
-                {!gameEnded && (
-                  <p className="text-gray-600">
-                    Pick a card from below to continue...
-                  </p>
-                )}
-                {gameEnded && (
-                  <Link href="/" className="mt-4 bg-rose-500 hover:bg-rose-600 text-white font-bold py-2 px-6 rounded-full transition duration-300">
-                      Start New Game
-                  </Link>
-                )}
-              </div>
-
-              {/* Pyramid display */}
-              {gameData && gameData["__pyramid.cards"] && (
-                <div className="mb-8 overflow-hidden">
-                  <Pyramid
-                    cards={gameData["__pyramid.cards"]}
-                    onCardSelect={handleCardSelect}
-                    isActive={isGameStarted && !showModal && !gameEnded}
-                    gameEnded={gameEnded}
-                    className="transform scale-90 md:scale-100"
-                    debug={true} // Add debug to help troubleshoot
-                  />
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="text-center pb-6">
-            <Link
-              href="/"
-              className="text-blue-500 hover:text-blue-700 transition duration-300"
+        <form onSubmit={handleCreateGame} className="space-y-6">
+          <div>
+            <label
+              htmlFor="gameName"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 inline mr-1"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Exit Game
-            </Link>
+              Game Name
+            </label>
+            <input
+              id="gameName"
+              type="text"
+              value={gameName}
+              onChange={(e) => setGameName(e.target.value)}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              placeholder="Enter a name for your game"
+              required
+            />
           </div>
+
+          {error && <div className="text-red-500 text-sm">{error}</div>}
+
+          <button
+            type="submit"
+            disabled={isCreating}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out"
+          >
+            {isCreating ? (
+              <span className="flex items-center justify-center">
+                <svg
+                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Creating Game...
+              </span>
+            ) : (
+              "Create Game"
+            )}
+          </button>
+        </form>
+
+        <div className="mt-4 text-center">
+          <button
+            onClick={() => router.push("/")}
+            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+          >
+            Back to Home
+          </button>
+        </div>
+
+        <div className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
+          Want to join a game instead?{" "}
+          <button
+            onClick={() => router.push("/join")}
+            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+          >
+            Join Game
+          </button>
         </div>
       </div>
-
-      {/* Round Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 text-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-auto">
-            <div className="p-6">
-              <h2 className="text-xl md:text-2xl font-bold text-center mb-4">
-                Round {currentRound}, Row {currentRow} - it&apos;s{" "}
-                {currentCard !== null ? cardIndexToText(currentCard) : ""}!
-              </h2>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* Card display */}
-                <div className="flex justify-center items-center bg-gray-800 rounded-lg p-4">
-                  {currentCard !== null && (
-                    <div className="transform scale-75 md:scale-100">
-                      {/* We'd use our Card component here, but it's simplified for the modal */}
-                      <div className="w-64 h-96 bg-white rounded-lg shadow-lg relative flex items-center justify-center">
-                        <span className="text-4xl">
-                          {cardIndexToText(currentCard)}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Round log */}
-                <div>
-                  <p className="mb-2">
-                    {information}{" "}
-                    <span className="text-gray-400">
-                      The card on the left is currently in play. Use your device
-                      to call a drink to another player.
-                    </span>
-                  </p>
-
-                  {roundTransactions.length > 0 ? (
-                    <div className="mt-4">
-                      <h4 className="font-semibold mb-2">Round Log:</h4>
-                      <div className="bg-gray-800 rounded-lg p-3 max-h-40 overflow-y-auto">
-                        {roundTransactions.map((transaction, index) => (
-                          <div
-                            key={index}
-                            className="mb-2 pb-2 border-b border-gray-700 last:border-0"
-                          >
-                            <div className="flex items-center">
-                              <img
-                                src={`https://us-central1-pyramid-ninja.cloudfunctions.net/avatars/40/${transaction.from_player}.png`}
-                                alt={transaction.from_player}
-                                className="w-6 h-6 rounded-full mr-1"
-                              />
-                              <span className="font-semibold">
-                                {transaction.from_player}
-                              </span>
-                              <span className="mx-1">has called on</span>
-                              <img
-                                src={`https://us-central1-pyramid-ninja.cloudfunctions.net/avatars/40/${transaction.to_player}.png`}
-                                alt={transaction.to_player}
-                                className="w-6 h-6 rounded-full mr-1"
-                              />
-                              <span className="font-semibold">
-                                {transaction.to_player}
-                              </span>
-                              <span className="ml-1">to drink!</span>
-                            </div>
-
-                            {transaction.result === null && (
-                              <div className="text-sm text-gray-400 ml-6 mt-1">
-                                Waiting on response from {transaction.to_player}
-                                ...
-                              </div>
-                            )}
-
-                            {transaction.result === "accepted" && (
-                              <div className="text-sm text-green-400 ml-6 mt-1">
-                                {transaction.to_player}{" "}
-                                <span className="font-bold">ACCEPTED</span> the
-                                drinks!
-                              </div>
-                            )}
-
-                            {transaction.result === "bullshit" && (
-                              <div className="text-sm text-rose-400 ml-6 mt-1">
-                                {transaction.to_player} has called{" "}
-                                <span className="font-bold">BULLSHIT!</span>{" "}
-                                Waiting for {transaction.from_player} to show a
-                                card...
-                              </div>
-                            )}
-
-                            {transaction.result === "bullshit_wrong" && (
-                              <div className="text-sm text-rose-400 ml-6 mt-1">
-                                {transaction.to_player} has called{" "}
-                                <span className="font-bold">BULLSHIT!</span>{" "}
-                                {transaction.from_player} turned over a card
-                                with the{" "}
-                                <span className="font-bold text-red-500">
-                                  WRONG
-                                </span>{" "}
-                                rank!
-                              </div>
-                            )}
-
-                            {transaction.result === "bullshit_correct" && (
-                              <div className="text-sm text-rose-400 ml-6 mt-1">
-                                {transaction.to_player} has called{" "}
-                                <span className="font-bold">BULLSHIT!</span>{" "}
-                                {transaction.from_player} turned over a card
-                                with the{" "}
-                                <span className="font-bold text-green-500">
-                                  CORRECT
-                                </span>{" "}
-                                rank!
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="bg-gray-800 rounded-lg p-4 text-center text-gray-400 mt-4">
-                      No updates yet...
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Round results */}
-              {drinkLog.length > 0 && (
-                <div className="mt-6 pt-4 border-t border-gray-700 text-center">
-                  <h4 className="font-semibold mb-2">Round Results:</h4>
-                  <p>
-                    {drinkLog.map((entry, index) => (
-                      <span key={index}>
-                        <span className="inline-flex items-center">
-                          <img
-                            src={`https://us-central1-pyramid-ninja.cloudfunctions.net/avatars/40/${entry.name}.png`}
-                            alt={entry.name}
-                            className="w-6 h-6 rounded-full mr-1"
-                          />
-                          <span className="font-semibold">{entry.name}</span>
-                        </span>{" "}
-                        drinks <span className="font-bold">{entry.drinks}</span>
-                        {index < drinkLog.length - 1 ? ", " : "!"}
-                      </span>
-                    ))}
-                  </p>
-                </div>
-              )}
-
-              <div className="mt-6 text-center">
-                <button
-                  onClick={handleCloseModal}
-                  className="bg-rose-500 hover:bg-rose-600 text-white font-bold py-2 px-6 rounded-full transition duration-300"
-                >
-                  Finish Round
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </Layout>
+    </div>
   );
 };
 
