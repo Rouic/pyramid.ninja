@@ -13,8 +13,8 @@ interface PlayerHandProps {
   isGameStarted: boolean;
   showFaceUp: boolean; // Only true during memorization phase or end of game
   highlightCurrentRank?: string;
-  allowCardFlip?: boolean; // New prop to control when cards can be flipped
-  challengedCardIndex?: number; // New prop to indicate which card is being challenged
+  allowCardFlip?: boolean; // Controls when cards can be flipped
+  challengedCardIndex?: number; // Indicates which card is being challenged
 }
 
 const PlayerHand: React.FC<PlayerHandProps> = ({
@@ -28,6 +28,9 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
   const { playerId } = usePlayerContext();
   const [playerCards, setPlayerCards] = useState<Card[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [newCardTimers, setNewCardTimers] = useState<{
+    [cardId: string]: number;
+  }>({});
 
   // Subscribe to player's cards
   useEffect(() => {
@@ -40,6 +43,18 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
 
     const unsubscribe = subscribeToPlayerCards(gameId, playerId, (cards) => {
       console.log(`Received ${cards.length} cards for player ${playerId}`);
+
+      // Check for new cards and set timers
+      cards.forEach((card) => {
+        if (card.newCard && !newCardTimers[card.id]) {
+          // Start a 15-second timer for this new card
+          setNewCardTimers((prev) => ({
+            ...prev,
+            [card.id]: 15, // 15 seconds
+          }));
+        }
+      });
+
       setPlayerCards(cards);
       setIsLoading(false);
     });
@@ -49,6 +64,37 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
       unsubscribe();
     };
   }, [gameId, playerId]);
+
+  // Handle countdown timers for new cards
+  useEffect(() => {
+    // Only run timers if we have any new cards
+    if (Object.keys(newCardTimers).length === 0) return;
+
+    const timerInterval = setInterval(() => {
+      setNewCardTimers((prev) => {
+        const updated = { ...prev };
+        let hasChanges = false;
+
+        // Decrease each timer by 1 second
+        Object.keys(updated).forEach((cardId) => {
+          if (updated[cardId] > 0) {
+            updated[cardId] -= 1;
+            hasChanges = true;
+          }
+
+          // Remove timers that have reached 0
+          if (updated[cardId] === 0) {
+            delete updated[cardId];
+            hasChanges = true;
+          }
+        });
+
+        return hasChanges ? updated : prev;
+      });
+    }, 1000);
+
+    return () => clearInterval(timerInterval);
+  }, [newCardTimers]);
 
   const handleCardMove = async (
     card: Card,
@@ -107,25 +153,42 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
             const shouldHighlight =
               highlightCurrentRank && card.rank === highlightCurrentRank;
 
-            // Determine if this specific card can be flipped (for challenges)
+            // Determine if this specific card is being challenged
             const canFlipThisCard = challengedCardIndex === index;
 
+            // Check if this card has an active timer
+            const hasTimer = newCardTimers[card.id] > 0;
+            const timeRemaining = hasTimer ? newCardTimers[card.id] : 0;
+
             return (
-              <GameCard
-                key={card.id}
-                card={card}
-                index={index}
-                position={position}
-                isRevealing={false}
-                canInteract={isGameStarted}
-                className={`cursor-move ${
-                  shouldHighlight ? "ring-4 ring-yellow-400 z-20" : ""
-                }`}
-                onReveal={() => {}} // No reveal needed for player's own cards
-                allowPeek={!showFaceUp && card.rank === highlightCurrentRank} // Allow peeking when card matches current pyramid card
-                showFace={showFaceUp || canFlipThisCard} // Show face up during memorization phase or if specifically challenged
-                allowFlip={allowCardFlip && canFlipThisCard} // Only allow flipping under specific circumstances
-              />
+              <div key={card.id} className="relative">
+                <GameCard
+                  card={card}
+                  index={index}
+                  position={position}
+                  isRevealing={false}
+                  canInteract={isGameStarted}
+                  className={`cursor-move ${
+                    shouldHighlight || canFlipThisCard
+                      ? "ring-4 ring-yellow-400 z-20"
+                      : ""
+                  }`}
+                  onReveal={() => {}} // No reveal needed for player's own cards
+                  allowPeek={!showFaceUp && card.rank === highlightCurrentRank} // Allow peeking when card matches current pyramid card
+                  showFace={showFaceUp || canFlipThisCard || card.newCard} // Show face up during memorization, challenges, or if it's a new card
+                  allowFlip={allowCardFlip && canFlipThisCard} // Only allow flipping under specific circumstances
+                />
+
+                {/* New card timer overlay */}
+                {hasTimer && (
+                  <div className="absolute top-0 left-0 right-0 bg-green-600 bg-opacity-80 text-white text-center py-1 z-30 rounded-t-lg">
+                    <div className="text-xs font-bold">NEW CARD</div>
+                    <div className="text-sm">
+                      {timeRemaining}s left to memorize
+                    </div>
+                  </div>
+                )}
+              </div>
             );
           })
         )}

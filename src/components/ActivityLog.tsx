@@ -54,9 +54,9 @@ const ActivityLog: React.FC<ActivityLogProps> = ({
       case "challenged":
         return "Challenged";
       case "successful_challenge":
-        return "Bluff Called";
+        return "Card Shown";
       case "failed_challenge":
-        return "Challenge Failed";
+        return "Bluff Called";
       default:
         return status;
     }
@@ -68,16 +68,17 @@ const ActivityLog: React.FC<ActivityLogProps> = ({
 
     currentRoundAssignments.forEach((assignment) => {
       if (assignment.status === "accepted") {
+        // Normal accepted - receiver drinks
         summary[assignment.to] =
           (summary[assignment.to] || 0) + assignment.count;
       } else if (assignment.status === "successful_challenge") {
-        // Bluffer drinks double
-        summary[assignment.from] =
-          (summary[assignment.from] || 0) + assignment.count * 2;
-      } else if (assignment.status === "failed_challenge") {
-        // Challenger drinks double
+        // Successful challenge - assigner had the card, challenger drinks double
         summary[assignment.to] =
           (summary[assignment.to] || 0) + assignment.count * 2;
+      } else if (assignment.status === "failed_challenge") {
+        // Failed challenge - assigner was bluffing, assigner drinks double
+        summary[assignment.from] =
+          (summary[assignment.from] || 0) + assignment.count * 2;
       }
     });
 
@@ -173,18 +174,19 @@ const ActivityLog: React.FC<ActivityLogProps> = ({
                 )}
               </div>
 
+              {/* Challenge result explanation */}
               {(assignment.status === "successful_challenge" ||
                 assignment.status === "failed_challenge") && (
                 <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 italic">
                   {assignment.status === "successful_challenge"
                     ? `${getPlayerName(
                         assignment.from
-                      )} was bluffing and drinks double (${
-                        assignment.count * 2
-                      })`
-                    : `${getPlayerName(
+                      )} showed the card. ${getPlayerName(
                         assignment.to
-                      )}'s challenge failed and drinks double (${
+                      )} drinks double (${assignment.count * 2})`
+                    : `${getPlayerName(
+                        assignment.from
+                      )} was bluffing and drinks double (${
                         assignment.count * 2
                       })`}
                 </div>

@@ -44,6 +44,13 @@ const GamePage = () => {
 
   // New state to track which card is being challenged (for flipping)
   const [challengedCardIndex, setChallengedCardIndex] = useState<number>(-1);
+  const [isDeckEmpty, setIsDeckEmpty] = useState(false);
+
+  useEffect(() => {
+    if (gameData && gameData.deck && gameData.deck.cards) {
+      setIsDeckEmpty(gameData.deck.cards.length === 0);
+    }
+  }, [gameData]);
 
   // Load game data
   useEffect(() => {
@@ -206,9 +213,60 @@ const GamePage = () => {
   );
 
   // Handler for when a player is challenged and needs to show a card
-  const handleChallengeCard = (cardIndex: number) => {
+  const handleChallengeCard = useCallback((cardIndex: number) => {
     setChallengedCardIndex(cardIndex);
+  }, []);
+
+  const renderNewCardAlert = () => {
+    if (
+      !gameData ||
+      !gameData.newCardTimers ||
+      Object.keys(gameData.newCardTimers).length === 0
+    ) {
+      return null;
+    }
+
+    return (
+      <div className="fixed bottom-4 right-4 bg-green-600 text-white p-4 rounded-lg shadow-lg z-50 max-w-xs">
+        <h4 className="font-bold mb-1">New Card!</h4>
+        <p>You have a new card. Memorize it before it's hidden again!</p>
+        <div className="mt-2 bg-green-500 h-2 rounded-full overflow-hidden">
+          <div
+            className="bg-white h-full transition-all duration-1000"
+            style={{
+              width: `${(gameData.newCardTimers.timeLeft / 15) * 100}%`,
+            }}
+          ></div>
+        </div>
+      </div>
+    );
   };
+
+  {
+    isDeckEmpty && (
+      <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-700">
+        <div className="flex items-center">
+          <svg
+            className="h-5 w-5 text-yellow-500 mr-2"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+          <span className="text-sm font-medium text-yellow-700 dark:text-yellow-300">
+            Deck is empty! Any cards you reveal during challenges won't be
+            replaced.
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -521,6 +579,8 @@ const GamePage = () => {
                     onChallengeCard={handleChallengeCard}
                   />
                 )}
+
+                {renderNewCardAlert()}
 
                 {/* Player's hand */}
                 <PlayerHand

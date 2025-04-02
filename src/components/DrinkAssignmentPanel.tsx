@@ -17,7 +17,7 @@ interface DrinkAssignmentPanelProps {
   isHost: boolean;
   currentCardRank?: string;
   drinkCount: number;
-  onChallengeCard?: (cardIndex: number) => void; // New callback for card challenges
+  onChallengeCard?: (cardIndex: number) => void; // Callback for card challenges
 }
 
 const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
@@ -38,14 +38,19 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
   const [activeChallenge, setActiveChallenge] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Filtered assignments that are relevant to the current user
-  const relevantAssignments = assignments
-    .filter((a) => a.status === "pending" || a.status === "challenged")
-    .filter(
-      (a) => a.to === currentPlayerId || a.from === currentPlayerId || isHost
-    );
+  // Filter assignments to show only the relevant ones
+  // First, get all pending or challenged assignments
+  const allActiveAssignments = assignments.filter(
+    (a) => a.status === "pending" || a.status === "challenged"
+  );
 
-  const pendingChallenges = assignments.filter(
+  // Assignments where current player is involved
+  const relevantAssignments = allActiveAssignments.filter(
+    (a) => a.to === currentPlayerId || a.from === currentPlayerId || isHost
+  );
+
+  // Assignments that need the current player to resolve a challenge
+  const challengesToResolve = assignments.filter(
     (a) => a.status === "challenged" && a.from === currentPlayerId
   );
 
@@ -91,7 +96,6 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
     try {
       setIsSubmitting(true);
       await challengeDrinkAssignment(gameId, assignmentIndex);
-      setActiveChallenge(assignmentIndex);
       setIsSubmitting(false);
     } catch (error) {
       console.error("Error challenging drink:", error);
@@ -99,6 +103,7 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
     }
   };
 
+  // Used by the person who is being challenged (the assigner of the drink)
   const handleSelectCardForChallenge = (cardIndex: number) => {
     setSelectedCardIndex(cardIndex);
     // Notify parent component to show this specific card
@@ -107,6 +112,7 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
     }
   };
 
+  // Used by the person who is being challenged (the assigner of the drink)
   const handleResolveChallenge = async (
     assignmentIndex: number,
     wasSuccessful: boolean
@@ -116,10 +122,11 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
       await resolveDrinkChallenge(gameId, assignmentIndex, wasSuccessful);
 
       // If the challenge was successful, we need to replace the card
+      // This means the person who assigned the drink actually had the card
       if (wasSuccessful && selectedCardIndex !== null) {
         await replacePlayerCard(
           gameId,
-          assignments[assignmentIndex].from,
+          assignments[assignmentIndex].from, // The player who assigned the drink
           selectedCardIndex
         );
       }
@@ -144,6 +151,7 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
         Drink Assignments
       </h3>
 
+      {/* Assign drinks control - only shown to players during gameplay with a current card */}
       {currentCardRank && !isHost && (
         <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
           <h4 className="font-medium text-gray-700 dark:text-gray-300">
@@ -207,6 +215,35 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
         </div>
       )}
 
+      {/* Card selection interface for the person being challenged (drink assigner) */}
+      {challengesToResolve.length > 0 && activeChallenge === null && (
+        <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg border border-yellow-200 dark:border-yellow-800">
+          <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+            You've been challenged!
+          </h4>
+          <p className="text-sm text-yellow-700 dark:text-yellow-300 mb-3">
+            {getPlayerName(challengesToResolve[0].to)} is challenging your claim
+            about having a {challengesToResolve[0].cardRank}. Select your card
+            that has {challengesToResolve[0].cardRank} or admit that you were
+            bluffing.
+          </p>
+
+          <button
+            onClick={() =>
+              setActiveChallenge(
+                assignments.findIndex(
+                  (a) => a.status === "challenged" && a.from === currentPlayerId
+                )
+              )
+            }
+            className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg"
+          >
+            Select My Card
+          </button>
+        </div>
+      )}
+
+      {/* Card selection interface once the challenged player has decided to respond */}
       {activeChallenge !== null && (
         <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg border border-yellow-200 dark:border-yellow-800">
           <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-3">
@@ -287,6 +324,7 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
         </div>
       )}
 
+      {/* List of active drink assignments */}
       {relevantAssignments.length > 0 ? (
         <div className="space-y-3">
           {relevantAssignments.map((assignment, index) => (
@@ -315,6 +353,7 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
                   )}
                 </div>
 
+                {/* Buttons for drink recipient to accept or challenge */}
                 {assignment.to === currentPlayerId &&
                   assignment.status === "pending" && (
                     <div className="flex gap-2">
@@ -343,6 +382,7 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
                     </div>
                   )}
 
+                {/* Status indicator for host */}
                 {isHost && assignment.status === "challenged" && (
                   <div className="text-sm font-medium text-yellow-600 dark:text-yellow-400">
                     Resolving challenge...

@@ -292,113 +292,6 @@ const GameCard: React.FC<GameCardProps> = ({
     }
   };
 
-  // Card front with modern design
-  const cardFront = (
-    <div
-      className={`h-full w-full rounded-lg bg-white shadow-md overflow-hidden ${getSuitColor(
-        card.suit
-      )}`}
-    >
-      <div className="relative h-full border border-gray-200 rounded-lg">
-        {/* Top left corner */}
-        <div className="absolute top-1 left-1 z-10">
-          <div className="text-sm font-bold">{card.rank}</div>
-          <div className="text-sm">{getSuitSymbol(card.suit)}</div>
-        </div>
-
-        {/* Bottom right corner (rotated) */}
-        <div className="absolute bottom-1 right-1 transform rotate-180 z-10">
-          <div className="text-sm font-bold">{card.rank}</div>
-          <div className="text-sm">{getSuitSymbol(card.suit)}</div>
-        </div>
-
-        {/* Card face content */}
-        <div className="h-full w-full flex items-center justify-center">
-          {renderCardFace(card.rank, card.suit)}
-        </div>
-
-        {card.newCard && (
-          <div className="absolute top-0 right-0 bg-green-500 text-white text-xs px-1 rounded-bl z-20">
-            NEW
-          </div>
-        )}
-
-        {userFlipped && (
-          <div className="absolute top-0 left-0 bg-yellow-500 text-white text-xs px-1 rounded-br z-20">
-            REVEALED
-          </div>
-        )}
-      </div>
-    </div>
-  );
-
-  // Card back with improved design
-  const cardBack = (
-    <div
-      className={`h-full w-full rounded-lg shadow-md overflow-hidden ${
-        (allowFlip || onReveal) && canInteract && !isFlipped
-          ? "cursor-pointer"
-          : ""
-      }`}
-      onClick={handleReveal}
-      onMouseDown={handlePeekStart}
-      onMouseUp={handlePeekEnd}
-      onMouseLeave={handlePeekEnd}
-      onTouchStart={handlePeekStart}
-      onTouchEnd={handlePeekEnd}
-    >
-      <div className="h-full w-full relative">
-        {/* Gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-800 to-blue-900">
-          {/* Pattern overlay */}
-          <div
-            className="absolute inset-0 opacity-30 bg-repeat"
-            style={{
-              backgroundImage: "url('/images/card-pattern.png')",
-              backgroundSize: "10px 10px",
-            }}
-          ></div>
-
-          {/* Card back logo/design */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="h-16 w-16 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
-              <div className="text-white font-bold text-2xl">P</div>
-            </div>
-          </div>
-
-          {/* Decorative border */}
-          <div className="absolute inset-0 border-4 border-white opacity-10 rounded-lg"></div>
-          <div className="absolute inset-0 m-3 border-2 border-white opacity-10 rounded-lg"></div>
-        </div>
-
-        {/* Loading state */}
-        {isRevealing && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-lg">
-            <div className="animate-spin h-8 w-8 border-4 border-white border-t-transparent rounded-full"></div>
-          </div>
-        )}
-
-        {/* Peek hint */}
-        {allowPeek && (
-          <div className="absolute bottom-2 inset-x-0 text-center">
-            <div className="inline-block text-xs bg-white bg-opacity-30 text-white px-2 py-1 rounded-full animate-pulse">
-              Hold to peek
-            </div>
-          </div>
-        )}
-
-        {/* Flip hint - only show when card can be flipped */}
-        {allowFlip && !userFlipped && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 rounded-lg">
-            <div className="text-white text-center px-3 py-1 bg-blue-600 rounded-lg animate-pulse">
-              Click to reveal
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-
   return (
     <motion.div
       className={`absolute ${className} ${isDragging ? "z-50" : "z-10"} ${
@@ -445,7 +338,69 @@ const GameCard: React.FC<GameCardProps> = ({
             transform: "rotateY(0deg)",
           }}
         >
-          {cardBack}
+          <div
+            className={`h-full w-full rounded-lg shadow-md overflow-hidden ${
+              (allowFlip || onReveal) && canInteract && !isFlipped
+                ? "cursor-pointer"
+                : ""
+            }`}
+            onClick={handleReveal}
+            onMouseDown={handlePeekStart}
+            onMouseUp={handlePeekEnd}
+            onMouseLeave={handlePeekEnd}
+            onTouchStart={handlePeekStart}
+            onTouchEnd={handlePeekEnd}
+          >
+            <div className="h-full w-full relative">
+              {/* Gradient background */}
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-800 to-blue-900">
+                {/* Pattern overlay */}
+                <div
+                  className="absolute inset-0 opacity-30 bg-repeat"
+                  style={{
+                    backgroundImage: "url('/images/card-pattern.png')",
+                    backgroundSize: "10px 10px",
+                  }}
+                ></div>
+
+                {/* Card back logo/design */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="h-16 w-16 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
+                    <div className="text-white font-bold text-2xl">P</div>
+                  </div>
+                </div>
+
+                {/* Decorative border */}
+                <div className="absolute inset-0 border-4 border-white opacity-10 rounded-lg"></div>
+                <div className="absolute inset-0 m-3 border-2 border-white opacity-10 rounded-lg"></div>
+              </div>
+
+              {/* Loading state */}
+              {isRevealing && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-lg">
+                  <div className="animate-spin h-8 w-8 border-4 border-white border-t-transparent rounded-full"></div>
+                </div>
+              )}
+
+              {/* Peek hint */}
+              {allowPeek && (
+                <div className="absolute bottom-2 inset-x-0 text-center">
+                  <div className="inline-block text-xs bg-white bg-opacity-30 text-white px-2 py-1 rounded-full animate-pulse">
+                    Hold to peek
+                  </div>
+                </div>
+              )}
+
+              {/* Flip hint - only show when card can be flipped */}
+              {allowFlip && !userFlipped && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 rounded-lg">
+                  <div className="text-white text-center px-3 py-1 bg-blue-600 rounded-lg animate-pulse">
+                    Click to reveal
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Card Front */}
@@ -456,7 +411,44 @@ const GameCard: React.FC<GameCardProps> = ({
             transform: "rotateY(180deg)",
           }}
         >
-          {cardFront}
+          <div
+            className={`h-full w-full rounded-lg bg-white shadow-md overflow-hidden ${getSuitColor(
+              card.suit
+            )}`}
+          >
+            <div className="relative h-full border border-gray-200 rounded-lg">
+              {/* Top left corner */}
+              <div className="absolute top-1 left-1 z-10">
+                <div className="text-sm font-bold">{card.rank}</div>
+                <div className="text-sm">{getSuitSymbol(card.suit)}</div>
+              </div>
+
+              {/* Bottom right corner (rotated) */}
+              <div className="absolute bottom-1 right-1 transform rotate-180 z-10">
+                <div className="text-sm font-bold">{card.rank}</div>
+                <div className="text-sm">{getSuitSymbol(card.suit)}</div>
+              </div>
+
+              {/* Card face content */}
+              <div className="h-full w-full flex items-center justify-center">
+                {renderCardFace(card.rank, card.suit)}
+              </div>
+
+              {/* New card indicator */}
+              {card.newCard && (
+                <div className="absolute top-0 right-0 bg-green-500 text-white text-xs px-2 py-1 rounded-bl z-20 animate-pulse">
+                  NEW
+                </div>
+              )}
+
+              {/* User revealed indicator */}
+              {userFlipped && (
+                <div className="absolute top-0 left-0 bg-yellow-500 text-white text-xs px-2 py-1 rounded-br z-20">
+                  REVEALED
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </motion.div>

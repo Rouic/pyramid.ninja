@@ -1,3 +1,4 @@
+// src/lib/firebase/gameState.ts
 import { doc, updateDoc, onSnapshot, getDoc, setDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from './firebase';
 import { revealPyramidCard } from './gameCards';
@@ -187,6 +188,8 @@ export async function resolveDrinkChallenge(
     throw new Error('Assignment not found');
   }
   
+  // If wasSuccessful is true, it means the drink assigner (from) actually had the card
+  // If wasSuccessful is false, it means they were bluffing
   assignments[assignmentIndex].status = wasSuccessful 
     ? 'successful_challenge' 
     : 'failed_challenge';
@@ -217,9 +220,20 @@ export async function replacePlayerCard(gameId: string, playerId: string, cardIn
   const gameData = gameDoc.data();
   const deck = gameData.deck;
   
-  // No more cards in deck
+  // Check if there are cards left in the deck
   if (!deck.cards || deck.cards.length === 0) {
-    throw new Error('No more cards in deck');
+    console.log('No more cards in deck, removing the challenged card without replacement');
+    // Just remove the card without replacement
+    const playerCards = [...playerDoc.data().cards];
+    playerCards.splice(cardIndex, 1);
+    
+    // Update player cards
+    await updateDoc(playerRef, {
+      cards: playerCards,
+      updatedAt: new Date().toISOString(),
+    });
+    
+    return null;
   }
   
   // Get new card from deck
