@@ -6,6 +6,7 @@ import { AuthProvider } from "../contexts/AuthContext";
 import { GameProvider } from "../contexts/GameContext";
 import "../styles/globals.css";
 
+
 function MyApp({ Component, pageProps }: AppProps) {
   const [randomBackground, setRandomBackground] = useState(1);
 

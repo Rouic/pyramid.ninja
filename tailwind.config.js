@@ -1,10 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-   "./src/pages/**/*.{js,ts,jsx,tsx}",
-    "./src/components/**/*.{js,ts,jsx,tsx}",
-    "./src/app/**/*.{js,ts,jsx,tsx}",
-  ],
+  // Using 'all' here to make sure Tailwind scans all files
+  content: ["./src/**/*.{js,jsx,ts,tsx,css,html}"],
   theme: {
     extend: {
       fontFamily: {
@@ -33,8 +30,13 @@ module.exports = {
       },
     },
   },
-  plugins: [],
-  // Ensure Tailwind doesn't remove used classes
+  // Important in v4: make sure tailwind checks for any styles
+  // being used dynamically via string interpolation
+  future: {
+    respectDefaultRingColorOpacity: true,
+    disableColorOpacityUtilitiesByDefault: true,
+  },
+  // Keep the safelist to ensure all needed classes are included
   safelist: [
     // Common colors
     {

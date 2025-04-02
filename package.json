@@ -2,11 +2,12 @@
   "name": "pyramid.ninja",
   "version": "3.0.0",
   "private": true,
-  "scripts": {
-    "dev": "next dev --turbopack",
+   "scripts": {
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "diagnostic": "node ./diagnostic-check.js"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.0",
@@ -32,6 +33,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.2.4",
+    "postcss-import": "^16.1.0",
     "tailwindcss": "^4.1.1",
     "typescript": "^5"
   }
