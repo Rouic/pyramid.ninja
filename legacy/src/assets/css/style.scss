@@ -1,0 +1,512 @@
+@import url("https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:400,700|Material+Icons&display=swap");
+
+#cardcontainer, #clientcardcontainer {
+    position: absolute;
+    height: 50vh;
+    display: flex;
+    top: calc(50% + 1.5rem);
+    left: 50%;
+    -webkit-transform: translate3d(-50%, -50%, 0);
+    -moz-transform: translate3d(-50%, -50%, 0);
+    -o-transform: translate3d(-50%, -50%, 0);
+    -ms-transform: translate3d(-50%, -50%, 0);
+    transform: translate3d(-50%, -50%, 0);
+}
+
+#clientcardcontainer {
+    position: absolute;
+    height: 35vh;
+    display: flex;
+    top: calc(50% + 1.5rem);
+    left: 46%;
+}
+
+#modalcardcontainer {
+  position: absolute;
+  left: 100px;
+  top: 50px;
+}
+
+#modalcardcontainer .playingcard { 
+  width: 11.875rem;
+  height: 15.5rem;  
+}
+
+
+#topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: #334d41;
+  padding: 0.25rem;
+  text-align: center;
+}
+#topbar button {
+  background: none;
+  border: 1px solid #fff;
+  outline: none;
+  margin: 0.1rem;
+  padding: 0.4rem;
+  font: inherit;
+  font-size: 0.75rem;
+  line-height: 1;
+  color: #fff;
+  cursor: pointer;
+}
+#topbar button:hover {
+  background-color: #fff;
+  color: #444;
+}
+.message {
+  position: fixed;
+  top: 2.5rem;
+  left: 0;
+  width: 100%;
+  padding: 1rem 0.5rem;
+  font-size: 0.5rem;
+  text-align: center;
+}
+.playingcard {
+  position: absolute;
+  display: inline-block;
+  left: -1.9375rem;
+  top: -2.75rem;
+  width: 7.875rem;
+  height: 11.5rem;
+  background-color: #fff;
+  -webkit-border-radius: 4px;
+  border-radius: 4px;
+  -webkit-box-shadow: 0 1px 1px rgba(0,0,0,0.15);
+  box-shadow: 0 1px 1px rgba(0,0,0,0.15);
+  cursor: default;
+  will-change: transform;
+}
+#clientcardcontainer > .playingcard {
+  width: 11.875rem;
+  height: 17rem;
+}
+.playingcard:before,
+.playingcard:after {
+	position: absolute;
+    font-size: 1.4rem;
+    padding: 0px 2px;
+    font-weight: 500;
+    text-align: center;
+    font-family: 'Ubuntu Condensed', sans-serif;
+    white-space: pre-line;
+    width: 0.55rem;
+    letter-spacing: -0.1rem;
+}
+.playingcard:before {
+  top: 0.15rem;
+  left: 0;
+}
+.playingcard:after {
+  bottom: 0.1rem;
+  right: 0;
+  -webkit-transform: rotate(180deg);
+  -moz-transform: rotate(180deg);
+  -o-transform: rotate(180deg);
+  -ms-transform: rotate(180deg);
+  transform: rotate(180deg);
+}
+.playingcard .face {
+  height: 100%;
+  background-position: 50% 50%;
+  -webkit-background-size: 100% 100%;
+  -moz-background-size: 100% 100%;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+.playingcard .back {
+  position: absolute;
+  background-image: url("../faces/back.png");
+  background-position: 50% 50%;
+  -webkit-background-size: 100% 100%;
+  -moz-background-size: 100% 100%;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+.playingcard.spades,
+.playingcard.clubs,
+.playingcard.joker {
+  color: #000;
+}
+.playingcard.hearts,
+.playingcard.diamonds,
+.playingcard.joker.rank3 {
+  color: #d40000;
+}
+.playingcard.joker.rank1:before,
+.playingcard.joker.rank2:before,
+.playingcard.joker.rank3:before,
+.playingcard.joker.rank1:after,
+.playingcard.joker.rank2:after,
+.playingcard.joker.rank3:after {
+  content: "J\a O\a K\a E\a R";
+  letter-spacing: 0;
+  font-size: 0.4rem;
+  line-height: 0.4rem;
+  padding: 0.15rem 0.05rem;
+  width: 0.5rem;
+}
+.playingcard.rank1:before,
+.playingcard.rank1:after {
+  content: "A";
+}
+.playingcard.rank2:before,
+.playingcard.rank2:after {
+  content: "2";
+}
+.playingcard.rank3:before,
+.playingcard.rank3:after {
+  content: "3";
+}
+.playingcard.rank4:before,
+.playingcard.rank4:after {
+  content: "4";
+}
+.playingcard.rank5:before,
+.playingcard.rank5:after {
+  content: "5";
+}
+.playingcard.rank6:before,
+.playingcard.rank6:after {
+  content: "6";
+}
+.playingcard.rank7:before,
+.playingcard.rank7:after {
+  content: "7";
+}
+.playingcard.rank8:before,
+.playingcard.rank8:after {
+  content: "8";
+}
+.playingcard.rank9:before,
+.playingcard.rank9:after {
+  content: "9";
+}
+.playingcard.rank10:before,
+.playingcard.rank10:after {
+  content: "10";
+}
+.playingcard.rank11:before,
+.playingcard.rank11:after {
+  content: "J";
+}
+.playingcard.rank12:before,
+.playingcard.rank12:after {
+  content: "Q";
+}
+.playingcard.rank13:before,
+.playingcard.rank13:after {
+  content: "K";
+}
+.playingcard.spades.rank1 .face {
+  background-image: url("../faces/0_1.svg");
+}
+.playingcard.spades.rank2 .face {
+  background-image: url("../faces/0_2.svg");
+}
+.playingcard.spades.rank3 .face {
+  background-image: url("../faces/0_3.svg");
+}
+.playingcard.spades.rank4 .face {
+  background-image: url("../faces/0_4.svg");
+}
+.playingcard.spades.rank5 .face {
+  background-image: url("../faces/0_5.svg");
+}
+.playingcard.spades.rank6 .face {
+  background-image: url("../faces/0_6.svg");
+}
+.playingcard.spades.rank7 .face {
+  background-image: url("../faces/0_7.svg");
+}
+.playingcard.spades.rank8 .face {
+  background-image: url("../faces/0_8.svg");
+}
+.playingcard.spades.rank9 .face {
+  background-image: url("../faces/0_9.svg");
+}
+.playingcard.spades.rank10 .face {
+  background-image: url("../faces/0_10.svg");
+}
+.playingcard.spades.rank11 .face {
+  background-image: url("../faces/0_11.svg");
+}
+.playingcard.spades.rank12 .face {
+  background-image: url("../faces/0_12.svg");
+}
+.playingcard.spades.rank13 .face {
+  background-image: url("../faces/0_13.svg");
+}
+.playingcard.hearts.rank1 .face {
+  background-image: url("../faces/1_1.svg");
+}
+.playingcard.hearts.rank2 .face {
+  background-image: url("../faces/1_2.svg");
+}
+.playingcard.hearts.rank3 .face {
+  background-image: url("../faces/1_3.svg");
+}
+.playingcard.hearts.rank4 .face {
+  background-image: url("../faces/1_4.svg");
+}
+.playingcard.hearts.rank5 .face {
+  background-image: url("../faces/1_5.svg");
+}
+.playingcard.hearts.rank6 .face {
+  background-image: url("../faces/1_6.svg");
+}
+.playingcard.hearts.rank7 .face {
+  background-image: url("../faces/1_7.svg");
+}
+.playingcard.hearts.rank8 .face {
+  background-image: url("../faces/1_8.svg");
+}
+.playingcard.hearts.rank9 .face {
+  background-image: url("../faces/1_9.svg");
+}
+.playingcard.hearts.rank10 .face {
+  background-image: url("../faces/1_10.svg");
+}
+.playingcard.hearts.rank11 .face {
+  background-image: url("../faces/1_11.svg");
+}
+.playingcard.hearts.rank12 .face {
+  background-image: url("../faces/1_12.svg");
+}
+.playingcard.hearts.rank13 .face {
+  background-image: url("../faces/1_13.svg");
+}
+.playingcard.clubs.rank1 .face {
+  background-image: url("../faces/2_1.svg");
+}
+.playingcard.clubs.rank2 .face {
+  background-image: url("../faces/2_2.svg");
+}
+.playingcard.clubs.rank3 .face {
+  background-image: url("../faces/2_3.svg");
+}
+.playingcard.clubs.rank4 .face {
+  background-image: url("../faces/2_4.svg");
+}
+.playingcard.clubs.rank5 .face {
+  background-image: url("../faces/2_5.svg");
+}
+.playingcard.clubs.rank6 .face {
+  background-image: url("../faces/2_6.svg");
+}
+.playingcard.clubs.rank7 .face {
+  background-image: url("../faces/2_7.svg");
+}
+.playingcard.clubs.rank8 .face {
+  background-image: url("../faces/2_8.svg");
+}
+.playingcard.clubs.rank9 .face {
+  background-image: url("../faces/2_9.svg");
+}
+.playingcard.clubs.rank10 .face {
+  background-image: url("../faces/2_10.svg");
+}
+.playingcard.clubs.rank11 .face {
+  background-image: url("../faces/2_11.svg");
+}
+.playingcard.clubs.rank12 .face {
+  background-image: url("../faces/2_12.svg");
+}
+.playingcard.clubs.rank13 .face {
+  background-image: url("../faces/2_13.svg");
+}
+.playingcard.diamonds.rank1 .face {
+  background-image: url("../faces/3_1.svg");
+}
+.playingcard.diamonds.rank2 .face {
+  background-image: url("../faces/3_2.svg");
+}
+.playingcard.diamonds.rank3 .face {
+  background-image: url("../faces/3_3.svg");
+}
+.playingcard.diamonds.rank4 .face {
+  background-image: url("../faces/3_4.svg");
+}
+.playingcard.diamonds.rank5 .face {
+  background-image: url("../faces/3_5.svg");
+}
+.playingcard.diamonds.rank6 .face {
+  background-image: url("../faces/3_6.svg");
+}
+.playingcard.diamonds.rank7 .face {
+  background-image: url("../faces/3_7.svg");
+}
+.playingcard.diamonds.rank8 .face {
+  background-image: url("../faces/3_8.svg");
+}
+.playingcard.diamonds.rank9 .face {
+  background-image: url("../faces/3_9.svg");
+}
+.playingcard.diamonds.rank10 .face {
+  background-image: url("../faces/3_10.svg");
+}
+.playingcard.diamonds.rank11 .face {
+  background-image: url("../faces/3_11.svg");
+}
+.playingcard.diamonds.rank12 .face {
+  background-image: url("../faces/3_12.svg");
+}
+.playingcard.diamonds.rank13 .face {
+  background-image: url("../faces/3_13.svg");
+}
+.playingcard.joker.rank1 .face {
+  background-image: url("../faces/4_1.svg");
+}
+.playingcard.joker.rank2 .face {
+  background-image: url("../faces/4_2.svg");
+}
+.playingcard.joker.rank3 .face {
+  background-image: url("../faces/4_3.svg");
+}
+
+.join-button {
+  margin-bottom: 18px
+}
+.game-player {
+  display: inline-block;
+  margin: 10px 30px 0px 0px;
+}
+.game-player > p {
+  margin-top: 10px;
+    font-size: 20px;
+    font-weight: 100;
+    text-transform: capitalize;
+}
+.footer-bottom {
+  position: absolute;
+    bottom: 0px;
+    width: 100%;
+}
+.footer-bottom-alt {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    left: 0px;
+}
+.join-room-input {
+/* 	font-size: 30px; */
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.room-code-holder {
+  position: absolute;
+    top: 10px;
+    left: 10px;
+}
+.room-cards-left-holder {
+    position: absolute;
+    top: 38px;
+    left: 10px;
+    border-top: solid 1px #ececec;
+    padding-top: 1px;
+    margin-top: 1px;
+}
+.room-cards-left-holder > h2 {
+    color: darkgray !important;
+    font-size: 10px;
+    margin: 0px;
+}
+.room-code-holder > h2 {
+    color: #e91e63 !important;
+    font-size: 20px;
+    margin: 0px;
+}
+.room-countdown-holder {
+  position: absolute;
+    top: 10px;
+    right: 10px;
+}
+.room-countdown-holder > h2 {
+    color: #e91e63 !important;
+    font-size: 20px;
+    margin: 0px;
+}
+.in-progress-avatar {
+  display: inline-block;
+  width: 40px !important;
+}
+.in-progress-user {
+  display: inline;
+  padding: 5px;
+  margin-right: 20px;
+}
+.in-progress-user > p {
+  margin-left: 5px;
+}
+.userState {
+border-radius: 50%;
+width: 9px;
+height: 9px;
+display: inline-block;
+position: absolute;
+bottom: 0px;
+background-color: mediumseagreen;
+margin-bottom: -15px;
+margin-left: -27px
+}
+.modal-backdrop {
+  z-index: 0 !important;
+}
+.main-logo {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 30px;
+    width: 40% !important;
+}
+@media only screen and (max-height: 400px) {
+  .footer-bottom-alt {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    left: 0px;
+}
+}
+@media only screen and (max-width: 600px) {
+  .main-logo {
+     width: 70% !important;
+  }
+  .footer-bottom-alt {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    left: 0px;
+}
+}
+.icon-logo {
+    max-width: 25px;
+    padding: 1px;
+    display: inline-block !important;
+    margin-right: 5px;
+}
+a:hover, a:focus {
+  color: #e91e63;
+}
+.players-container {
+    display: grid;
+    position: absolute;
+    padding: 10px;
+    margin-top: 20px;
+}
+.log-avatar {
+  max-height: 100%;
+  max-width: 30px;
+  margin-right: 6px;
+  margin-bottom: 5px;
+  margin-left: 6px;
+  border-radius: 5px;
+}
