@@ -2,11 +2,8 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/about": "pages/about.html",
-  "/api/hello": "pages/api/hello.js",
-  "/game/[gameId]": "pages/game/[gameId].html",
-  "/host": "pages/host.html",
-  "/": "pages/index.html",
-  "/join": "pages/join.html",
-  "/404": "pages/404.html"
+  "/": "pages/index.js",
+  "/host": "pages/host.js",
+  "/game/[gameId]": "pages/game/[gameId].js",
+  "/join": "pages/join.js"
 }

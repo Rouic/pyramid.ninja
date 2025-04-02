@@ -1,6 +1,12 @@
 /** @type {import('next').NextConfig} */
+
+
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 const nextConfig = {
-  reactStrictMode: true,
+  reactStrictMode: false,
   eslint: {
     dirs: ['src'],
   },
@@ -9,7 +15,6 @@ const nextConfig = {
     NEXT_PUBLIC_APP_VERSION: '2.1.0',
     NEXT_PUBLIC_FIREBASE_PROJECT_ID: 'pyramid-ninja',
   },
-  
   // Image domains for next/image
   images: {
     remotePatterns: [
@@ -42,7 +47,7 @@ const nextConfig = {
   headers: async () => {
     return [
       {
-        source: '/assets/img/:path*',
+        source: '/images/:path*',
         headers: [
           {
             key: 'Cache-Control',
@@ -65,4 +70,4 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+module.exports = withBundleAnalyzer(nextConfig);

@@ -2,7 +2,7 @@
   "name": "pyramid.ninja",
   "version": "3.0.0",
   "private": true,
-   "scripts": {
+  "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -27,6 +27,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@next/bundle-analyzer": "^15.2.4",
     "@tailwindcss/postcss": "^4.1.1",
     "@types/node": "^20",
     "@types/react": "^19",

@@ -49,7 +49,7 @@ export const useSound = () => {
       const randomIndex = Math.floor(Math.random() * maxNumber) + 1;
       
       // Set the source and play
-      audioRef.current.src = `/assets/sounds/${category}/${randomIndex}.mp3`;
+      audioRef.current.src = `/sounds/${category}/${randomIndex}.mp3`;
       audioRef.current.play().catch(error => {
         console.error('Error playing sound:', error);
       });

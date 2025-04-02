@@ -1,7 +1,7 @@
 {
   "name": "pyramid.ninja",
   "version": "2.1.72",
-  "description": "![pyramid.ninja logo](https://pyramid-ninja.web.app/assets/img/pyramid.ninja.png)",
+  "description": "![pyramid.ninja logo](https://pyramid-ninja.web.app/images/pyramid.ninja.png)",
   "private": true,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

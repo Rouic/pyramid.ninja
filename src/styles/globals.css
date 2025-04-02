@@ -1,5 +1,6 @@
 @import "tailwindcss/preflight";
-@tailwind utilities;
+@import "tailwindcss";
+
 
 /* Base styles that don't use Tailwind utilities */
 html {

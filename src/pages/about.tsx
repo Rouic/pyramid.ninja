@@ -23,7 +23,7 @@ const AboutPage: React.FC = () => {
             <div className="p-8">
               <div className="flex justify-center mb-6">
                 <img
-                  src="/assets/img/logo.png"
+                  src="/images/logo.png"
                   alt="Pyramid.Ninja logo"
                   className="h-32"
                 />

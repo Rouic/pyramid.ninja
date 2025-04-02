@@ -373,7 +373,7 @@ Pyramid.controller('game', ['$cookies', '$state', '$scope','$rootScope', '$state
 												}
 												
 																									
-												$rootScope.soundEffect.src = '/assets/sounds/notification/1.mp3';
+												$rootScope.soundEffect.src = '/sounds/notification/1.mp3';
 												
 												
 												console.log($scope.soundsLock, transaction.seenby);

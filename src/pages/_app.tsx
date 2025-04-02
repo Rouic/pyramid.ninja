@@ -42,7 +42,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         />
         <meta
           property="og:image"
-          content="https://pyramid.ninja/assets/img/pyramid.ninja.background.png"
+          content="https://pyramid.ninja/imgages/pyramid.ninja.background.png"
         />
 
         {/* Twitter */}
@@ -58,11 +58,11 @@ function MyApp({ Component, pageProps }: AppProps) {
         />
         <meta
           property="twitter:image"
-          content="https://pyramid.ninja/assets/img/pyramid.ninja.background.png"
+          content="https://pyramid.ninja/imgages/pyramid.ninja.background.png"
         />
 
         {/* Favicon */}
-        <link rel="icon" type="image/png" href="/assets/img/icon.png" />
+        <link rel="icon" type="image/png" href="/images/icon.png" />
       </Head>
 
       <AuthProvider>
@@ -70,7 +70,7 @@ function MyApp({ Component, pageProps }: AppProps) {
           <div
             className="min-h-screen bg-cover bg-center flex flex-col"
             style={{
-              backgroundImage: `url('/assets/img/backgrounds/${randomBackground}.jpg')`,
+              backgroundImage: `url('/images/${randomBackground}.jpg')`,
             }}
           >
             <Component {...pageProps} />

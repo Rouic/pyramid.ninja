@@ -21,7 +21,7 @@ const Header: React.FC = () => {
         {/* Logo and title */}
         <Link href="/" className="flex items-center">
           <img
-            src="/assets/img/icon.png"
+            src="/images/icon.png"
             alt="Pyramid.Ninja logo"
             className="h-8 mr-2"
           />

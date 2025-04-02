@@ -1,7 +1,18 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   // Using 'all' here to make sure Tailwind scans all files
-  content: ["./src/**/*.{js,jsx,ts,tsx,css,html}"],
+  content: [
+    './**/*.{js,jsx,ts,tsx}',
+    './src/**/*.{js,jsx,ts,tsx}',
+    '../../packages/**/*.{js,jsx,ts,tsx}',
+    '/src/**/*.{js,jsx,ts,tsx}',
+    './src/components/**/*.{js,jsx,ts,tsx}',
+    './src/contexts/*.{js,jsx,ts,tsx}',
+    './src/hooks/*.{js,jsx,ts,tsx}',
+    './src/lib/*.{js,jsx,ts,tsx}',
+    './src/pages/**/*.{js,jsx,ts,tsx}',
+    './src/pages/*.{js,jsx,ts,tsx}',
+  ],
   theme: {
     extend: {
       fontFamily: {
@@ -26,7 +37,7 @@ module.exports = {
         'height': 'height',
       },
       backgroundImage: {
-        'card-pattern': "url('/assets/img/card-background.png')",
+        'card-pattern': "url('/images/card-background.png')",
       },
     },
   },
