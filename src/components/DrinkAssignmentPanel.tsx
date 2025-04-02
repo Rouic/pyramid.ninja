@@ -1,3 +1,4 @@
+// src/components/DrinkAssignmentPanel.tsx
 import React, { useState } from "react";
 import {
   DrinkAssignment,
@@ -16,6 +17,7 @@ interface DrinkAssignmentPanelProps {
   isHost: boolean;
   currentCardRank?: string;
   drinkCount: number;
+  onChallengeCard?: (cardIndex: number) => void; // New callback for card challenges
 }
 
 const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
@@ -26,6 +28,7 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
   isHost,
   currentCardRank,
   drinkCount,
+  onChallengeCard,
 }) => {
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
   const [showingCardSelection, setShowingCardSelection] = useState(false);
@@ -33,6 +36,7 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
     null
   );
   const [activeChallenge, setActiveChallenge] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Filtered assignments that are relevant to the current user
   const relevantAssignments = assignments
@@ -54,6 +58,7 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
     if (!selectedPlayerId || !currentCardRank) return;
 
     try {
+      setIsSubmitting(true);
       await assignDrinks(
         gameId,
         currentPlayerId,
@@ -64,25 +69,41 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
       );
 
       setSelectedPlayerId("");
+      setIsSubmitting(false);
     } catch (error) {
       console.error("Error assigning drinks:", error);
+      setIsSubmitting(false);
     }
   };
 
   const handleAcceptDrink = async (assignmentIndex: number) => {
     try {
+      setIsSubmitting(true);
       await acceptDrinkAssignment(gameId, assignmentIndex);
+      setIsSubmitting(false);
     } catch (error) {
       console.error("Error accepting drink:", error);
+      setIsSubmitting(false);
     }
   };
 
   const handleChallengeClick = async (assignmentIndex: number) => {
     try {
+      setIsSubmitting(true);
       await challengeDrinkAssignment(gameId, assignmentIndex);
       setActiveChallenge(assignmentIndex);
+      setIsSubmitting(false);
     } catch (error) {
       console.error("Error challenging drink:", error);
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSelectCardForChallenge = (cardIndex: number) => {
+    setSelectedCardIndex(cardIndex);
+    // Notify parent component to show this specific card
+    if (onChallengeCard) {
+      onChallengeCard(cardIndex);
     }
   };
 
@@ -91,24 +112,29 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
     wasSuccessful: boolean
   ) => {
     try {
+      setIsSubmitting(true);
       await resolveDrinkChallenge(gameId, assignmentIndex, wasSuccessful);
 
       // If the challenge was successful, we need to replace the card
-      if (wasSuccessful) {
-        if (selectedCardIndex !== null) {
-          await replacePlayerCard(
-            gameId,
-            assignments[assignmentIndex].from,
-            selectedCardIndex
-          );
-        }
+      if (wasSuccessful && selectedCardIndex !== null) {
+        await replacePlayerCard(
+          gameId,
+          assignments[assignmentIndex].from,
+          selectedCardIndex
+        );
       }
 
       setActiveChallenge(null);
       setSelectedCardIndex(null);
       setShowingCardSelection(false);
+      // Reset the card view
+      if (onChallengeCard) {
+        onChallengeCard(-1);
+      }
+      setIsSubmitting(false);
     } catch (error) {
       console.error("Error resolving challenge:", error);
+      setIsSubmitting(false);
     }
   };
 
@@ -119,7 +145,7 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
       </h3>
 
       {currentCardRank && !isHost && (
-        <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+        <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
           <h4 className="font-medium text-gray-700 dark:text-gray-300">
             Assign drinks for {currentCardRank}
           </h4>
@@ -128,6 +154,7 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
               value={selectedPlayerId}
               onChange={(e) => setSelectedPlayerId(e.target.value)}
               className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              disabled={isSubmitting}
             >
               <option value="">Select player</option>
               {players
@@ -141,60 +168,119 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
 
             <button
               onClick={handleAssignDrink}
-              disabled={!selectedPlayerId}
+              disabled={!selectedPlayerId || isSubmitting}
               className={`px-4 py-2 rounded-lg ${
-                !selectedPlayerId
+                !selectedPlayerId || isSubmitting
                   ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                   : "bg-blue-500 hover:bg-blue-600 text-white"
               }`}
             >
-              Assign {drinkCount} Drink{drinkCount !== 1 ? "s" : ""}
+              {isSubmitting ? (
+                <span className="flex items-center">
+                  <svg
+                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Assigning...
+                </span>
+              ) : (
+                `Assign ${drinkCount} Drink${drinkCount !== 1 ? "s" : ""}`
+              )}
             </button>
           </div>
         </div>
       )}
 
       {activeChallenge !== null && (
-        <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg">
-          <h4 className="font-medium text-yellow-800 dark:text-yellow-200">
+        <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg border border-yellow-200 dark:border-yellow-800">
+          <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-3">
             Select your card that has {assignments[activeChallenge].cardRank}
           </h4>
           <div className="mt-2">
-            <div className="flex gap-2">
+            <div className="grid grid-cols-5 gap-2">
               {[0, 1, 2, 3, 4].map((index) => (
                 <button
                   key={index}
-                  onClick={() => setSelectedCardIndex(index)}
-                  className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold ${
+                  onClick={() => handleSelectCardForChallenge(index)}
+                  className={`w-12 h-12 rounded-lg flex items-center justify-center text-sm font-bold ${
                     selectedCardIndex === index
                       ? "bg-yellow-500 text-white"
                       : "bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-600"
                   }`}
+                  disabled={isSubmitting}
                 >
                   {index + 1}
                 </button>
               ))}
             </div>
 
-            <div className="mt-3 flex gap-2">
+            <div className="mt-4 flex gap-2">
               <button
                 onClick={() => handleResolveChallenge(activeChallenge, true)}
-                disabled={selectedCardIndex === null}
+                disabled={selectedCardIndex === null || isSubmitting}
                 className={`px-4 py-2 rounded-lg ${
-                  selectedCardIndex === null
+                  selectedCardIndex === null || isSubmitting
                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                     : "bg-green-500 hover:bg-green-600 text-white"
                 }`}
               >
-                I have it! (Card{" "}
-                {selectedCardIndex !== null ? selectedCardIndex + 1 : ""})
+                {isSubmitting ? (
+                  <span className="flex items-center">
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Processing...
+                  </span>
+                ) : (
+                  `I have it! (Card ${
+                    selectedCardIndex !== null ? selectedCardIndex + 1 : ""
+                  })`
+                )}
               </button>
 
               <button
                 onClick={() => handleResolveChallenge(activeChallenge, false)}
-                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg"
+                disabled={isSubmitting}
+                className={`px-4 py-2 text-white rounded-lg ${
+                  isSubmitting
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-red-500 hover:bg-red-600"
+                }`}
               >
-                I was bluffing...
+                {isSubmitting ? "Processing..." : "I was bluffing..."}
               </button>
             </div>
           </div>
@@ -234,15 +320,25 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleAcceptDrink(index)}
-                        className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-sm rounded"
+                        disabled={isSubmitting}
+                        className={`px-3 py-1 text-white text-sm rounded transition-colors ${
+                          isSubmitting
+                            ? "bg-gray-400 cursor-not-allowed"
+                            : "bg-green-500 hover:bg-green-600"
+                        }`}
                       >
-                        Drink
+                        {isSubmitting ? "..." : "Drink"}
                       </button>
                       <button
                         onClick={() => handleChallengeClick(index)}
-                        className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-sm rounded"
+                        disabled={isSubmitting}
+                        className={`px-3 py-1 text-white text-sm rounded transition-colors ${
+                          isSubmitting
+                            ? "bg-gray-400 cursor-not-allowed"
+                            : "bg-red-500 hover:bg-red-600"
+                        }`}
                       >
-                        Challenge
+                        {isSubmitting ? "..." : "Challenge"}
                       </button>
                     </div>
                   )}
@@ -257,7 +353,7 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
           ))}
         </div>
       ) : (
-        <div className="text-gray-500 text-center py-4">
+        <div className="text-gray-500 text-center py-6 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
           No active drink assignments yet
         </div>
       )}

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+// src/pages/game/[id].tsx
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
 import { doc, getDoc, onSnapshot, updateDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase/firebase";
@@ -11,12 +12,13 @@ import {
   DrinkAssignment,
   subscribeToGameStateDetails,
   startMemorizationPhase,
-  revealNextPyramidCard,
 } from "../../lib/firebase/gameState";
 import GamePyramid from "../../components/GamePyramid";
 import PlayerHand from "../../components/PlayerHand";
 import MemorizeTimer from "../../components/MemorizeTimer";
 import DrinkAssignmentPanel from "../../components/DrinkAssignmentPanel";
+import { GameControls } from "../../components/GameControls";
+import ActivityLog from "../../components/ActivityLog";
 import { usePlayerContext } from "../../context/PlayerContext";
 
 const GamePage = () => {
@@ -37,8 +39,11 @@ const GamePage = () => {
   );
   const [currentPyramidCard, setCurrentPyramidCard] = useState<any>(null);
   const [currentRowNumber, setCurrentRowNumber] = useState(0);
-  const [playerReadyToMemorize, setPlayerReadyToMemorize] = useState(false);
   const [allCardsDealt, setAllCardsDealt] = useState(false);
+  const [currentRound, setCurrentRound] = useState(1);
+
+  // New state to track which card is being challenged (for flipping)
+  const [challengedCardIndex, setChallengedCardIndex] = useState<number>(-1);
 
   // Load game data
   useEffect(() => {
@@ -76,6 +81,11 @@ const GamePage = () => {
           setGameState(data.gameState || "waiting");
           setDrinkAssignments(data.drinkAssignments || []);
           setAllCardsDealt(data.allCardsDealt || false);
+
+          // Update current round
+          if (data.currentRound) {
+            setCurrentRound(data.currentRound);
+          }
 
           // Handle memorization timer
           if (data.gameState === "memorizing" && data.memorizeEndTime) {
@@ -170,17 +180,14 @@ const GamePage = () => {
   }, [id, isHost, gameData, gameState, isStartingGame]);
 
   const handleStartMemorizing = useCallback(async () => {
-    if (!id || typeof id !== "string" || gameState !== "ready") return;
-
-    setPlayerReadyToMemorize(true);
+    if (!id || typeof id !== "string") return;
 
     try {
       await startMemorizationPhase(id);
     } catch (error) {
       console.error("Error starting memorization phase:", error);
-      setPlayerReadyToMemorize(false);
     }
-  }, [id, gameState]);
+  }, [id]);
 
   const handleRevealCard = useCallback(
     async (cardIndex: number) => {
@@ -189,6 +196,8 @@ const GamePage = () => {
 
       try {
         await revealPyramidCard(id, cardIndex);
+        // Update round number
+        setCurrentRound((prev) => prev + 1);
       } catch (error) {
         console.error("Error revealing card:", error);
       }
@@ -196,24 +205,50 @@ const GamePage = () => {
     [id, isHost, gameState]
   );
 
+  // Handler for when a player is challenged and needs to show a card
+  const handleChallengeCard = (cardIndex: number) => {
+    setChallengedCardIndex(cardIndex);
+  };
+
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading game...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
-        <div className="text-red-500 text-xl mb-4">{error}</div>
-        <button
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg"
-          onClick={() => router.push("/")}
-        >
-          Back to Home
-        </button>
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col items-center justify-center p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 max-w-md w-full text-center">
+          <svg
+            className="h-16 w-16 text-red-500 mx-auto mb-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+          <h2 className="text-xl font-bold text-red-600 dark:text-red-400 mb-2">
+            Error
+          </h2>
+          <p className="text-gray-700 dark:text-gray-300 mb-6">{error}</p>
+          <button
+            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+            onClick={() => router.push("/")}
+          >
+            Back to Home
+          </button>
+        </div>
       </div>
     );
   }
@@ -226,22 +261,29 @@ const GamePage = () => {
     // Host View - shows the pyramid and game controls
     return (
       <div className="min-h-screen bg-gray-100 dark:bg-gray-900 pb-8">
-        <div className="max-w-6xl mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4 pt-6">
           {/* Game header */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-4 mt-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
-                {gameData?.name || "Pyramid Game"}{" "}
-                <span className="text-purple-600">(Host View)</span>
-              </h1>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-1">
+                  {gameData?.name || "Pyramid Game"}
+                </h1>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">
+                  Game ID: <span className="font-mono">{id}</span> •
+                  <span className="ml-1 font-medium text-purple-600 dark:text-purple-400">
+                    Host View
+                  </span>
+                </p>
+              </div>
 
               {gameState === "waiting" && (
                 <button
-                  className={`px-4 py-2 ${
+                  className={`px-6 py-3 rounded-lg font-medium text-white transition-colors ${
                     isStartingGame
-                      ? "bg-gray-400"
-                      : "bg-green-500 hover:bg-green-600"
-                  } text-white rounded-lg`}
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-green-600 hover:bg-green-700"
+                  }`}
                   onClick={handleStartGame}
                   disabled={isStartingGame}
                 >
@@ -277,135 +319,117 @@ const GamePage = () => {
 
               {gameState === "playing" && (
                 <div className="flex items-center gap-4">
-                  <div className="text-md font-medium">
-                    Current drink value:{" "}
-                    <span className="text-xl font-bold text-yellow-500">
-                      {drinksForCurrentRow}
-                    </span>
+                  <div className="py-2 px-4 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
+                    <div className="text-sm text-yellow-800 dark:text-yellow-200">
+                      Current Drink Value
+                    </div>
+                    <div className="text-xl font-bold text-yellow-700 dark:text-yellow-300">
+                      {drinksForCurrentRow} drink
+                      {drinksForCurrentRow !== 1 ? "s" : ""}
+                    </div>
                   </div>
                 </div>
               )}
 
               {gameState === "ended" && (
-                <div className="text-xl font-bold text-green-500">
-                  Game Over!
+                <div className="py-2 px-4 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                  <div className="text-xl font-bold text-green-700 dark:text-green-300">
+                    Game Complete!
+                  </div>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Player list */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-4">
-            <h2 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Players in Game
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              <div className="px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
-                You (Host)
+          {/* Game content - two column layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left column - Pyramid */}
+            <div className="lg:col-span-2">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
+                <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
+                  Pyramid
+                </h2>
+
+                {gameState === "waiting" ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+                    <svg
+                      className="h-16 w-16 mb-4 text-gray-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M13 10V3L4 14h7v7l9-11h-7z"
+                      />
+                    </svg>
+                    <p className="text-lg">
+                      Click "Start Game" to begin the pyramid game
+                    </p>
+                  </div>
+                ) : (
+                  <GamePyramid
+                    gameId={id as string}
+                    rows={5}
+                    isGameStarted={gameState !== "waiting"}
+                    highlightCurrentCard={currentPyramidCard?.id}
+                    drinksForCurrentRow={drinksForCurrentRow}
+                    canRevealCards={gameState === "playing"}
+                    onRevealCard={handleRevealCard}
+                  />
+                )}
               </div>
 
-              {(gameData?.players || []).map((player: any) => (
-                <div
-                  key={player.id}
-                  className="px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
-                >
-                  {player.name}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Game area - only for host */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-4 flex flex-col">
-            {gameState === "waiting" ? (
-              <div className="text-center py-12 text-gray-500">
-                Click 'Start Game' when everyone has joined
-              </div>
-            ) : (
-              <>
-                {/* Pyramid display area - host view */}
-                <GamePyramid
-                  gameId={id as string}
-                  rows={5}
-                  isGameStarted={gameState !== "waiting"}
-                  highlightCurrentCard={currentPyramidCard?.id}
-                  drinksForCurrentRow={drinksForCurrentRow}
-                  canRevealCards={gameState === "playing"}
-                  onRevealCard={handleRevealCard}
+              {/* Activity Log - Only for host during gameplay */}
+              {(gameState === "playing" || gameState === "ended") && (
+                <ActivityLog
+                  assignments={drinkAssignments}
+                  players={gameData?.players || []}
+                  roundNumber={currentRound}
+                  currentCardRank={currentPyramidCard?.rank}
                 />
+              )}
+            </div>
 
-                {/* Game state information */}
-                <div className="mt-6 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                  <h3 className="text-lg font-medium mb-2">Game Status</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <span className="font-medium">Game State:</span>
-                      <span
-                        className="ml-2 px-2 py-1 rounded-lg text-sm font-medium 
-                        {gameState === 'playing' 
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
-                          : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'}"
-                      >
-                        {gameState.charAt(0).toUpperCase() + gameState.slice(1)}
-                      </span>
-                    </div>
+            {/* Right column - Game controls, player list */}
+            <div className="lg:col-span-1">
+              {/* Game Controls */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
+                <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
+                  Game Controls
+                </h2>
+                <GameControls
+                  gameId={id as string}
+                  currentPhase={gameState}
+                  isHost={isHost}
+                  onStartMemorization={handleStartMemorizing}
+                />
+              </div>
 
-                    {currentPyramidCard && (
-                      <div>
-                        <span className="font-medium">Current Card:</span>
-                        <span className="ml-2 px-2 py-1 rounded-lg text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                          {currentPyramidCard.rank} of{" "}
-                          {currentPyramidCard.suit.charAt(0).toUpperCase() +
-                            currentPyramidCard.suit.slice(1)}
-                        </span>
+              {/* Player list */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
+                  Players
+                </h2>
+                <div className="grid grid-cols-2 gap-3">
+                  {(gameData?.players || []).map((player: any) => (
+                    <div
+                      key={player.id}
+                      className="p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 flex flex-col items-center"
+                    >
+                      <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-800 dark:text-blue-200 font-bold mb-2">
+                        {player.name.charAt(0).toUpperCase()}
                       </div>
-                    )}
-
-                    <div>
-                      <span className="font-medium">Players with cards:</span>
-                      <span className="ml-2">
-                        {(gameData?.players || []).length}
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {player.name}
                       </span>
                     </div>
-
-                    <div>
-                      <span className="font-medium">Current drink value:</span>
-                      <span className="ml-2 font-bold text-yellow-500">
-                        {drinksForCurrentRow}
-                      </span>
-                    </div>
-                  </div>
+                  ))}
                 </div>
-
-                {/* Host instructions */}
-                {gameState === "memorizing" && (
-                  <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                    <h3 className="text-lg font-medium text-yellow-800 dark:text-yellow-200 mb-2">
-                      Memorization Phase
-                    </h3>
-                    <p>
-                      Players are memorizing their cards. They have 10 seconds
-                      to remember their cards before play begins.
-                    </p>
-                  </div>
-                )}
-
-                {gameState === "playing" && (
-                  <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg">
-                    <h3 className="text-lg font-medium text-blue-800 dark:text-blue-200 mb-2">
-                      Playing Instructions
-                    </h3>
-                    <p className="mb-2">
-                      Click on the pyramid cards to reveal them one by one.
-                    </p>
-                    <p>
-                      After revealing a card, players can assign drinks based on
-                      having that card in their hand (or bluffing).
-                    </p>
-                  </div>
-                )}
-              </>
-            )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -414,109 +438,75 @@ const GamePage = () => {
     // Player View - focuses on their cards and drink assignments
     return (
       <div className="min-h-screen bg-gray-100 dark:bg-gray-900 pb-8">
-        <div className="max-w-6xl mx-auto px-4">
+        <div className="max-w-4xl mx-auto px-4 pt-6">
           {/* Game header */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-4 mt-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
-                {gameData?.name || "Pyramid Game"}{" "}
-                <span className="text-sm font-normal text-gray-500">
-                  (Look at host's screen for the pyramid)
-                </span>
-              </h1>
-
-              {gameState === "ready" &&
-                allCardsDealt &&
-                !playerReadyToMemorize && (
-                  <button
-                    className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg"
-                    onClick={handleStartMemorizing}
-                  >
-                    Memorize My Cards
-                  </button>
-                )}
+              <div>
+                <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-1">
+                  {gameData?.name || "Pyramid Game"}
+                </h1>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">
+                  Game ID: <span className="font-mono">{id}</span> •
+                  <span className="ml-1">
+                    Playing as <span className="font-medium">{playerName}</span>
+                  </span>
+                </p>
+              </div>
 
               {gameState === "memorizing" && memorizationEndTime && (
                 <MemorizeTimer endTime={memorizationEndTime} />
               )}
 
               {gameState === "playing" && currentPyramidCard && (
-                <div className="px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-lg">
-                  Current Card:{" "}
-                  <span className="font-bold">{currentPyramidCard.rank}</span> (
-                  {drinksForCurrentRow} drinks)
+                <div className="py-2 px-4 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                  <div className="text-sm text-blue-800 dark:text-blue-200">
+                    Current Card
+                  </div>
+                  <div className="text-xl font-bold text-blue-700 dark:text-blue-300">
+                    {currentPyramidCard.rank} ({drinksForCurrentRow} drink
+                    {drinksForCurrentRow !== 1 ? "s" : ""})
+                  </div>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Player info */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-4">
-            <div className="flex items-center gap-2">
-              <div className="px-3 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                {playerName} (You)
-              </div>
-
-              <div className="text-sm text-gray-500">
-                Game Code: <span className="font-mono font-medium">{id}</span>
-              </div>
-            </div>
-          </div>
-
           {/* Player game area */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-4 flex flex-col">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
             {gameState === "waiting" ? (
-              <div className="text-center py-12 text-gray-500">
-                Waiting for the host to start the game...
-              </div>
-            ) : gameState === "ready" && !playerReadyToMemorize ? (
-              <div className="text-center py-12 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                <h3 className="text-xl font-bold text-yellow-800 dark:text-yellow-200 mb-2">
-                  Ready to Play?
-                </h3>
-                <p className="mb-4 text-yellow-700 dark:text-yellow-300">
-                  You'll have 10 seconds to memorize your cards.
-                </p>
-                <button
-                  className="px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-bold"
-                  onClick={handleStartMemorizing}
+              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                <svg
+                  className="h-16 w-16 mx-auto mb-4 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
-                  I'm Ready to Memorize
-                </button>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <p className="text-lg">
+                  Waiting for the host to start the game...
+                </p>
               </div>
             ) : (
               <>
-                {/* Instructions reminder */}
-                <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg mb-4">
-                  <div className="flex items-start">
-                    <div className="mr-3 text-blue-500">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-6 w-6"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-blue-800 dark:text-blue-200">
-                        Game Info
-                      </h3>
-                      <p className="text-sm text-blue-700 dark:text-blue-300">
-                        {gameState === "memorizing"
-                          ? "Memorize your cards now! They'll be hidden after the timer."
-                          : "Watch the host's screen for pyramid cards. Your matching cards are highlighted."}
-                      </p>
-                    </div>
-                  </div>
+                {/* Game controls for player readiness */}
+                <div className="mb-6">
+                  <GameControls
+                    gameId={id as string}
+                    currentPhase={gameState}
+                    isHost={isHost}
+                    onStartMemorization={handleStartMemorizing}
+                  />
                 </div>
+
+                {/* Divider */}
+                <div className="border-t border-gray-200 dark:border-gray-700 my-6"></div>
 
                 {/* Drink assignments panel */}
                 {gameState === "playing" && (
@@ -528,6 +518,7 @@ const GamePage = () => {
                     isHost={isHost}
                     currentCardRank={currentPyramidCard?.rank}
                     drinkCount={drinksForCurrentRow}
+                    onChallengeCard={handleChallengeCard}
                   />
                 )}
 
@@ -539,28 +530,94 @@ const GamePage = () => {
                     gameState === "memorizing" || gameState === "ended"
                   }
                   highlightCurrentRank={currentPyramidCard?.rank}
+                  allowCardFlip={gameState === "playing"} // Only allow flipping during gameplay
+                  challengedCardIndex={challengedCardIndex} // Pass the challenged card index
                 />
               </>
             )}
           </div>
 
-          {/* Mobile tips */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-4">
-            <h3 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Playing Tips
-            </h3>
-            <ul className="text-sm text-gray-600 dark:text-gray-400 list-disc pl-5 space-y-1">
-              <li>
-                Look at the host's screen to see which card is currently shown
-                in the pyramid
+          {/* Game tips */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
+              Game Tips
+            </h2>
+
+            <ul className="space-y-3">
+              <li className="flex items-start">
+                <span className="flex-shrink-0 h-5 w-5 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-2">
+                  <svg
+                    className="h-3 w-3"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </span>
+                <span className="text-gray-700 dark:text-gray-300">
+                  Watch the host's screen to see which card is currently shown
+                  in the pyramid
+                </span>
               </li>
-              <li>Your matching cards will be highlighted in yellow</li>
-              <li>
-                You can hold down on a card to peek at it if it matches the
-                current pyramid card
+              <li className="flex items-start">
+                <span className="flex-shrink-0 h-5 w-5 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-2">
+                  <svg
+                    className="h-3 w-3"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </span>
+                <span className="text-gray-700 dark:text-gray-300">
+                  Cards matching the current pyramid card will be highlighted in
+                  yellow
+                </span>
               </li>
-              <li>
-                If someone assigns you drinks, you can accept or challenge them
+              <li className="flex items-start">
+                <span className="flex-shrink-0 h-5 w-5 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-2">
+                  <svg
+                    className="h-3 w-3"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </span>
+                <span className="text-gray-700 dark:text-gray-300">
+                  Hold down on a matching card to peek at it during gameplay
+                </span>
+              </li>
+              <li className="flex items-start">
+                <span className="flex-shrink-0 h-5 w-5 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-2">
+                  <svg
+                    className="h-3 w-3"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </span>
+                <span className="text-gray-700 dark:text-gray-300">
+                  If you challenge someone successfully, they drink double. If
+                  you fail, you drink double!
+                </span>
               </li>
             </ul>
           </div>

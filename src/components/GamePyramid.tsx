@@ -92,7 +92,7 @@ const GamePyramid: React.FC<GamePyramidProps> = ({
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-64 sm:h-80 md:h-96 lg:h-[450px] mx-auto bg-emerald-50 dark:bg-emerald-900/30 rounded-lg p-4"
+      className="relative w-full h-64 sm:h-80 md:h-96 lg:h-[650px] mx-auto bg-emerald-50 dark:bg-emerald-900/30 rounded-lg p-4"
     >
       {/* Row indicators - showing drink values */}
       {isGameStarted && (

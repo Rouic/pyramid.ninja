@@ -1,3 +1,4 @@
+// src/components/PlayerHand.tsx
 import React, { useState, useEffect } from "react";
 import { Card } from "../lib/deck";
 import GameCard from "./GameCard";
@@ -10,8 +11,10 @@ import { usePlayerContext } from "../context/PlayerContext";
 interface PlayerHandProps {
   gameId: string;
   isGameStarted: boolean;
-  showFaceUp: boolean;
+  showFaceUp: boolean; // Only true during memorization phase or end of game
   highlightCurrentRank?: string;
+  allowCardFlip?: boolean; // New prop to control when cards can be flipped
+  challengedCardIndex?: number; // New prop to indicate which card is being challenged
 }
 
 const PlayerHand: React.FC<PlayerHandProps> = ({
@@ -19,6 +22,8 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
   isGameStarted,
   showFaceUp,
   highlightCurrentRank,
+  allowCardFlip = false,
+  challengedCardIndex = -1,
 }) => {
   const { playerId } = usePlayerContext();
   const [playerCards, setPlayerCards] = useState<Card[]>([]);
@@ -62,14 +67,25 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
 
   return (
     <div className="w-full h-48 md:h-56 relative border-t-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 mt-8 pt-4">
-      <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2 px-4">
-        Your Cards{" "}
+      <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2 px-4 flex justify-between items-center">
+        <span>Your Cards</span>
         {isLoading && (
           <span className="text-xs text-gray-500">(loading...)</span>
         )}
         {!showFaceUp && !isLoading && (
-          <span className="text-xs text-red-500 ml-2">
-            (hidden - remember your cards!)
+          <span className="text-xs text-red-500 inline-flex items-center">
+            <svg
+              className="h-4 w-4 mr-1"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z"
+                clipRule="evenodd"
+              />
+            </svg>
+            Cards hidden - remember what you have!
           </span>
         )}
       </h3>
@@ -91,6 +107,9 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
             const shouldHighlight =
               highlightCurrentRank && card.rank === highlightCurrentRank;
 
+            // Determine if this specific card can be flipped (for challenges)
+            const canFlipThisCard = challengedCardIndex === index;
+
             return (
               <GameCard
                 key={card.id}
@@ -104,7 +123,8 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
                 }`}
                 onReveal={() => {}} // No reveal needed for player's own cards
                 allowPeek={!showFaceUp && card.rank === highlightCurrentRank} // Allow peeking when card matches current pyramid card
-                showFace={showFaceUp} // Show face up during memorization phase
+                showFace={showFaceUp || canFlipThisCard} // Show face up during memorization phase or if specifically challenged
+                allowFlip={allowCardFlip && canFlipThisCard} // Only allow flipping under specific circumstances
               />
             );
           })
