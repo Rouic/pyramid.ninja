@@ -8,6 +8,8 @@ import { useGame } from "../contexts/GameContext";
 import { getRandomTaunt, cardIndexToText } from "../lib/deckUtils";
 import { Round, DisplayTransaction } from "../types";
 
+const DEBUG = true;
+
 const HostPage: React.FC = () => {
   const { createGame, gameId, gameData, players, startGame, selectCard } =
     useGame();
@@ -25,6 +27,17 @@ const HostPage: React.FC = () => {
   const [drinkLog, setDrinkLog] = useState<{ name: string; drinks: number }[]>(
     []
   );
+
+  useEffect(() => {
+    // Check localStorage for game state
+    if (gameId) {
+      const localStarted = localStorage.getItem(`game_${gameId}_started`);
+      if (localStarted === "true") {
+        console.log("Found local state, starting game");
+        setIsGameStarted(true);
+      }
+    }
+  }, [gameId]);
 
   // Initialize game on component mount
   useEffect(() => {
@@ -51,8 +64,20 @@ const HostPage: React.FC = () => {
   // Watch for game data changes
   useEffect(() => {
     if (gameData) {
+
+      if (DEBUG) {
+        console.log("Game data updated in host:", gameData);
+        console.log("Meta data:", gameData["__pyramid.meta"]);
+        console.log("Started value:", gameData["__pyramid.meta"]?.started);
+      }
+
       // Check if game has started
-      if (gameData["__pyramid.meta"].started) {
+      if (
+        gameData["__pyramid.meta"] &&
+        typeof gameData["__pyramid.meta"] === "object" &&
+        gameData["__pyramid.meta"].started === true
+      ) {
+        console.log("Setting game started to true");
         setIsGameStarted(true);
       }
 
@@ -98,7 +123,7 @@ const HostPage: React.FC = () => {
         );
       }
     }
-  }, [gameData, gameId, isGameStarted, players, showModal]);
+  }, [gameData, gameId, players, showModal]);
 
   // Process transactions for display
   const processTransactions = (
@@ -156,6 +181,14 @@ const HostPage: React.FC = () => {
     if (gameId) {
       try {
         await startGame(gameId);
+
+        // Manually force UI into game mode regardless of Firestore
+        console.log("Manually forcing game to start in UI");
+        setIsGameStarted(true);
+        setInformation("Game is starting! Pick a card to begin...");
+
+        // Save state to localStorage as backup
+        localStorage.setItem(`game_${gameId}_started`, "true");
       } catch (error) {
         console.error("Failed to start game:", error);
       }
@@ -202,7 +235,7 @@ const HostPage: React.FC = () => {
           )}
 
           {/* Waiting for players screen */}
-          {!isGameStarted && (
+          {!isGameStarted ? (
             <div className="p-8 text-center">
               <h2 className="text-2xl font-bold mb-6">{information}</h2>
 
@@ -242,10 +275,7 @@ const HostPage: React.FC = () => {
                 </div>
               )}
             </div>
-          )}
-
-          {/* Game in progress */}
-          {isGameStarted && (
+          ) : (
             <div className="p-4">
               {/* Connected players */}
               <div className="mb-4 overflow-x-auto whitespace-nowrap py-2">

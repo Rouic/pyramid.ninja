@@ -4,10 +4,12 @@ import {
   doc,
   setDoc,
   getDoc,
+  getDocFromServer,
   updateDoc,
   onSnapshot,
   DocumentSnapshot,
 } from "firebase/firestore";
+
 import { db } from "../lib/firebase";
 import { useAuth } from "./AuthContext";
 import { generateGameCode, shuffleDeck } from "../lib/deckUtils";
@@ -40,6 +42,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Generate a new game code (4 random letters)
       const roomCode = generateGameCode();
+      console.log(`Creating new game with ID: ${roomCode}`);
 
       // Create shuffled deck and pyramid cards
       const deck = shuffleDeck(roomCode);
@@ -48,17 +51,26 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
         shown: false,
       }));
 
-      // Create game document in Firestore
-      await setDoc(doc(db, "games", roomCode), {
+      // Create a timestamp to help debug concurrency issues
+      const timestamp = new Date().toISOString();
+
+      // Create game document in Firestore with a unique debug field
+      const gameData = {
         "__pyramid.meta": {
           started: false,
           total_drinks: 0,
           created_at: new Date(),
           fancy_shown: false,
+          debug_id: `${timestamp}_${Math.random()
+            .toString(36)
+            .substring(2, 7)}`,
         },
         "__pyramid.cards": pyramidCards,
         "__pyramid.deck": deck,
-      });
+      };
+
+      // Create the document
+      await setDoc(doc(db, "games", roomCode), gameData);
 
       setGameId(roomCode);
 
@@ -124,17 +136,61 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   // Start the game (host only)
-  const startGame = async (gameId: string): Promise<void> => {
-    try {
-      const gameRef = doc(db, "games", gameId.toUpperCase());
-      await updateDoc(gameRef, {
-        "__pyramid.meta.started": true,
-      });
-    } catch (error) {
-      console.error("Error starting game:", error);
-      throw error;
+const startGame = async (gameId: string): Promise<void> => {
+  try {
+    const gameIdUpper = gameId.toUpperCase();
+    console.log(`Starting game with ID: ${gameIdUpper}`);
+
+    // Get a fresh reference to the game
+    const gameRef = doc(db, "games", gameIdUpper);
+
+    // Get current document data directly from server
+    const gameSnap = await getDocFromServer(gameRef);
+    if (!gameSnap.exists()) {
+      throw new Error("Game not found");
     }
-  };
+
+    // Get the complete document data
+    const gameData = gameSnap.data();
+    console.log("Current full game data:", gameData);
+
+    // Create an entirely new meta object
+    const newMeta = {
+      ...gameData["__pyramid.meta"],
+      started: true,
+      last_updated: new Date(),
+      debug_id: `started_${new Date().toISOString()}`,
+    };
+
+    // Create a completely new document with all the same data but updated meta
+    const newGameData = {
+      ...gameData,
+      "__pyramid.meta": newMeta,
+    };
+
+    console.log("New game data to save:", newGameData);
+
+    // Complete document replacement instead of field update
+    await setDoc(gameRef, newGameData);
+
+    // Force a server read right after update
+    setTimeout(async () => {
+      const verifySnap = await getDocFromServer(gameRef);
+      const verifyData = verifySnap.data();
+      console.log(
+        "VERIFICATION - Game data 1 second after update:",
+        verifyData
+      );
+      console.log(
+        "VERIFICATION - Started value:",
+        verifyData?.["__pyramid.meta"]?.started
+      );
+    }, 1000);
+  } catch (error) {
+    console.error("Error starting game:", error);
+    throw error;
+  }
+};
 
   // Select a card from the pyramid (host only)
   const selectCard = async (
@@ -322,24 +378,57 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Subscribe to game updates
   const subscribeToGameUpdates = (gameId: string) => {
-    const gameRef = doc(db, "games", gameId);
+    // Make sure we use toUpperCase to maintain consistency
+    const gameIdUpper = gameId.toUpperCase();
+    console.log(`Subscribing to game updates for: ${gameIdUpper}`);
 
+    // Use getDocFromServer to ensure fresh data
+    const gameRef = doc(db, "games", gameIdUpper);
+
+    // Get fresh data first
+    getDocFromServer(gameRef)
+      .then((snapshot) => {
+        console.log("Initial fresh server data:", snapshot.data());
+      })
+      .catch((err) => console.error("Error getting fresh data:", err));
+
+    // Then set up real-time listener
     return onSnapshot(
       gameRef,
+      { includeMetadataChanges: true },
       (snapshot: DocumentSnapshot) => {
+        const source = snapshot.metadata.hasPendingWrites
+          ? "Local"
+          : snapshot.metadata.fromCache
+          ? "Cache"
+          : "Server";
+
+        console.log(`Data came from ${source}:`, snapshot.data());
+
         const data = snapshot.data() as GameData | undefined;
         if (data) {
+          // Force data refresh when needed
+          if (source === "Cache") {
+            console.log("Got cached data, forcing refresh from server");
+            getDocFromServer(gameRef).catch((err) =>
+              console.error("Refresh error:", err)
+            );
+          }
+
+          // Log the specific meta field we care about
+          console.log("Meta data:", data["__pyramid.meta"]);
+          console.log(
+            "Started value from Firestore:",
+            data["__pyramid.meta"]?.started
+          );
+
           setGameData(data);
 
           // Extract players from game data
           const playerEntries = Object.entries(data).filter(
-            ([key]) =>
-              key !== "__pyramid.meta" &&
-              key !== "__pyramid.cards" &&
-              key !== "__pyramid.deck" &&
-              key !== "__pyramid.currentRound" &&
-              key !== "__pyramid.rounds" &&
-              key !== "__pyramid.summary"
+            ([key, value]) =>
+              // Look specifically for objects with player properties
+              typeof value === "object" && value !== null && "name" in value // This matches the legacy implementation's filter
           );
 
           const playersList = playerEntries.map(([uid, player]) => ({
@@ -356,6 +445,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     );
   };
+
 
   // Context value
   const value: GameContextType = {
