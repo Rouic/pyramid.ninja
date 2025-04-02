@@ -27,46 +27,23 @@ const Card: React.FC<CardProps> = ({
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const cardRef = useRef<HTMLDivElement>(null);
 
+  // Make sure to update card face when props change
   useEffect(() => {
+    console.log(`Card ${index} faceUp changed to:`, faceUp);
     setShowFront(faceUp);
-  }, [faceUp]);
+  }, [faceUp, index]);
 
+  // Update position when props change
   useEffect(() => {
     setPos(position);
   }, [position]);
 
   const { suit, rank } = getCardDetails(index);
 
-  // Determine card rank and suit symbols
-  const getRankSymbol = (rank: number): string => {
-    const symbols = [
-      "A",
-      "2",
-      "3",
-      "4",
-      "5",
-      "6",
-      "7",
-      "8",
-      "9",
-      "10",
-      "J",
-      "Q",
-      "K",
-    ];
-    return symbols[rank];
-  };
-
-  const getSuitSymbol = (suit: number): string => {
-    const symbols = ["♠", "♥", "♣", "♦"];
-    return symbols[suit];
-  };
-
-  const suitColor = suit === 0 || suit === 2 ? "text-black" : "text-red-600";
-
   // Handle drag events if draggable
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!draggable) return;
+    e.preventDefault(); // Prevent text selection while dragging
 
     const cardRect = cardRef.current?.getBoundingClientRect();
     if (cardRect) {
@@ -128,165 +105,107 @@ const Card: React.FC<CardProps> = ({
   // Handle card click
   const handleClick = () => {
     if (onClick && !isDragging) {
+      console.log(`Card ${index} clicked!`);
       onClick();
     }
   };
+
+  // Determine card rank and suit symbols
+  const getRankSymbol = (rank: number): string => {
+    const symbols = [
+      "A",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "J",
+      "Q",
+      "K",
+    ];
+    return symbols[rank];
+  };
+
+  const getSuitSymbol = (suit: number): string => {
+    const symbols = ["♠", "♥", "♣", "♦"];
+    return symbols[suit];
+  };
+
+  const suitColor = suit === 0 || suit === 2 ? "text-black" : "text-red-600";
 
   // Generate pips for number cards
   const renderPips = () => {
     if (rank < 1 || rank > 9) return null; // Only for number cards 2-10
 
-    // Fix: Explicitly type the pips array as React.ReactNode[]
     const pips: React.ReactNode[] = [];
     const count = rank + 1; // Adjust for 0-based index
 
-    // Generate specific patterns based on card rank
-    if (count === 2) {
-      pips.push(
-        <div key="top" className="absolute top-1/4 left-1/2 -translate-x-1/2">
-          {getSuitSymbol(suit)}
-        </div>,
-        <div
-          key="bottom"
-          className="absolute bottom-1/4 left-1/2 -translate-x-1/2 rotate-180"
-        >
-          {getSuitSymbol(suit)}
-        </div>
-      );
-    } else if (count === 3) {
-      pips.push(
-        <div key="top" className="absolute top-1/4 left-1/2 -translate-x-1/2">
-          {getSuitSymbol(suit)}
-        </div>,
-        <div
-          key="middle"
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-        >
-          {getSuitSymbol(suit)}
-        </div>,
-        <div
-          key="bottom"
-          className="absolute bottom-1/4 left-1/2 -translate-x-1/2 rotate-180"
-        >
-          {getSuitSymbol(suit)}
-        </div>
-      );
-    } else if (count === 4) {
-      pips.push(
-        <div key="top-left" className="absolute top-1/4 left-1/4">
-          {getSuitSymbol(suit)}
-        </div>,
-        <div key="top-right" className="absolute top-1/4 right-1/4">
-          {getSuitSymbol(suit)}
-        </div>,
-        <div
-          key="bottom-left"
-          className="absolute bottom-1/4 left-1/4 rotate-180"
-        >
-          {getSuitSymbol(suit)}
-        </div>,
-        <div
-          key="bottom-right"
-          className="absolute bottom-1/4 right-1/4 rotate-180"
-        >
-          {getSuitSymbol(suit)}
-        </div>
-      );
-    } else if (count === 5) {
-      pips.push(
-        <div key="top-left" className="absolute top-1/4 left-1/4">
-          {getSuitSymbol(suit)}
-        </div>,
-        <div key="top-right" className="absolute top-1/4 right-1/4">
-          {getSuitSymbol(suit)}
-        </div>,
-        <div
-          key="middle"
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-        >
-          {getSuitSymbol(suit)}
-        </div>,
-        <div
-          key="bottom-left"
-          className="absolute bottom-1/4 left-1/4 rotate-180"
-        >
-          {getSuitSymbol(suit)}
-        </div>,
-        <div
-          key="bottom-right"
-          className="absolute bottom-1/4 right-1/4 rotate-180"
-        >
-          {getSuitSymbol(suit)}
-        </div>
-      );
-    } else {
-      // For cards 6-10, create appropriate pip configurations
-      const rows = Math.ceil(count / 2);
-      const spacing = 1 / (rows + 1);
+    // Generate appropriate pip patterns based on card rank
+    for (let i = 0; i < count; i++) {
+      const row = Math.floor(i / 2);
+      const col = i % 2;
+      const top = (row + 1) * (100 / (Math.ceil(count / 2) + 1));
+      const left = col === 0 ? "1/4" : "3/4";
+      const rotation = row >= Math.ceil(count / 2) / 2 ? "rotate-180" : "";
 
-      for (let i = 0; i < count; i++) {
-        const row = Math.floor(i / 2);
-        const col = i % 2;
-        const top = spacing * (row + 1);
-        const left = col === 0 ? "1/4" : "3/4";
-        const rotation = row >= rows / 2 ? "rotate-180" : "";
-
-        pips.push(
-          <div
-            key={i}
-            className={`absolute ${rotation}`}
-            style={{
-              top: `${top * 100}%`,
-              left,
-              transform: "translate(-50%, -50%)",
-            }}
-          >
-            {getSuitSymbol(suit)}
-          </div>
-        );
-      }
+      pips.push(
+        <div
+          key={i}
+          className={`absolute ${suitColor} ${rotation}`}
+          style={{
+            top: `${top}%`,
+            left,
+            transform: "translate(-50%, -50%)",
+          }}
+        >
+          {getSuitSymbol(suit)}
+        </div>
+      );
     }
 
     return pips;
   };
 
-  // Render court cards (J, Q, K)
-  const renderCourtCard = () => {
-    const courtRanks = ["J", "Q", "K"];
-    if (rank < 10 || rank > 12) return null;
-
-    const courtRank = courtRanks[rank - 10];
-    return (
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className={`text-4xl font-bold ${suitColor}`}>
-          {courtRank}
-          {getSuitSymbol(suit)}
+  // Render court cards or aces
+  const renderSpecialCard = () => {
+    if (rank >= 10) {
+      // Face cards (J, Q, K)
+      const courtRank = ["J", "Q", "K"][rank - 10];
+      return (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className={`text-4xl font-bold ${suitColor}`}>
+            {courtRank}
+            {getSuitSymbol(suit)}
+          </div>
         </div>
-      </div>
-    );
-  };
-
-  // Render ace cards
-  const renderAce = () => {
-    if (rank !== 0) return null;
-
-    return (
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className={`text-5xl ${suitColor}`}>{getSuitSymbol(suit)}</div>
-      </div>
-    );
+      );
+    } else if (rank === 0) {
+      // Ace
+      return (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className={`text-5xl ${suitColor}`}>{getSuitSymbol(suit)}</div>
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
     <div
       ref={cardRef}
-      className={`absolute transform transition-transform cursor-pointer select-none ${className}`}
+      className={`absolute select-none ${className} ${
+        draggable ? "cursor-move" : "cursor-pointer"
+      }`}
       style={{
         width: "100px",
         height: "140px",
         transform: `translate(${pos.x}px, ${pos.y}px)`,
-        transformStyle: "preserve-3d",
-        transition: isDragging ? "none" : "transform 0.5s ease",
+        transition: isDragging ? "none" : "transform 0.3s ease",
+        zIndex: isDragging ? 10 : 1,
         ...style,
       }}
       onClick={handleClick}
@@ -298,18 +217,25 @@ const Card: React.FC<CardProps> = ({
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
+      {/* Card container with 3D effect */}
       <div
-        className={`absolute w-full h-full rounded-lg border border-gray-300 shadow-lg transform ${
-          showFront ? "rotateY(0deg)" : "rotateY(180deg)"
-        }`}
+        className="relative w-full h-full"
         style={{
-          backfaceVisibility: "hidden",
+          perspective: "1000px",
           transformStyle: "preserve-3d",
-          transition: "transform 0.5s ease",
         }}
       >
-        {/* Card Front */}
-        <div className="absolute w-full h-full bg-white rounded-lg p-2">
+        {/* Front face */}
+        <div
+          className={`absolute w-full h-full rounded-lg border border-gray-300 shadow-lg bg-white ${
+            !showFront ? "card-hidden" : "card-visible"
+          }`}
+          style={{
+            backfaceVisibility: "hidden",
+            transform: showFront ? "rotateY(0deg)" : "rotateY(180deg)",
+            transition: "transform 0.5s ease",
+          }}
+        >
           {/* Top left rank and suit */}
           <div
             className={`absolute top-1 left-1 text-lg font-bold ${suitColor}`}
@@ -328,25 +254,24 @@ const Card: React.FC<CardProps> = ({
 
           {/* Card center content */}
           {renderPips()}
-          {renderCourtCard()}
-          {renderAce()}
+          {renderSpecialCard()}
         </div>
-      </div>
 
-      {/* Card Back */}
-      <div
-        className={`absolute w-full h-full rounded-lg border border-gray-300 shadow-lg bg-indigo-600 transform ${
-          showFront ? "rotateY(180deg)" : "rotateY(0deg)"
-        }`}
-        style={{
-          backfaceVisibility: "hidden",
-          transformStyle: "preserve-3d",
-          transition: "transform 0.5s ease",
-        }}
-      >
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-3/4 h-3/4 border-4 border-indigo-300 rounded-lg flex items-center justify-center">
-            <div className="text-white text-2xl font-bold">🔺</div>
+        {/* Back face */}
+        <div
+          className={`absolute w-full h-full rounded-lg border border-gray-300 shadow-lg bg-indigo-600 ${
+            showFront ? "card-hidden" : "card-visible"
+          }`}
+          style={{
+            backfaceVisibility: "hidden",
+            transform: showFront ? "rotateY(-180deg)" : "rotateY(0deg)",
+            transition: "transform 0.5s ease",
+          }}
+        >
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-3/4 h-3/4 border-4 border-indigo-300 rounded-lg flex items-center justify-center">
+              <div className="text-white text-2xl font-bold">🔺</div>
+            </div>
           </div>
         </div>
       </div>

@@ -10,6 +10,7 @@ interface PyramidProps {
   isActive: boolean;
   className?: string;
   gameEnded?: boolean;
+  debug?: boolean;
 }
 
 const Pyramid: React.FC<PyramidProps> = ({
@@ -18,6 +19,7 @@ const Pyramid: React.FC<PyramidProps> = ({
   isActive,
   className = "",
   gameEnded = false,
+  debug = false,
 }) => {
   // State to track which cards have been shown
   const [shownCards, setShownCards] = useState<boolean[]>(
@@ -26,14 +28,30 @@ const Pyramid: React.FC<PyramidProps> = ({
 
   // Update shown cards when props change
   useEffect(() => {
+    if (debug) console.log("Pyramid cards updated:", cards);
+
     if (cards && cards.length > 0) {
-      setShownCards(cards.map((card) => card.shown));
+      const newShownState = cards.map((card) => card.shown);
+      setShownCards(newShownState);
+
+      if (debug) console.log("New shown state:", newShownState);
     }
-  }, [cards]);
+  }, [cards, debug]);
 
   // Handle card click
   const handleCardClick = (index: number) => {
+    if (debug)
+      console.log(
+        "Pyramid card clicked:",
+        index,
+        "isActive:",
+        isActive,
+        "shown:",
+        shownCards[index]
+      );
+
     if (isActive && !shownCards[index] && !gameEnded) {
+      if (debug) console.log("Selecting card:", index);
       onCardSelect(index);
     }
   };
@@ -59,7 +77,7 @@ const Pyramid: React.FC<PyramidProps> = ({
 
         return (
           <Card
-            key={index}
+            key={`pyramid-card-${index}-${card.id}`}
             index={card.id}
             position={{ x: adjustedX, y: adjustedY }}
             faceUp={shownCards[index]}

@@ -14,7 +14,7 @@ import { cardIndexToText } from "../../lib/deckUtils";
 const GamePage: React.FC = () => {
   const router = useRouter();
   const { gameId: routeGameId } = router.query;
-  const { gameData, players } = useGame();
+  const { gameData, players, markCardsAsSeen, showBullshitCard, checkCardMatch } = useGame();
   const { userUid } = useAuth();
   const { playSound } = useSound();
 
@@ -60,6 +60,7 @@ const GamePage: React.FC = () => {
   // Handle countdown timer
   useEffect(() => {
     if (countdown > 0) {
+      // Countdown is running
       countdownRef.current = setTimeout(() => {
         setCountdown(countdown - 1);
       }, 1000);
@@ -72,17 +73,28 @@ const GamePage: React.FC = () => {
       setShowAllCards(false);
 
       // Mark cards as seen in the database
-      if (gameData && userUid && gameData[userUid]) {
-        // We'd need to update the database here to mark cards as seen
-        // This would be handled by a function in GameContext
-
-        // For now we'll just update the local state
-        setMyCards((prev) => prev.map((card) => ({ ...card, seen: true })));
-
-        setInstruction("Waiting for host to continue...");
+      if (gameData && userUid && routeGameId) {
+        // Call the new function to mark cards as seen in Firebase
+        markCardsAsSeen(routeGameId.toString(), userUid)
+          .then(() => {
+            console.log("Cards marked as seen in Firebase");
+            // Update local state to match
+            setMyCards((prev) => prev.map((card) => ({ ...card, seen: true })));
+            setInstruction("Waiting for host to continue...");
+          })
+          .catch((error) => {
+            console.error("Error marking cards as seen:", error);
+          });
       }
     }
-  }, [countdown, showAllCards, gameData, userUid]);
+  }, [
+    countdown,
+    showAllCards,
+    gameData,
+    userUid,
+    routeGameId,
+    markCardsAsSeen,
+  ]);
 
   // Process game data updates
   useEffect(() => {
@@ -253,22 +265,30 @@ const GamePage: React.FC = () => {
 
   // Handle showing all cards
   const handleShowAllCards = () => {
+    console.log("Showing all cards");
     setShowAllCards(true);
     setAllowViewAll(false);
     setCountdown(10); // 10 seconds to memorize cards
     setInstruction(
       "Remember your cards now! You will NOT be able to view them again!"
     );
+
+    // Play a notification sound
+    playSound("notification");
   };
 
   // Handle getting a new card
   const handleGetNewCard = () => {
+    console.log("Getting new card");
     setShowAllCards(true);
     setAllowNewCard(false);
     setCountdown(15); // 15 seconds to memorize the new card
     setInstruction(
       "Remember your new card! You will NOT be able to view it again!"
     );
+
+    // Play a notification sound
+    playSound("notification");
   };
 
   // Handle calling another player
@@ -335,21 +355,47 @@ const GamePage: React.FC = () => {
   };
 
   // Handle card selection for bullshit response
-  const handleCardSelect = async () => {
-    if (!bullshitMode || !userUid || !routeGameId || currentRound === null)
+  const handleCardSelect = (cardIndex: number) => {
+    if (!bullshitMode || !userUid || !routeGameId || currentRound === null) {
       return;
+    }
 
-    try {
-      // We'd need to call a function from GameContext to process the bullshit response
-      // For demonstration, we'll just update the UI state
+    console.log(`Selected card ${cardIndex} for bullshit response`);
 
-      setBullshitMode(false);
-      setAllowNewCard(true);
-      setInstruction("You showed your card! Click below to get a new card.");
+    // Check if card matches the current round card
+    const isMatch =
+      gameData && checkCardMatch(gameData, currentRound, cardIndex);
 
-      // In a real implementation, we'd update the database
-    } catch (error) {
-      console.error("Failed to process bullshit response:", error);
+    // Update transaction status and get a new card
+    if (gameData && userUid && routeGameId && transactionIteration !== -1) {
+      showBullshitCard(
+        routeGameId.toString(),
+        userUid,
+        cardIndex,
+        currentRound,
+        isMatch || false
+      )
+        .then(() => {
+          console.log("Bullshit response processed");
+          setBullshitMode(false);
+          setAllowNewCard(true);
+
+          // Play appropriate sound
+          if (isMatch) {
+            playSound("success");
+            setInstruction(
+              "You showed a matching card! Click below to get a new card."
+            );
+          } else {
+            playSound("wrong");
+            setInstruction(
+              "Your card didn't match! You'll need to drink double. Click below to get a new card."
+            );
+          }
+        })
+        .catch((error) => {
+          console.error("Error processing bullshit response:", error);
+        });
     }
   };
 
@@ -506,6 +552,8 @@ const GamePage: React.FC = () => {
                     showAllCards={showAllCards}
                     countdownActive={countdown > 0}
                     onCardSelect={bullshitMode ? handleCardSelect : undefined}
+                    className="mb-8"
+                    debug={true} // Add debug to help troubleshoot
                   />
                 </div>
 

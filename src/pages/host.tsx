@@ -64,66 +64,28 @@ const HostPage: React.FC = () => {
   // Watch for game data changes
   useEffect(() => {
     if (gameData) {
+      const hasStartedValue = gameData["__pyramid.meta"]?.started;
+      console.log(
+        "Game state update - Started value:",
+        hasStartedValue,
+        "isGameStarted state:",
+        isGameStarted
+      );
 
-      if (DEBUG) {
-        console.log("Game data updated in host:", gameData);
-        console.log("Meta data:", gameData["__pyramid.meta"]);
-        console.log("Started value:", gameData["__pyramid.meta"]?.started);
-      }
-
-      // Check if game has started
+      // Force isGameStarted to true if Firebase says it's started
       if (
         gameData["__pyramid.meta"] &&
         typeof gameData["__pyramid.meta"] === "object" &&
-        gameData["__pyramid.meta"].started === true
+        gameData["__pyramid.meta"].started === true &&
+        !isGameStarted
       ) {
-        console.log("Setting game started to true");
+        console.log("Forcing game started state to true");
         setIsGameStarted(true);
-      }
-
-      // Check for game summary (end of game)
-      if (gameData["__pyramid.summary"]) {
-        setGameEnded(true);
-        setInformation("That's the end of the game! Let's look at our cards!");
-      }
-
-      // Update current round information
-      if (gameData["__pyramid.currentRound"]) {
-        const { round_number, round_row, round_card } =
-          gameData["__pyramid.currentRound"];
-        setCurrentRound(round_number);
-        setCurrentRow(round_row);
-        setCurrentCard(round_card);
-
-        // Generate taunt for current round
-        setInformation(getRandomTaunt(round_number, gameId || ""));
-
-        // Show modal
-        setShowModal(true);
-
-        // Process round transactions
-        if (
-          gameData["__pyramid.rounds"] &&
-          gameData["__pyramid.rounds"][round_number] &&
-          gameData["__pyramid.rounds"][round_number].round_transactions
-        ) {
-          processTransactions(
-            gameData["__pyramid.rounds"][round_number],
-            round_number,
-            round_row
-          );
-        }
-      } else if (isGameStarted && !showModal) {
-        setInformation("Select another card from the pyramid to continue...");
-      } else if (!isGameStarted && players.length > 0) {
-        setInformation(
-          players.length < 2
-            ? "Waiting for more players..."
-            : "Press Continue when ready..."
-        );
+        setInformation("Select a card from the pyramid to continue...");
       }
     }
-  }, [gameData, gameId, players, showModal]);
+  }, [gameData, isGameStarted]);
+
 
   // Process transactions for display
   const processTransactions = (
@@ -180,28 +142,45 @@ const HostPage: React.FC = () => {
   const handleStartGame = async () => {
     if (gameId) {
       try {
-        await startGame(gameId);
+        console.log("Starting game with ID:", gameId);
 
-        // Manually force UI into game mode regardless of Firestore
-        console.log("Manually forcing game to start in UI");
+        // First save to localStorage as backup
+        localStorage.setItem(`game_${gameId}_started`, "true");
+
+        // Then update UI
         setIsGameStarted(true);
         setInformation("Game is starting! Pick a card to begin...");
 
-        // Save state to localStorage as backup
-        localStorage.setItem(`game_${gameId}_started`, "true");
+        // Then try to update Firebase
+        await startGame(gameId);
+
+        console.log("Game started successfully in Firebase");
       } catch (error) {
-        console.error("Failed to start game:", error);
+        console.error("Failed to start game in Firebase:", error);
+        // Continue with local state since we already updated UI
+        // The next Firebase sync should correct any discrepancies
       }
     }
   };
 
   // Handle card selection in pyramid
   const handleCardSelect = async (index: number) => {
-    if (gameId && isGameStarted && !gameEnded) {
+    if (gameId && isGameStarted && !gameEnded && !showModal) {
       try {
+        console.log("Selecting card at index:", index);
+
+        // Update UI first for better responsiveness
+        setShowModal(true);
+
+        // Then update Firebase
         await selectCard(gameId, index);
+
+        console.log("Card selected successfully in Firebase");
       } catch (error) {
-        console.error("Failed to select card:", error);
+        console.error("Failed to select card in Firebase:", error);
+
+        // Revert UI if Firebase update failed
+        setShowModal(false);
       }
     }
   };
@@ -295,10 +274,8 @@ const HostPage: React.FC = () => {
                   </p>
                 )}
                 {gameEnded && (
-                  <Link href="/">
-                    <button className="mt-4 bg-rose-500 hover:bg-rose-600 text-white font-bold py-2 px-6 rounded-full transition duration-300">
+                  <Link href="/" className="mt-4 bg-rose-500 hover:bg-rose-600 text-white font-bold py-2 px-6 rounded-full transition duration-300">
                       Start New Game
-                    </button>
                   </Link>
                 )}
               </div>
@@ -312,6 +289,7 @@ const HostPage: React.FC = () => {
                     isActive={isGameStarted && !showModal && !gameEnded}
                     gameEnded={gameEnded}
                     className="transform scale-90 md:scale-100"
+                    debug={true} // Add debug to help troubleshoot
                   />
                 </div>
               )}

@@ -34,6 +34,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  
+
+
   // Create a new game as host
   const createGame = async (): Promise<string> => {
     try {
@@ -446,22 +449,172 @@ const startGame = async (gameId: string): Promise<void> => {
     );
   };
 
+  const markCardsAsSeen = async (
+  gameId: string,
+  playerUid: string,
+): Promise<void> => {
+  if (!gameId || !playerUid) {
+    console.error("Missing gameId or playerUid in markCardsAsSeen");
+    return;
+  }
 
-  // Context value
-  const value: GameContextType = {
-    gameId,
-    gameData,
-    players,
-    loading,
-    error,
-    joinGame,
-    createGame,
-    startGame,
-    selectCard,
-    callPlayer,
-    respondToCall,
-    showBullshitCard,
-  };
+  try {
+    console.log(`Marking cards as seen for player ${playerUid} in game ${gameId}`);
+    setLoading(true);
+    
+    // Get fresh game data
+    const gameRef = doc(db, "games", gameId.toUpperCase());
+    const gameSnap = await getDocFromServer(gameRef);
+    
+    if (!gameSnap.exists()) {
+      throw new Error("Game not found");
+    }
+    
+    const gameData = gameSnap.data() as GameData;
+    
+    // Check if player exists and has cards
+    if (!gameData[playerUid] || !gameData[playerUid].cards) {
+      console.error("Player or player cards not found in game data");
+      setLoading(false);
+      return;
+    }
+    
+    // Mark all cards as seen
+    const updatedCards = gameData[playerUid].cards.map(card => ({
+      ...card,
+      seen: true
+    }));
+    
+    console.log("Updating cards in Firebase:", updatedCards);
+    
+    // Update Firebase
+    await updateDoc(gameRef, {
+      [`${playerUid}.cards`]: updatedCards
+    });
+    
+    console.log("Cards marked as seen successfully");
+    setLoading(false);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Failed to mark cards as seen";
+    console.error("Error marking cards as seen:", error);
+    setError(errorMessage);
+    setLoading(false);
+    throw error;
+  }
+};
+
+// Get a new card for a player (after showing card for bullshit)
+const getNewCard = async (
+  gameId: string,
+  playerUid: string,
+  cardIndex: number
+): Promise<void> => {
+  if (!gameId || !playerUid) {
+    console.error("Missing gameId or playerUid in getNewCard");
+    return;
+  }
+
+  try {
+    console.log(`Getting new card for player ${playerUid} in game ${gameId}, replacing card at index ${cardIndex}`);
+    setLoading(true);
+    
+    // Get fresh game data
+    const gameRef = doc(db, "games", gameId.toUpperCase());
+    const gameSnap = await getDocFromServer(gameRef);
+    
+    if (!gameSnap.exists()) {
+      throw new Error("Game not found");
+    }
+    
+    const gameData = gameSnap.data() as GameData;
+    
+    // Check if player exists and has cards
+    if (!gameData[playerUid] || !gameData[playerUid].cards) {
+      console.error("Player or player cards not found in game data");
+      setLoading(false);
+      return;
+    }
+    
+    // Get a new card from the deck
+    const newDeck = [...gameData["__pyramid.deck"]];
+    const newCard = newDeck.shift();
+    
+    if (newCard === undefined) {
+      throw new Error("No cards left in deck");
+    }
+    
+    // Remove the old card and add the new one
+    const updatedCards = gameData[playerUid].cards.filter((_, i) => i !== cardIndex);
+    updatedCards.push({ i: newCard, seen: false });
+    
+    console.log("Updating cards and deck in Firebase:", { updatedCards, newDeck });
+    
+    // Update Firebase
+    await updateDoc(gameRef, {
+      [`${playerUid}.cards`]: updatedCards,
+      "__pyramid.deck": newDeck
+    });
+    
+    console.log("New card added successfully");
+    setLoading(false);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Failed to get new card";
+    console.error("Error getting new card:", error);
+    setError(errorMessage);
+    setLoading(false);
+    throw error;
+  }
+};
+
+// Check if a card matches the current round card (for bullshit calls)
+const checkCardMatch = (
+  gameData: GameData,
+  roundNumber: number,
+  cardIndex: number
+): boolean => {
+  if (!gameData["__pyramid.currentRound"] || !gameData["__pyramid.rounds"]) {
+    return false;
+  }
+  
+  const currentRound = gameData["__pyramid.currentRound"];
+  const roundData = gameData["__pyramid.rounds"][roundNumber];
+  
+  if (!roundData) {
+    return false;
+  }
+  
+  // Get the card index from the player's hand
+  const playerCard = gameData[userUid].cards[cardIndex];
+  
+  // Get rank of the player's card
+  const playerCardRank = Math.floor(playerCard.i % 13);
+  
+  // Get rank of the round card
+  const roundCardRank = Math.floor(roundData.round_card % 13);
+  
+  // Cards match if they have the same rank
+  return playerCardRank === roundCardRank;
+};
+
+    // Add these functions to the context value
+    const value: GameContextType = {
+      gameId,
+      gameData,
+      players,
+      loading,
+      error,
+      joinGame,
+      createGame,
+      startGame,
+      selectCard,
+      callPlayer,
+      respondToCall,
+      showBullshitCard,
+      markCardsAsSeen,  // Add this new function
+      getNewCard,       // Add this new function
+      checkCardMatch    // Add this new function
+    };
+
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
 };

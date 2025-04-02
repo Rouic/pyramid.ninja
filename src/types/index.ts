@@ -111,4 +111,7 @@ export interface GameContextType {
   callPlayer: (gameId: string, fromUid: string, toUid: string, roundNumber: number) => Promise<void>;
   respondToCall: (gameId: string, fromUid: string, toUid: string, roundNumber: number, accept: boolean) => Promise<void>;
   showBullshitCard: (gameId: string, playerUid: string, cardIndex: number, roundNumber: number, correct: boolean) => Promise<void>;
+  markCardsAsSeen: (gameId: string, playerUid: string) => Promise<void>;
+  getNewCard: (gameId: string, playerUid: string, cardIndex: number) => Promise<void>;
+  checkCardMatch: (gameData: GameData, roundNumber: number, cardIndex: number) => boolean;
 }
