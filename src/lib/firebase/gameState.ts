@@ -39,19 +39,41 @@ export async function startMemorizationPhase(gameId: string) {
 
 // Start playing phase (after memorization)
 export async function startPlayingPhase(gameId: string) {
-  const gameRef = doc(db, 'games', gameId);
+  const gameRef = doc(db, "games", gameId);
   
   try {
+    // First get current game data
+    const gameSnapshot = await getDoc(gameRef);
+    if (!gameSnapshot.exists()) {
+      throw new Error('Game not found');
+    }
+    
+    const gameData = gameSnapshot.data();
+    
     // Get all players
     const playersCollectionRef = collection(db, `games/${gameId}/players`);
     const playerDocs = await getDocs(playersCollectionRef);
     
-    // For each player, hide their cards
+    // Get player readiness status
+    const readinessRef = doc(db, 'games', gameId, 'meta', 'playerReadiness');
+    const readinessSnapshot = await getDoc(readinessRef);
+    const playerReadiness = readinessSnapshot.exists() ? readinessSnapshot.data() : {};
+    
+    // Force mark all players as ready
+    const updatedReadiness = {...playerReadiness};
+    
+    // For each player, hide their cards and mark them as ready
     const playerUpdates = playerDocs.docs.map(async (playerDoc) => {
       const playerData = playerDoc.data();
+      const playerId = playerDoc.id;
+      
+      // Make sure player is marked as ready
+      updatedReadiness[playerId] = true;
+      
       const updatedCards = (playerData.cards || []).map(card => ({
         ...card,
         faceVisible: false,
+        seen: true, // Mark as seen even if they didn't explicitly memorize
       }));
       
       return updateDoc(playerDoc.ref, {
@@ -59,6 +81,9 @@ export async function startPlayingPhase(gameId: string) {
         updatedAt: new Date().toISOString(),
       });
     });
+    
+    // Update readiness status for all players
+    await setDoc(readinessRef, updatedReadiness, { merge: true });
     
     // Wait for all player updates
     await Promise.all(playerUpdates);
@@ -69,6 +94,12 @@ export async function startPlayingPhase(gameId: string) {
       playingStartTime: new Date().toISOString(),
       // Clear any pending memorization timers
       memorizeEndTime: deleteField(),
+      // Add a message to indicate host forced game start
+      lastAction: {
+        type: 'host_started_game',
+        timestamp: new Date().toISOString(),
+        message: 'Host started the game by revealing a card'
+      }
     });
     
     console.log("Game state updated to playing successfully");
@@ -263,6 +294,8 @@ export async function markCardForReplacement(gameId: string, playerId: string, c
     console.error("Error marking card for replacement:", error);
   }
 }
+
+
 
 // Replace a player's card after it was revealed in a challenge
 export async function replacePlayerCard(gameId: string, playerId: string, cardIndex: number) {

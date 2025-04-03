@@ -25,6 +25,7 @@ import { GameControls } from "../../components/GameControls";
 import ActivityLog from "../../components/ActivityLog";
 import { usePlayerContext } from "../../context/PlayerContext";
 import MemorizationOverlay from "../../components/MemorizationOverlay";
+import GameStartNotification from "../../components/GameStartNotification";
 
 
 const GamePage = () => {
@@ -56,6 +57,21 @@ const GamePage = () => {
   // New state to track which card is being challenged (for flipping)
   const [challengedCardIndex, setChallengedCardIndex] = useState<number>(-1);
   const [isDeckEmpty, setIsDeckEmpty] = useState(false);
+  const [showGameStartNotification, setShowGameStartNotification] =
+    useState(false);
+
+    useEffect(() => {
+      if (
+        gameData &&
+        gameData.lastAction &&
+        gameData.lastAction.type === "host_started_game" &&
+        gameState === "playing" &&
+        !isHost
+      ) {
+        // Show notification that host started the game
+        setShowGameStartNotification(true);
+      }
+    }, [gameData, gameState, isHost]);
 
   useEffect(() => {
     if (gameData && gameData.deck && gameData.deck.cards) {
@@ -276,18 +292,33 @@ const GamePage = () => {
 
   const handleRevealCard = useCallback(
     async (cardIndex: number) => {
-      if (!id || typeof id !== "string" || !isHost || gameState !== "playing")
-        return;
+      if (!id || typeof id !== "string" || !isHost) return;
 
       try {
+        // If the game is in memorizing or ready state, automatically
+        // transition to playing phase for everyone
+        if (gameState === "memorizing" || gameState === "ready") {
+          console.log(
+            "Host clicked a card: Automatically transitioning to playing phase..."
+          );
+
+          // Force update gameState to playing locally for immediate UI response
+          setGameState("playing");
+
+          // Then update the server
+          await startPlayingPhase(id as string);
+        }
+
+        // Now reveal the card
         await revealPyramidCard(id, cardIndex);
+
         // Update round number
         setCurrentRound((prev) => prev + 1);
       } catch (error) {
         console.error("Error revealing card:", error);
       }
     },
-    [id, isHost, gameState]
+    [id, isHost, gameState, startPlayingPhase]
   );
 
   // Handler for when a player is challenged and needs to show a card
@@ -648,7 +679,7 @@ const GamePage = () => {
                     isGameStarted={gameState !== "waiting"}
                     highlightCurrentCard={currentPyramidCard?.id}
                     drinksForCurrentRow={drinksForCurrentRow}
-                    canRevealCards={gameState === "playing"}
+                    canRevealCards={isHost && gameState !== "waiting"} // This is the key change
                     onRevealCard={handleRevealCard}
                   />
                 )}
@@ -726,6 +757,12 @@ const GamePage = () => {
                   </span>
                 </p>
               </div>
+              {showGameStartNotification && (
+                <GameStartNotification
+                  isVisible={showGameStartNotification}
+                  onClose={() => setShowGameStartNotification(false)}
+                />
+              )}
 
               {gameState === "memorizing" && memorizationEndTime && (
                 <MemorizeTimer endTime={memorizationEndTime} />
@@ -855,8 +892,6 @@ const GamePage = () => {
               </>
             )}
           </div>
-
-         
         </div>
       </div>
     );

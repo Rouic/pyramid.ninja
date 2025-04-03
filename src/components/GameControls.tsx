@@ -123,6 +123,35 @@ export function GameControls({
 
   return (
     <div className="flex flex-col space-y-4">
+      {isHost &&
+        (currentPhase === "memorizing" || currentPhase === "ready") && (
+          <div className="mt-4 p-4 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+            <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2">
+              Host Controls
+            </h4>
+            <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
+              You can click any pyramid card at any time to start the game.
+              {currentPhase === "memorizing" &&
+                "Players are currently memorizing their cards."}
+              {currentPhase === "ready" &&
+                "Players are ready to start memorizing."}
+            </p>
+
+            {currentPhase === "memorizing" && allPlayersReady && (
+              <button
+                onClick={onStartPlaying}
+                className="w-full mt-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+              >
+                Everyone's Ready - Start Playing Phase
+              </button>
+            )}
+
+            <div className="mt-2 text-xs text-blue-600 dark:text-blue-400">
+              <strong>Tip:</strong> Clicking any pyramid card will automatically
+              start the game for everyone.
+            </div>
+          </div>
+        )}
       {currentPhase === "memorizing" && (
         <div className="flex flex-col space-y-2">
           {isMemorizing ? (
