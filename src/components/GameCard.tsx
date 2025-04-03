@@ -38,8 +38,8 @@ const GameCard: React.FC<GameCardProps> = ({
 
   // Update flip state when revealed status or showFace changes
   useEffect(() => {
-    setIsFlipped(card.revealed || showFace || userFlipped);
-  }, [card.revealed, showFace, userFlipped]);
+    setIsFlipped(card.revealed || showFace || userFlipped || card.newCard);
+  }, [card.revealed, showFace, userFlipped, card.newCard]);
 
   const handleReveal = () => {
     // For pyramid cards: standard reveal logic
@@ -436,7 +436,7 @@ const GameCard: React.FC<GameCardProps> = ({
 
               {/* New card indicator */}
               {card.newCard && (
-                <div className="absolute top-0 right-0 bg-green-500 text-white text-xs px-2 py-1 rounded-bl z-20 animate-pulse">
+                <div className="absolute top-0 right-0 bg-green-500 text-white text-xs px-2 py-1 rounded-bl z-20">
                   NEW
                 </div>
               )}

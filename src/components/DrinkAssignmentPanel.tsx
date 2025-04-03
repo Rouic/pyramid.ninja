@@ -1,5 +1,5 @@
 // src/components/DrinkAssignmentPanel.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   DrinkAssignment,
   assignDrinks,
@@ -118,18 +118,20 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
     wasSuccessful: boolean
   ) => {
     try {
+      if (selectedCardIndex === null) {
+        // Require card selection before submission
+        return;
+      }
+
       setIsSubmitting(true);
       await resolveDrinkChallenge(gameId, assignmentIndex, wasSuccessful);
 
-      // If the challenge was successful, we need to replace the card
-      // This means the person who assigned the drink actually had the card
-      if (wasSuccessful && selectedCardIndex !== null) {
-        await replacePlayerCard(
-          gameId,
-          assignments[assignmentIndex].from, // The player who assigned the drink
-          selectedCardIndex
-        );
-      }
+      // Always replace the selected card - whether bluffing or had the card
+      await replacePlayerCard(
+        gameId,
+        assignments[assignmentIndex].from, // The player who assigned the drink
+        selectedCardIndex
+      );
 
       setActiveChallenge(null);
       setSelectedCardIndex(null);
@@ -223,9 +225,8 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
           </h4>
           <p className="text-sm text-yellow-700 dark:text-yellow-300 mb-3">
             {getPlayerName(challengesToResolve[0].to)} is challenging your claim
-            about having a {challengesToResolve[0].cardRank}. Select your card
-            that has {challengesToResolve[0].cardRank} or admit that you were
-            bluffing.
+            about having a {challengesToResolve[0].cardRank}. Select one of your
+            cards to show them.
           </p>
 
           <button
@@ -247,7 +248,7 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
       {activeChallenge !== null && (
         <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg border border-yellow-200 dark:border-yellow-800">
           <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-3">
-            Select your card that has {assignments[activeChallenge].cardRank}
+            Select which of your cards to reveal
           </h4>
           <div className="mt-2">
             <div className="grid grid-cols-5 gap-2">
@@ -302,22 +303,20 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
                     Processing...
                   </span>
                 ) : (
-                  `I have it! (Card ${
-                    selectedCardIndex !== null ? selectedCardIndex + 1 : ""
-                  })`
+                  `I have the card`
                 )}
               </button>
 
               <button
                 onClick={() => handleResolveChallenge(activeChallenge, false)}
-                disabled={isSubmitting}
+                disabled={selectedCardIndex === null || isSubmitting}
                 className={`px-4 py-2 text-white rounded-lg ${
-                  isSubmitting
-                    ? "bg-gray-400 cursor-not-allowed"
+                  selectedCardIndex === null || isSubmitting
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                     : "bg-red-500 hover:bg-red-600"
                 }`}
               >
-                {isSubmitting ? "Processing..." : "I was bluffing..."}
+                {isSubmitting ? "Processing..." : "I was bluffing"}
               </button>
             </div>
           </div>
