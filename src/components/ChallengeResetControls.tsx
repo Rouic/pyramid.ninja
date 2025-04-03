@@ -109,47 +109,45 @@ const ChallengeResetControls: React.FC<ChallengeResetControlsProps> = ({
       {!showControls ? (
         <button
           onClick={() => setShowControls(true)}
-          className="text-xs text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-300"
+          className="text-xs text-gray-400 hover:text-game-neon-red border-b border-dotted border-gray-700 font-game-fallback flex items-center"
         >
-          ▶ Show Emergency Controls
+          <span className="mr-1 text-game-neon-red">⚠</span> EMERGENCY CONTROLS
         </button>
       ) : (
-        <div className="border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
-          <div className="flex justify-between items-center mb-2">
-            <h4 className="text-sm font-medium text-red-700 dark:text-red-300">
-              Emergency Controls
+        <div className="border-2 border-game-neon-red/70 bg-black/60 backdrop-blur-sm p-4 rounded-lg shadow-neon-red-sm transform -rotate-1">
+          <div className="flex justify-between items-center mb-3">
+            <h4 className="text-sm font-game-fallback text-game-neon-red animate-pulse-slow flex items-center">
+              <span className="mr-2">⚠</span> EMERGENCY CONTROLS
             </h4>
             <button
               onClick={() => setShowControls(false)}
-              className="text-xs text-gray-500 hover:text-gray-700"
+              className="text-xs text-gray-400 hover:text-white bg-black/40 rounded-full h-6 w-6 flex items-center justify-center"
             >
-              ▼ Hide
+              ✕
             </button>
           </div>
 
-          <p className="text-xs text-red-600 dark:text-red-400 mb-2">
-            If you're stuck in a challenge state, use these controls to reset.
+          <p className="text-xs text-gray-300 mb-3 border-l-2 border-game-neon-red/50 pl-2 bg-black/40 py-2 rounded-r-lg">
+            If you're stuck in a challenge state and can't proceed, use this emergency reset button.
           </p>
 
           <button
             onClick={resetPlayerChallengeState}
             disabled={isResetting}
-            className={`w-full px-3 py-2 rounded-lg text-xs font-medium ${
-              isResetting
-                ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-                : "bg-red-600 hover:bg-red-700 text-white"
-            }`}
+            className={`w-full px-4 py-3 rounded-lg text-sm font-game-fallback relative overflow-hidden ${isResetting
+                ? "bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700"
+                : "bg-black text-game-neon-red border-2 border-game-neon-red hover:bg-game-neon-red/10 transition-colors duration-300 shadow-neon-red-sm btn-neon"}
+            `}
           >
-            {isResetting ? "Resetting..." : "Reset My Challenge State"}
+            {isResetting ? "RESETTING..." : "RESET MY CHALLENGE STATE"}
           </button>
 
           {resetResult && (
             <div
-              className={`mt-2 p-2 rounded-lg text-xs ${
-                resetResult.startsWith("Error")
-                  ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300"
-                  : "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
-              }`}
+              className={`mt-3 p-2 rounded-lg text-xs font-game-fallback border ${resetResult.startsWith("Error")
+                  ? "border-game-neon-red bg-black/60 text-game-neon-red animate-pulse-slow"
+                  : "border-game-neon-green bg-black/60 text-game-neon-green animate-pulse-slow"}
+              `}
             >
               {resetResult}
             </div>

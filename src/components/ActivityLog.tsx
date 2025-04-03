@@ -30,17 +30,17 @@ const ActivityLog: React.FC<ActivityLogProps> = ({
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "pending":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300";
+        return "bg-game-neon-yellow/20 text-game-neon-yellow border border-game-neon-yellow/50";
       case "accepted":
-        return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
+        return "bg-game-neon-green/20 text-game-neon-green border border-game-neon-green/50";
       case "challenged":
-        return "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300";
+        return "bg-game-neon-purple/20 text-game-neon-purple border border-game-neon-purple/50";
       case "successful_challenge":
-        return "bg-green-600 text-white dark:bg-green-700 dark:text-white font-bold";
+        return "bg-game-neon-green/30 text-game-neon-green border border-game-neon-green font-bold animate-pulse-slow";
       case "failed_challenge":
-        return "bg-red-600 text-white dark:bg-red-700 dark:text-white font-bold";
+        return "bg-game-neon-red/30 text-game-neon-red border border-game-neon-red font-bold animate-pulse-slow";
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300";
+        return "bg-gray-800/50 text-gray-300 border border-gray-700";
     }
   };
 
@@ -94,23 +94,23 @@ const ActivityLog: React.FC<ActivityLogProps> = ({
   );
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
+    <div className="bg-black/40 backdrop-blur-sm rounded-xl shadow-lg border border-game-neon-blue/30 p-4 font-game-fallback">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
-          Round {roundNumber} Activity
+        <h2 className="text-lg text-game-neon-blue animate-glow font-game-fallback">
+          ROUND {roundNumber}
         </h2>
         {currentCardRank && (
-          <div className="px-3 py-1 rounded-lg bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 text-sm font-medium">
-            Card: {currentCardRank}
+          <div className="px-3 py-1 rounded-lg bg-black/60 text-game-neon-green border border-game-neon-green/50 shadow-neon-green-sm text-sm font-game-fallback">
+            <span className="animate-pulse-slow">♠</span> {currentCardRank} <span className="animate-pulse-slow">♠</span>
           </div>
         )}
       </div>
 
       {/* Resolved challenges section */}
       {hasResolvedChallenges && (
-        <div className="mb-4 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-          <h3 className="text-sm font-medium text-orange-800 dark:text-orange-300 mb-2">
-            Challenge Results
+        <div className="mb-4 p-3 bg-black/60 border border-game-neon-orange/50 rounded-lg transform -rotate-1 shadow-neon-orange-sm">
+          <h3 className="text-sm font-game-fallback text-game-neon-orange animate-glow mb-2 flex items-center">
+            <span className="mr-2">♦</span> CHALLENGE RESULTS <span className="ml-2">♦</span>
           </h3>
           <div className="space-y-2">
             {currentRoundAssignments
@@ -122,11 +122,10 @@ const ActivityLog: React.FC<ActivityLogProps> = ({
               .map((challenge, idx) => (
                 <div
                   key={`challenge-${idx}`}
-                  className={`p-2 rounded-lg text-sm ${
-                    challenge.status === "successful_challenge"
-                      ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
-                      : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300"
-                  }`}
+                  className={`p-2 rounded-lg text-sm border-2 ${challenge.status === "successful_challenge"
+                      ? "bg-black/40 border-game-neon-green text-game-neon-green shadow-neon-green-sm"
+                      : "bg-black/40 border-game-neon-red text-game-neon-red shadow-neon-red-sm"
+                  } transform ${idx % 2 === 0 ? 'rotate-1' : '-rotate-1'}`}
                 >
                   {challenge.status === "successful_challenge"
                     ? `${getPlayerName(challenge.from)} had the ${
@@ -149,21 +148,21 @@ const ActivityLog: React.FC<ActivityLogProps> = ({
 
       {/* Drink summary section */}
       {Object.keys(drinkSummary).length > 0 && (
-        <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-          <h3 className="text-sm font-medium text-green-800 dark:text-green-300 mb-2">
-            Drink Summary
+        <div className="mb-4 p-3 bg-black/60 border border-game-neon-green/50 rounded-lg transform rotate-1 shadow-neon-green-sm">
+          <h3 className="text-sm font-game-fallback text-game-neon-green animate-glow mb-2 flex items-center">
+            <span className="mr-2">♣</span> DRINK SUMMARY <span className="ml-2">♣</span>
           </h3>
           <div className="space-y-1">
-            {Object.entries(drinkSummary).map(([playerId, drinks]) => (
+            {Object.entries(drinkSummary).map(([playerId, drinks], idx) => (
               <div
                 key={`summary-${playerId}`}
-                className="flex justify-between items-center"
+                className="flex justify-between items-center p-2 bg-black/40 border border-gray-700 rounded-lg transform ${idx % 2 === 0 ? '-rotate-1' : 'rotate-1'}"
               >
-                <span className="text-sm font-medium">
+                <span className="text-sm font-game-fallback text-white">
                   {getPlayerName(playerId)}
                 </span>
-                <span className="text-sm bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 px-2 py-0.5 rounded">
-                  {drinks} drink{drinks !== 1 ? "s" : ""}
+                <span className="text-sm bg-game-neon-green/20 border border-game-neon-green text-game-neon-green px-3 py-1 rounded-lg font-game-fallback animate-pulse-slow">
+                  {drinks} DRINK{drinks !== 1 ? "S" : ""}
                 </span>
               </div>
             ))}
@@ -172,28 +171,26 @@ const ActivityLog: React.FC<ActivityLogProps> = ({
       )}
 
       {/* Activity list */}
-      <div className="space-y-3 max-h-80 overflow-y-auto">
+      <div className="space-y-3 max-h-80 overflow-y-auto pr-1 custom-scrollbar">
         {currentRoundAssignments.length > 0 ? (
           currentRoundAssignments.map((assignment, index) => (
             <div
               key={`activity-${index}`}
-              className={`p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-100 dark:border-gray-700 ${
-                assignment.status === "successful_challenge" ||
+              className={`p-3 bg-black/60 backdrop-blur-sm rounded-lg border ${assignment.status === "successful_challenge" ||
                 assignment.status === "failed_challenge"
-                  ? "border-l-4 " +
-                    (assignment.status === "successful_challenge"
-                      ? "border-l-green-500"
-                      : "border-l-red-500")
-                  : ""
-              }`}
+                  ? (assignment.status === "successful_challenge"
+                      ? "border-game-neon-green shadow-neon-green-sm"
+                      : "border-game-neon-red shadow-neon-red-sm")
+                  : "border-gray-700"
+              } transform ${index % 2 === 0 ? 'rotate-0.5' : '-rotate-0.5'}`}
             >
               <div className="flex justify-between items-start">
                 <div className="flex items-center">
-                  <div className="font-medium text-gray-800 dark:text-gray-200">
+                  <div className="font-game-fallback text-white">
                     {getPlayerName(assignment.from)}
                   </div>
                   <svg
-                    className="h-4 w-4 mx-1 text-gray-400"
+                    className="h-5 w-5 mx-2 text-game-neon-blue"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -205,26 +202,28 @@ const ActivityLog: React.FC<ActivityLogProps> = ({
                       d="M14 5l7 7m0 0l-7 7m7-7H3"
                     />
                   </svg>
-                  <div className="font-medium text-gray-800 dark:text-gray-200">
+                  <div className="font-game-fallback text-white">
                     {getPlayerName(assignment.to)}
                   </div>
                 </div>
                 <span
-                  className={`text-xs px-2 py-1 rounded-full ${getStatusBadge(
+                  className={`text-xs px-3 py-1 rounded-lg font-game-fallback ${getStatusBadge(
                     assignment.status
                   )}`}
                 >
                   {formatStatus(assignment.status)}
                 </span>
               </div>
-              <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                <span className="font-medium">
-                  {assignment.count} drink{assignment.count !== 1 ? "s" : ""}
+              <div className="mt-2 text-sm text-gray-300 flex items-center">
+                <span className="inline-block bg-black/60 border border-game-neon-orange/50 rounded-lg px-2 py-1 text-game-neon-orange font-game-fallback mr-2">
+                  {assignment.count} DRINK{assignment.count !== 1 ? "S" : ""}
                 </span>
                 {assignment.cardRank && (
-                  <span className="ml-1">
-                    for card{" "}
-                    <span className="font-mono">{assignment.cardRank}</span>
+                  <span className="flex items-center">
+                    <span className="text-gray-400 mr-1">FOR CARD</span>
+                    <span className="bg-black/60 px-2 py-1 rounded-lg border border-white/30 font-game-fallback text-white">
+                      {assignment.cardRank}
+                    </span>
                   </span>
                 )}
               </div>
@@ -233,30 +232,27 @@ const ActivityLog: React.FC<ActivityLogProps> = ({
               {(assignment.status === "successful_challenge" ||
                 assignment.status === "failed_challenge") && (
                 <div
-                  className={`mt-2 px-3 py-2 rounded-lg font-bold text-sm ${
-                    assignment.status === "successful_challenge"
-                      ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                      : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+                  className={`mt-3 px-3 py-2 rounded-lg font-bold text-sm border-2 ${assignment.status === "successful_challenge"
+                      ? "bg-black/60 text-game-neon-green border-game-neon-green animate-pulse-slow"
+                      : "bg-black/60 text-game-neon-red border-game-neon-red animate-pulse-slow"
                   }`}
                 >
                   {/* Show custom message from resolution if available */}
-                  {assignment.resolution && assignment.resolution.message
-                    ? assignment.resolution.message
-                    : assignment.status === "successful_challenge"
-                    ? `CHALLENGE SUCCESSFUL: ${getPlayerName(
-                        assignment.from
-                      )} showed the ${assignment.cardRank}! ${getPlayerName(
-                        assignment.to
-                      )} drinks double (${assignment.count * 2})`
-                    : `CHALLENGE FAILED: ${getPlayerName(
-                        assignment.from
-                      )} didn't have the ${
-                        assignment.cardRank
-                      } and drinks double (${assignment.count * 2})`}
+                  <div className="font-game-fallback">
+                    {assignment.resolution && assignment.resolution.message
+                      ? assignment.resolution.message
+                      : assignment.status === "successful_challenge"
+                      ? <>
+                          <span className="text-white">CHALLENGE SUCCESSFUL:</span> {getPlayerName(assignment.from)} showed the {assignment.cardRank}! {getPlayerName(assignment.to)} drinks double ({assignment.count * 2})
+                        </>
+                      : <>
+                          <span className="text-white">CHALLENGE FAILED:</span> {getPlayerName(assignment.from)} bluffed about having the {assignment.cardRank}! Drinks double ({assignment.count * 2})
+                        </>}
+                  </div>
 
                   {/* Show timestamp for when the challenge was resolved */}
                   {assignment.resolvedAt && (
-                    <div className="text-xs mt-1 opacity-80">
+                    <div className="text-xs mt-2 opacity-80 text-gray-300 font-normal">
                       Resolved at{" "}
                       {new Date(assignment.resolvedAt).toLocaleTimeString()}
                     </div>
@@ -266,8 +262,11 @@ const ActivityLog: React.FC<ActivityLogProps> = ({
             </div>
           ))
         ) : (
-          <div className="text-center py-6 text-gray-500 dark:text-gray-400">
-            No activity in this round yet
+          <div className="text-center py-8 rounded-lg border border-dashed border-gray-700 bg-black/40">
+            <div className="font-game-fallback text-gray-500 animate-pulse-slow">
+              NO ACTIVITY YET
+            </div>
+            <div className="text-xs text-gray-600 mt-1">Waiting for first drink assignment</div>
           </div>
         )}
       </div>

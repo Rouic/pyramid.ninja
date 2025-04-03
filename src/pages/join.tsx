@@ -90,125 +90,218 @@ const JoinPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-game-bg flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background patterns similar to Balatro */}
+    <div className="min-h-screen bg-game-bg flex items-center justify-center p-6 lg:p-10 relative overflow-hidden">
+      {/* Background patterns - Balatro style */}
       <div className="absolute inset-0" 
         style={{
-          backgroundImage: "linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px)",
+          backgroundImage: "linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px)",
           backgroundSize: "20px 20px"
         }}>
       </div>
       
-      {/* Glowing orb effect */}
-      <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full opacity-20"
+      {/* Multiple glowing orb effects */}
+      <div className="absolute top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-20"
         style={{
-          background: "radial-gradient(circle at center, rgba(50, 135, 252, 0.7), transparent 70%)",
-          filter: "blur(60px)"
+          background: "radial-gradient(circle at center, rgba(50, 135, 252, 0.5), transparent 70%)",
+          filter: "blur(80px)",
+          animation: "pulse 8s ease-in-out infinite alternate"
         }}>
       </div>
       
-      {/* Card join form with Balatro style */}
-      <div className="max-w-md w-full bg-game-card rounded-xl shadow-xl p-8 border border-game-neon-blue border-opacity-20 relative z-10">
-        <h1 className="text-3xl font-display text-game-neon-blue text-center mb-6 tracking-wider animate-glow">
-          JOIN A GAME
-        </h1>
+      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full opacity-10"
+        style={{
+          background: "radial-gradient(circle at center, rgba(70, 191, 252, 0.6), transparent 70%)",
+          filter: "blur(60px)",
+          animation: "pulse 10s ease-in-out infinite alternate-reverse"
+        }}>
+      </div>
+      
+      {/* Floating card decorations */}
+      <div className="absolute top-20 right-[20%] w-32 h-44 rounded-lg opacity-20 animate-float-slow"
+        style={{
+          background: "radial-gradient(circle at center, rgba(70, 191, 252, 0.7), transparent 90%)", 
+          boxShadow: "0 0 30px rgba(70, 191, 252, 0.5)"
+        }}>
+      </div>
+      
+      <div className="absolute bottom-32 left-[15%] w-28 h-40 rounded-lg opacity-20 animate-float-slow-reverse"
+        style={{
+          background: "radial-gradient(circle at center, rgba(50, 135, 252, 0.7), transparent 90%)",
+          boxShadow: "0 0 30px rgba(50, 135, 252, 0.5)",
+          animationDelay: "2s"
+        }}>
+      </div>
+      
+      {/* Card join form with enhanced Balatro style */}
+      <div className="max-w-xl w-full bg-game-card rounded-2xl shadow-2xl p-8 md:p-10 border-4 border-game-neon-blue border-opacity-40 relative z-10 overflow-hidden">
+        {/* Card glow effect */}
+        <div className="absolute -inset-px rounded-2xl overflow-hidden opacity-40"
+          style={{ 
+            background: "radial-gradient(circle at 30% 30%, rgba(50, 135, 252, 0.7), transparent 70%)",
+            filter: "blur(20px)"
+          }}>
+        </div>
         
-        <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-game-neon-blue to-transparent mb-6 opacity-50"></div>
+        {/* Corner card chip decorations */}
+        <div className="absolute top-3 left-3 w-16 h-16 border-t-4 border-l-4 border-game-neon-blue border-opacity-30 rounded-tl-xl"></div>
+        <div className="absolute top-3 right-3 w-16 h-16 border-t-4 border-r-4 border-game-neon-blue border-opacity-30 rounded-tr-xl"></div>
+        <div className="absolute bottom-3 left-3 w-16 h-16 border-b-4 border-l-4 border-game-neon-blue border-opacity-30 rounded-bl-xl"></div>
+        <div className="absolute bottom-3 right-3 w-16 h-16 border-b-4 border-r-4 border-game-neon-blue border-opacity-30 rounded-br-xl"></div>
 
-        <form onSubmit={handleJoinGame} className="space-y-6">
-          <div>
-            <label
-              htmlFor="playerName"
-              className="block text-sm font-game-fallback text-white mb-2 tracking-wider"
-            >
-              YOUR NAME
-            </label>
-            <input
-              id="playerName"
-              type="text"
-              value={playerName}
-              onChange={(e) => setPlayerName(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-game-neon-blue border-opacity-50 rounded-lg bg-black bg-opacity-20 text-white focus:border-game-neon-blue focus:ring-1 focus:ring-game-neon-blue"
-              placeholder="Enter your name..."
-              required
-            />
-          </div>
+        {/* Main content with better spacing */}
+        <div className="relative z-10">
+          <h1 className="text-4xl md:text-5xl font-display-fallback text-game-neon-blue text-center mb-6 tracking-wider animate-glow">
+            JOIN A GAME
+          </h1>
+          
+          <div className="w-full h-1 bg-gradient-to-r from-transparent via-game-neon-blue to-transparent mb-8 opacity-70"></div>
 
-          <div>
-            <label
-              htmlFor="gameId"
-              className="block text-sm font-game-fallback text-white mb-2 tracking-wider"
-            >
-              GAME ID
-            </label>
-            <input
-              id="gameId"
-              type="text"
-              value={gameId}
-              onChange={(e) => setGameId(e.target.value.toUpperCase())}
-              className="w-full px-4 py-3 border-2 border-game-neon-blue border-opacity-50 rounded-lg bg-black bg-opacity-20 text-white uppercase focus:border-game-neon-blue focus:ring-1 focus:ring-game-neon-blue"
-              placeholder="Enter game ID..."
-              required
-            />
-          </div>
-
-          {error && (
-            <div className="text-game-neon-red text-sm p-3 bg-black bg-opacity-30 rounded-lg">
-              {error}
+          <form onSubmit={handleJoinGame} className="space-y-8">
+            <div>
+              <label
+                htmlFor="playerName"
+                className="block text-base font-game-fallback text-white mb-3 tracking-wider flex items-center"
+              >
+                <span className="bg-game-neon-blue bg-opacity-20 w-8 h-8 inline-flex items-center justify-center rounded-lg mr-2 shadow-inner">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-game-neon-blue" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                  </svg>
+                </span>
+                YOUR NAME
+              </label>
+              <div className="relative">
+                <input
+                  id="playerName"
+                  type="text"
+                  value={playerName}
+                  onChange={(e) => setPlayerName(e.target.value)}
+                  className="w-full px-5 py-4 border-4 border-game-neon-blue border-opacity-50 rounded-xl bg-black bg-opacity-40 text-white focus:border-game-neon-blue focus:ring-2 focus:ring-game-neon-blue focus:ring-opacity-50 transition-all shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)] text-lg"
+                  placeholder="Enter your name..."
+                  required
+                />
+                <div className="absolute inset-0 rounded-xl pointer-events-none"
+                  style={{
+                    background: "linear-gradient(to bottom, rgba(50, 135, 252, 0.1), transparent 10%)"
+                  }}>
+                </div>
+              </div>
             </div>
-          )}
 
-          <button
-            type="submit"
-            disabled={isJoining}
-            className="w-full btn-neon py-4 px-6 bg-game-neon-blue text-white font-game-fallback tracking-wide text-lg rounded-lg transition-all duration-300 hover:shadow-neon-blue hover:scale-105 focus:outline-none"
-          >
-            {isJoining ? (
-              <span className="flex items-center justify-center">
-                <svg
-                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                JOINING...
-              </span>
-            ) : (
-              "JOIN GAME"
+            <div>
+              <label
+                htmlFor="gameId"
+                className="block text-base font-game-fallback text-white mb-3 tracking-wider flex items-center"
+              >
+                <span className="bg-game-neon-blue bg-opacity-20 w-8 h-8 inline-flex items-center justify-center rounded-lg mr-2 shadow-inner">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-game-neon-blue" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M3 12v3c0 1.657 3.134 3 7 3s7-1.343 7-3v-3c0 1.657-3.134 3-7 3s-7-1.343-7-3z" />
+                    <path d="M3 7v3c0 1.657 3.134 3 7 3s7-1.343 7-3V7c0 1.657-3.134 3-7 3S3 8.657 3 7z" />
+                    <path d="M17 5c0 1.657-3.134 3-7 3S3 6.657 3 5s3.134-3 7-3 7 1.343 7 3z" />
+                  </svg>
+                </span>
+                GAME ID
+              </label>
+              <div className="relative">
+                <input
+                  id="gameId"
+                  type="text"
+                  value={gameId}
+                  onChange={(e) => setGameId(e.target.value.toUpperCase())}
+                  className="w-full px-5 py-4 border-4 border-game-neon-blue border-opacity-50 rounded-xl bg-black bg-opacity-40 text-white uppercase focus:border-game-neon-blue focus:ring-2 focus:ring-game-neon-blue focus:ring-opacity-50 transition-all shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)] text-lg font-mono font-semibold tracking-wider"
+                  placeholder="Enter game ID..."
+                  required
+                />
+                <div className="absolute inset-0 rounded-xl pointer-events-none"
+                  style={{
+                    background: "linear-gradient(to bottom, rgba(50, 135, 252, 0.1), transparent 10%)"
+                  }}>
+                </div>
+              </div>
+            </div>
+
+            {error && (
+              <div className="p-4 bg-black bg-opacity-40 rounded-xl border-2 border-game-neon-red border-opacity-70 shadow-neon-red">
+                <div className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-game-neon-red mr-3" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <p className="text-game-neon-red font-medium">
+                    {error}
+                  </p>
+                </div>
+              </div>
             )}
-          </button>
-        </form>
 
-        <div className="mt-6 flex justify-center">
-          <button
-            onClick={() => router.push("/")}
-            className="text-white hover:text-game-neon-purple transition-colors flex items-center"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
-            </svg>
-            BACK TO HOME
-          </button>
+            <button
+              type="submit"
+              disabled={isJoining}
+              className="w-full btn-neon py-5 px-6 bg-game-neon-blue text-white font-game-fallback tracking-wide text-xl rounded-xl transition-all duration-300 hover:shadow-neon-blue hover:scale-105 focus:outline-none border-4 border-opacity-50 border-game-neon-blue relative overflow-hidden"
+            >
+              <div className="absolute inset-0 opacity-20"
+                style={{
+                  background: "linear-gradient(to bottom, rgba(255,255,255,0.2), transparent 70%)"
+                }}>
+              </div>
+              {isJoining ? (
+                <span className="flex items-center justify-center">
+                  <svg
+                    className="animate-spin -ml-1 mr-3 h-6 w-6 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  JOINING GAME...
+                </span>
+              ) : (
+                "JOIN GAME"
+              )}
+            </button>
+          </form>
+
+          <div className="mt-8 flex justify-center">
+            <button
+              onClick={() => router.push("/")}
+              className="text-white hover:text-game-neon-purple transition-all flex items-center group px-5 py-3 rounded-lg hover:bg-black hover:bg-opacity-30 border-2 border-white border-opacity-10"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 group-hover:translate-x-[-2px] transition-transform" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+              </svg>
+              <span className="font-game-fallback">BACK TO HOME</span>
+            </button>
+          </div>
         </div>
       </div>
       
-      {/* Decorative cards */}
-      <div className="absolute top-20 right-20 w-28 h-36 rounded-lg bg-game-card opacity-10 transform rotate-6"></div>
-      <div className="absolute bottom-20 left-20 w-28 h-36 rounded-lg bg-game-card opacity-10 transform -rotate-6"></div>
+      {/* Additional decorative card elements */}
+      <div className="absolute -bottom-10 right-10 w-40 h-56 rounded-xl bg-game-card opacity-10 transform rotate-12"
+        style={{
+          background: "linear-gradient(135deg, rgba(50, 135, 252, 0.8), rgba(70, 191, 252, 0.8))"
+        }}>
+      </div>
+      
+      <div className="absolute -top-10 left-10 w-32 h-48 rounded-xl bg-game-card opacity-10 transform -rotate-12"
+        style={{
+          background: "linear-gradient(135deg, rgba(70, 191, 252, 0.8), rgba(50, 135, 252, 0.8))"
+        }}>
+      </div>
+      
+      {/* Card chip decorations */}
+      <div className="absolute top-[20%] left-[15%] w-16 h-16 rounded-full bg-game-neon-blue bg-opacity-5 border border-game-neon-blue border-opacity-30 animate-spin-slow"></div>
+      <div className="absolute bottom-[20%] right-[15%] w-12 h-12 rounded-full bg-game-neon-blue bg-opacity-5 border border-game-neon-blue border-opacity-20 animate-spin-slow-reverse"></div>
     </div>
   );
 };

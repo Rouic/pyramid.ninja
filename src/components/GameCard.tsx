@@ -293,14 +293,16 @@ const GameCard: React.FC<GameCardProps> = ({
     !card.seen;
 
   // Calculate drag constraints based on window size and card dimensions
+  // Adding padding to ensure cards never go out of view
   const cardWidth = 100;
   const cardHeight = 140;
+  const safetyMargin = 30; // Safety margin to keep cards partially visible
   
   const dragConstraints = {
-    left: -position.x, // Prevent dragging beyond left edge
-    right: windowSize.width - position.x - cardWidth, // Right edge constraint
-    top: -position.y, // Prevent dragging beyond top edge
-    bottom: windowSize.height - position.y - cardHeight, // Bottom edge constraint
+    left: Math.max(-position.x + safetyMargin, -Infinity), // Left edge constraint with safety margin
+    right: Math.min(windowSize.width - position.x - cardWidth + safetyMargin, Infinity), // Right edge constraint with safety margin
+    top: Math.max(-position.y + safetyMargin, -Infinity), // Top edge constraint with safety margin
+    bottom: Math.min(windowSize.height - position.y - cardHeight + safetyMargin, Infinity) // Bottom edge constraint with safety margin
   };
   
   // Debug log for card rendering (only in development)

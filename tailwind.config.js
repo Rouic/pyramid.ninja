@@ -40,11 +40,11 @@ module.exports = {
         ]
       },
       colors: {
-        // Balatro-inspired colors
+        // Balatro-inspired colors with rose theme
         'game': {
-          'bg': '#1a0f26',
-          'card': '#191230',
-          'felt': '#271847',
+          'bg': '#26101a',
+          'card': '#301219',
+          'felt': '#471827',
           'accent': '#ff5722',
           'highlight': '#ffc107',
           'neon': {
@@ -102,13 +102,13 @@ module.exports = {
   // being used dynamically via string interpolation
   future: {
     respectDefaultRingColorOpacity: true,
-    disableColorOpacityUtilitiesByDefault: true,
+    disableColorOpacityUtilitiesByDefault: false,
   },
   // Keep the safelist to ensure all needed classes are included
   safelist: [
     // Common colors
     {
-      pattern: /(bg|text|border)-(blue|gray|rose|red|green|indigo|purple|yellow)-(50|100|200|300|400|500|600|700|800|900)/,
+      pattern: /(bg|text|border)-(blue|gray|rose|red|green|indigo|purple|yellow|black|white)-(50|100|200|300|400|500|600|700|800|900)/,
     },
     // Game colors
     {
@@ -116,17 +116,69 @@ module.exports = {
     },
     // Neon colors
     {
-      pattern: /(bg|text|border|shadow)-(neon)-(blue|red|green|purple|yellow)/,
+      pattern: /(bg|text|border|shadow)-(neon)-(blue|red|green|purple|yellow|orange)/,
     },
-    // Common utilities
+    // Padding utilities (all variants)
     {
-      pattern: /(p|m|px|py|mx|my)-(0|1|2|3|4|5|6|8|10|12|16|20|24)/,
+      pattern: /(p|px|py|pt|pr|pb|pl)-(.+)/,
+    },
+    // Margin utilities (all variants)
+    {
+      pattern: /(m|mx|my|mt|mr|mb|ml)-(.+)/,
+    },
+    // Gap utilities
+    {
+      pattern: /gap-(.+)/,
     },
     {
-      pattern: /(flex|grid|block|hidden|relative|absolute|fixed|rounded|shadow)/,
+      pattern: /space-y-(.+)/,
     },
     {
-      pattern: /(hover|focus|active):.+/,
+      pattern: /space-x-(.+)/,
+    },
+    // Width and height utilities
+    {
+      pattern: /(w|h)-(.+)/,
+    },
+    // Flex and grid utilities
+    {
+      pattern: /(flex|grid|items|justify|space|gap|col|row)-(.+)/,
+    },
+    // Position and display utilities
+    {
+      pattern: /(relative|absolute|fixed|block|hidden|top|right|bottom|left|inset)-(.+)/,
+    },
+    // Border utilities
+    {
+      pattern: /(rounded|border|shadow)-(.+)/,
+    },
+    // Font utilities
+    {
+      pattern: /(text|font|tracking|leading)-(.+)/,
+    },
+    // Z-index utilities
+    {
+      pattern: /z-(.+)/,
+    },
+    // Transform utilities
+    {
+      pattern: /(transform|rotate|scale|translate)-(.+)/,
+    },
+    // Animation utilities
+    {
+      pattern: /(animate|transition|duration)-(.+)/,
+    },
+    // Opacity utilities
+    {
+      pattern: /opacity-(.+)/,
+    },
+    // Interactive state utilities
+    {
+      pattern: /(hover|focus|active|group-hover|focus-within|disabled):.+/,
+    },
+    // Backdrop utilities
+    {
+      pattern: /backdrop-(.+)/,
     }
   ]
 };
