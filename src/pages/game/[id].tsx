@@ -1,5 +1,5 @@
 // src/pages/game/[id].tsx
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/router";
 import {
   doc,
@@ -34,6 +34,7 @@ import ActivityLog from "../../components/ActivityLog";
 import { usePlayerContext } from "../../context/PlayerContext";
 import MemorizationOverlay from "../../components/MemorizationOverlay";
 import GameStartNotification from "../../components/GameStartNotification";
+import ChallengeResetControls from "../../components/ChallengeResetControls";
 
 
 const GamePage = () => {
@@ -61,6 +62,15 @@ const GamePage = () => {
 
   const [isPersonallyMemorizing, setIsPersonallyMemorizing] = useState(false);
   const [memorizeTimeLeft, setMemorizeTimeLeft] = useState<number | null>(null);
+
+  const previousChallengeResultIdRef = useRef<string | null>(null);
+  const autoResolveTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const [challengeResolutionId, setChallengeResolutionId] = useState<
+    string | null
+  >(null);
+  const [autoResolveTimer, setAutoResolveTimer] =
+    useState<NodeJS.Timeout | null>(null);
 
   const [hasShownGameStartNotification, setHasShownGameStartNotification] =
     useState(false);
@@ -109,95 +119,144 @@ const GamePage = () => {
   }, [gameData, challengedCardIndex, isSelectingForChallenge]);
 
   // Load game data
-  useEffect(() => {
-    if (!id || typeof id !== "string") return;
+ useEffect(() => {
+   if (!id || typeof id !== "string") return;
 
-    const gameRef = doc(db, "games", id);
+   const gameRef = doc(db, "games", id);
 
-    // Initial fetch to check if player is allowed
-    getDoc(gameRef)
-      .then((docSnap) => {
-        if (!docSnap.exists()) {
-          setError("Game not found");
-          setIsLoading(false);
-          return;
-        }
+   // Initial fetch to check if player is allowed
+   getDoc(gameRef)
+     .then((docSnap) => {
+       if (!docSnap.exists()) {
+         setError("Game not found");
+         setIsLoading(false);
+         return;
+       }
 
-        const data = docSnap.data();
+       const data = docSnap.data();
 
-        // Check if player is in the game or is host
-        const players = data.players || [];
-        const isHostUser = data.hostId === playerId;
+       // Check if player is in the game or is host
+       const players = data.players || [];
+       const isHostUser = data.hostId === playerId;
 
-        if (!isHostUser && !players.some((p: any) => p.id === playerId)) {
-          setError("You are not a player in this game");
-          setIsLoading(false);
-          return;
-        }
+       if (!isHostUser && !players.some((p: any) => p.id === playerId)) {
+         setError("You are not a player in this game");
+         setIsLoading(false);
+         return;
+       }
 
-        // Check if player is host
-        setIsHost(isHostUser);
+       // Check if player is host
+       setIsHost(isHostUser);
 
-        // Subscribe to detailed game state updates
-        const unsubscribe = subscribeToGameStateDetails(id, (data) => {
-          setGameData(data);
-          setGameState(data.gameState || "waiting");
-          setDrinkAssignments(data.drinkAssignments || []);
-          setAllCardsDealt(data.allCardsDealt || false);
+       // Subscribe to detailed game state updates
+       const unsubscribe = subscribeToGameStateDetails(id, (data) => {
+         setGameData(data);
+         setGameState(data.gameState || "waiting");
+         setDrinkAssignments(data.drinkAssignments || []);
+         setAllCardsDealt(data.allCardsDealt || false);
 
-          // Update current round
-          if (data.currentRound) {
-            setCurrentRound(data.currentRound);
-          }
+         // Update challenge resolution ID only if it changed
+         // Also check it against a ref to prevent extra renders
+         if (
+           data.challengeResultId &&
+           data.challengeResultId !== challengeResolutionId &&
+           data.challengeResultId !== previousChallengeResultIdRef.current
+         ) {
+           console.log(
+             "New challenge resolution detected:",
+             data.challengeResultId
+           );
+           previousChallengeResultIdRef.current = data.challengeResultId;
+           setChallengeResolutionId(data.challengeResultId);
 
-          // Handle memorization timer
-          if (data.gameState === "memorizing" && data.memorizeEndTime) {
-            setMemorizationEndTime(new Date(data.memorizeEndTime));
-          } else {
-            setMemorizationEndTime(null);
-          }
+           // Auto reset challenge card index after a delay
+           if (challengedCardIndex !== -1) {
+             if (autoResolveTimerRef.current) {
+               clearTimeout(autoResolveTimerRef.current);
+               autoResolveTimerRef.current = null;
+             }
 
-          // Handle current pyramid card
-          if (data.currentCardIndex !== undefined && data.pyramidCards) {
-            setCurrentPyramidCard(data.pyramidCards[data.currentCardIndex]);
+             const timer = setTimeout(() => {
+               console.log("Auto-resetting challenge card index");
+               setChallengedCardIndex(-1);
+               if (isSelectingForChallenge) {
+                 setIsSelectingForChallenge(false);
+               }
+               autoResolveTimerRef.current = null;
+             }, 3000);
 
-            // Calculate current row
-            let cardCount = 0;
-            let rowNum = 0;
+             autoResolveTimerRef.current = timer;
+           }
+         }
 
-            while (cardCount <= data.currentCardIndex) {
-              rowNum++;
-              cardCount += rowNum;
-            }
+         // Update current round
+         if (data.currentRound) {
+           setCurrentRound(data.currentRound);
+         }
 
-            // Row number from bottom, for drink count
-            setCurrentRowNumber(
-              data.pyramidCards.length > 0
-                ? Math.sqrt(2 * data.pyramidCards.length + 0.25) -
-                    0.5 -
-                    rowNum +
-                    1
-                : 0
-            );
-          }
+         // Handle memorization timer
+         if (data.gameState === "memorizing" && data.memorizeEndTime) {
+           setMemorizationEndTime(new Date(data.memorizeEndTime));
+         } else {
+           setMemorizationEndTime(null);
+         }
 
-          // Update player cards if available
-          if (data[playerId] && data[playerId].cards) {
-            setPlayerCards(data[playerId].cards);
-          }
+         // Handle current pyramid card
+         if (data.currentCardIndex !== undefined && data.pyramidCards) {
+           setCurrentPyramidCard(data.pyramidCards[data.currentCardIndex]);
 
-          setIsLoading(false);
-          setIsStartingGame(false);
-        });
+           // Calculate current row
+           let cardCount = 0;
+           let rowNum = 0;
 
-        return () => unsubscribe();
-      })
-      .catch((err) => {
-        console.error("Error loading game:", err);
-        setError("Failed to load game");
-        setIsLoading(false);
-      });
-  }, [id, playerId, setIsHost]);
+           while (cardCount <= data.currentCardIndex) {
+             rowNum++;
+             cardCount += rowNum;
+           }
+
+           // Row number from bottom, for drink count
+           setCurrentRowNumber(
+             data.pyramidCards.length > 0
+               ? Math.sqrt(2 * data.pyramidCards.length + 0.25) -
+                   0.5 -
+                   rowNum +
+                   1
+               : 0
+           );
+         }
+
+         // Update player cards if available
+         if (data[playerId] && data[playerId].cards) {
+           setPlayerCards(data[playerId].cards);
+         }
+
+         setIsLoading(false);
+         setIsStartingGame(false);
+       });
+
+       return () => unsubscribe();
+     })
+     .catch((err) => {
+       console.error("Error loading game:", err);
+       setError("Failed to load game");
+       setIsLoading(false);
+     });
+
+   // Cleanup function for the autoResolveTimer
+   return () => {
+     if (autoResolveTimerRef.current) {
+       clearTimeout(autoResolveTimerRef.current);
+       autoResolveTimerRef.current = null;
+     }
+   };
+ }, [
+   id,
+   playerId,
+   setIsHost,
+   challengeResolutionId,
+   challengedCardIndex,
+   isSelectingForChallenge,
+ ]);
 
   // Update the handlers to track time information
   const handlePersonalMemorizationStart = useCallback((seconds: number) => {
@@ -370,56 +429,61 @@ const GamePage = () => {
   );
 
   // Handler for when a player is challenged and needs to show a card
-  const handleChallengeCard = useCallback((cardIndex: number) => {
-    console.log(`Challenge card index set to ${cardIndex}`);
-    setChallengedCardIndex(cardIndex);
+  const handleChallengeCard = useCallback(
+    (cardIndex: number) => {
+      console.log(`Challenge card index set to ${cardIndex}`);
 
-    // If cardIndex is -1, it means we're resetting the challenge state
-    if (cardIndex === -1) {
-      console.log("Challenge selection mode disabled");
-      setIsSelectingForChallenge(false);
-      
-      // Also explicitly clear any challenge state in Firebase
-      if (id && playerId) {
-        // Handle case where id might be a string or array
-        const gameId = typeof id === 'string' ? id : id[0];
-        if (gameId) {
-          clearPlayerChallengeState(gameId, playerId).catch(err => 
-            console.error("Error clearing challenge state:", err)
-          );
-        }
+      // If we're setting to the same value, don't update to prevent rerenders
+      if (cardIndex === challengedCardIndex) {
+        console.log("Card index unchanged, skipping update");
+        return;
       }
-    } else {
-      // If selecting a card for challenge, make sure we're in selection mode
-      console.log("Challenge card selected, ensuring selection mode is enabled");
-      setIsSelectingForChallenge(true);
-      
-      // Listen for the auto-submit event from the card component
-      const autoSubmitListener = (event: Event) => {
-        const customEvent = event as CustomEvent;
-        console.log("🎮 CHALLENGE FLOW: Received auto-submit event", customEvent.detail);
-        
-        // Get the drink assignment panel component
-        const drinkPanels = document.querySelectorAll('[data-component="drink-assignment-panel"]');
-        if (drinkPanels.length > 0) {
-          // Find the submit button in the panel
-          const submitButton = drinkPanels[0].querySelector('[data-action="confirm-challenge"]');
-          if (submitButton) {
-            console.log("🎮 CHALLENGE FLOW: Found and clicking submit button");
-            (submitButton as HTMLButtonElement).click();
+
+      setChallengedCardIndex(cardIndex);
+
+      // If cardIndex is -1, it means we're resetting the challenge state
+      if (cardIndex === -1) {
+        console.log("Challenge selection mode disabled");
+        setIsSelectingForChallenge(false);
+
+        // Also explicitly clear any challenge state in Firebase - but only if needed
+        if (id && playerId && isSelectingForChallenge) {
+          // Handle case where id might be a string or array
+          const gameId = typeof id === "string" ? id : id[0];
+          if (gameId) {
+            clearPlayerChallengeState(gameId, playerId).catch((err) =>
+              console.error("Error clearing challenge state:", err)
+            );
           }
         }
-      };
-      
-      // Add the event listener
-      document.addEventListener('challenge:autoSubmit', autoSubmitListener, { once: true });
-      
-      // Clean up after 5 seconds (in case it never fires)
-      setTimeout(() => {
-        document.removeEventListener('challenge:autoSubmit', autoSubmitListener);
-      }, 5000);
-    }
-  }, [id, playerId]);
+      } else {
+        // If selecting a card for challenge, make sure we're in selection mode
+        console.log(
+          "Challenge card selected, ensuring selection mode is enabled"
+        );
+        setIsSelectingForChallenge(true);
+
+        // Add auto-transition after showing card
+        if (autoResolveTimerRef.current) {
+          clearTimeout(autoResolveTimerRef.current);
+          autoResolveTimerRef.current = null;
+        }
+
+        const timer = setTimeout(() => {
+          // If still showing a challenge card after timeout, auto-hide it
+          if (challengedCardIndex !== -1) {
+            console.log("Auto-resetting challenge card index after timeout");
+            setChallengedCardIndex(-1);
+            setIsSelectingForChallenge(false);
+            autoResolveTimerRef.current = null;
+          }
+        }, 5000); // Give 5 seconds for the challenge to complete
+
+        autoResolveTimerRef.current = timer;
+      }
+    },
+    [id, playerId, challengedCardIndex, isSelectingForChallenge]
+  );
 
   // Single useEffect for handling new cards with auto-hide timer
   useEffect(() => {
@@ -548,6 +612,121 @@ const GamePage = () => {
       });
     }
   }, [gameData, id, playerId]);
+
+  useEffect(() => {
+    // Global event listeners for debugging challenge flow
+    const handleChallengeAutoSubmit = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      console.log(
+        "🔍 DEBUG: Challenge auto-submit event received:",
+        customEvent.detail
+      );
+
+      // If we have an auto-resolve timer, clear it
+      if (autoResolveTimerRef.current) {
+        clearTimeout(autoResolveTimerRef.current);
+        autoResolveTimerRef.current = null;
+      }
+
+      // Set a new timer that will clear the challenge state if nothing happens
+      const timer = setTimeout(() => {
+        console.log("🔍 DEBUG: Auto-cleanup after challenge submission");
+        if (challengedCardIndex !== -1) {
+          setChallengedCardIndex(-1);
+        }
+        if (isSelectingForChallenge) {
+          setIsSelectingForChallenge(false);
+        }
+      }, 8000); // Extra long timeout
+
+      autoResolveTimerRef.current = timer;
+    };
+
+    const handleCardSelected = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      console.log(
+        "🔍 DEBUG: Card selected event received:",
+        customEvent.detail
+      );
+    };
+
+    // Add listeners for both events
+    document.addEventListener(
+      "challenge:autoSubmit",
+      handleChallengeAutoSubmit
+    );
+    document.addEventListener("card:selected", handleCardSelected);
+
+    // Cleanup
+    return () => {
+      document.removeEventListener(
+        "challenge:autoSubmit",
+        handleChallengeAutoSubmit
+      );
+      document.removeEventListener("card:selected", handleCardSelected);
+    };
+  }, [challengedCardIndex, isSelectingForChallenge]);
+
+  const debugChallengeState = () => {
+    console.log("🔍 CHALLENGE DEBUG - Current state:");
+    console.log("- isSelectingForChallenge:", isSelectingForChallenge);
+    console.log("- challengedCardIndex:", challengedCardIndex);
+    console.log("- challengeResolutionId:", challengeResolutionId);
+    console.log("- Current assignments:", drinkAssignments);
+
+    // Find any challenged assignments
+    const challengedAssignments = drinkAssignments.filter(
+      (a) => a.status === "challenged"
+    );
+    console.log("- Challenged assignments:", challengedAssignments);
+
+    // Add a debug button to player view
+    return (
+      <button
+        onClick={() => {
+          console.log("🔍 Manual debug triggered");
+          debugChallengeState();
+
+          // Force clean state after 1 second
+          setTimeout(() => {
+            console.log("🔍 Forcing challenge state cleanup");
+            setChallengedCardIndex(-1);
+            setIsSelectingForChallenge(false);
+
+            // Also clear Firebase challenge state
+            if (id && playerId) {
+              const gameId = typeof id === "string" ? id : id[0];
+              if (gameId) {
+                clearPlayerChallengeState(gameId, playerId);
+              }
+            }
+          }, 1000);
+        }}
+        className="mt-2 p-1 bg-red-600 text-white text-xs rounded"
+      >
+        Debug Challenge
+      </button>
+    );
+  };
+
+
+  useEffect(() => {
+    const handleCardSelectedEvent = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      console.log("🎮 Card selected event received", customEvent.detail);
+
+      // This optional code can help auto-resolve the selection
+      if (customEvent.detail && customEvent.detail.index !== undefined) {
+        handleChallengeCard(customEvent.detail.index);
+      }
+    };
+
+    document.addEventListener("card:selected", handleCardSelectedEvent);
+
+    return () => {
+      document.removeEventListener("card:selected", handleCardSelectedEvent);
+    };
+  }, [handleChallengeCard]);
 
   // Render new card alert notification
   const renderNewCardAlert = () => {
@@ -957,97 +1136,113 @@ const GamePage = () => {
 
                 {/* Divider */}
                 <div className="border-t border-gray-200 dark:border-gray-700 my-6"></div>
-                
+
                 {/* Player Emergency Controls */}
-                <div className="mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
+                {/* <div className="mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
                   <h3 className="text-sm font-medium text-red-600 dark:text-red-400 mb-2">
                     💥 Emergency Controls
                   </h3>
-                  
+
                   <div className="flex flex-col gap-2">
                     <button
                       onClick={async () => {
                         if (!id || !playerId) return;
-                        const gameId = typeof id === 'string' ? id : id[0];
+                        const gameId = typeof id === "string" ? id : id[0];
                         if (!gameId) return;
-                        
+
                         try {
                           // Reset player's challenge state
                           await clearPlayerChallengeState(gameId, playerId);
-                          
+
                           // Reset UI state
                           setChallengedCardIndex(-1);
                           setIsSelectingForChallenge(false);
-                          
-                          alert('Your challenge state has been reset!');
+
+                          alert("Your challenge state has been reset!");
                         } catch (error) {
-                          console.error('Error in emergency reset:', error);
-                          alert('Error resetting your state. Try asking the host to reset all players.');
+                          console.error("Error in emergency reset:", error);
+                          alert(
+                            "Error resetting your state. Try asking the host to reset all players."
+                          );
                         }
                       }}
                       className="w-full px-3 py-2 text-xs bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg"
                     >
                       🚨 Reset My Challenge State (If Stuck)
                     </button>
-                    
+
                     <button
                       onClick={async () => {
                         if (!id || !playerId) return;
-                        const gameId = typeof id === 'string' ? id : id[0];
+                        const gameId = typeof id === "string" ? id : id[0];
                         if (!gameId) return;
-                        
+
                         try {
                           // Get the current game data
-                          const gameRef = doc(db, 'games', gameId);
+                          const gameRef = doc(db, "games", gameId);
                           const gameDoc = await getDoc(gameRef);
-                          
+
                           if (gameDoc.exists()) {
                             const gameData = gameDoc.data();
                             const assignments = gameData.drinkAssignments || [];
-                            
+
                             // Find any challenged assignments involving this player
-                            const challengedAssignments = assignments.map((assignment, index) => ({
-                              assignment,
-                              index
-                            })).filter(item => 
-                              item.assignment.status === 'challenged' && 
-                              (item.assignment.from === playerId || item.assignment.to === playerId)
-                            );
-                            
+                            const challengedAssignments = assignments
+                              .map((assignment, index) => ({
+                                assignment,
+                                index,
+                              }))
+                              .filter(
+                                (item) =>
+                                  item.assignment.status === "challenged" &&
+                                  (item.assignment.from === playerId ||
+                                    item.assignment.to === playerId)
+                              );
+
                             if (challengedAssignments.length > 0) {
                               // Force them to resolve as failed challenges
                               for (const item of challengedAssignments) {
-                                const wasFromMe = item.assignment.from === playerId;
-                                
+                                const wasFromMe =
+                                  item.assignment.from === playerId;
+
                                 // Update the assignment status
                                 assignments[item.index] = {
                                   ...assignments[item.index],
-                                  status: wasFromMe ? 'failed_challenge' : 'successful_challenge',
+                                  status: wasFromMe
+                                    ? "failed_challenge"
+                                    : "successful_challenge",
                                   resolvedAt: Date.now(),
-                                  isResolved: true
+                                  isResolved: true,
                                 };
                               }
-                              
+
                               // Update all assignments at once
                               await updateDoc(gameRef, {
-                                drinkAssignments: assignments
+                                drinkAssignments: assignments,
                               });
-                              
+
                               // Reset player state
                               await clearPlayerChallengeState(gameId, playerId);
-                              
+
                               // Reset UI state
                               setChallengedCardIndex(-1);
                               setIsSelectingForChallenge(false);
-                              
-                              alert(`Fixed ${challengedAssignments.length} stuck challenge(s)!`);
+
+                              alert(
+                                `Fixed ${challengedAssignments.length} stuck challenge(s)!`
+                              );
                             } else {
-                              alert('No challenged assignments found to fix.');
+                              alert("No challenged assignments found to fix.");
                             }
                           }
                         } catch (error) {
-                          console.error('Error forcing challenge resolution:', error);
-                          alert('Error resolving challenges. Try reloading the game.');
+                          console.error(
+                            "Error forcing challenge resolution:",
+                            error
+                          );
+                          alert(
+                            "Error resolving challenges. Try reloading the game."
+                          );
                         }
                       }}
                       className="w-full px-3 py-2 text-xs bg-yellow-600 hover:bg-yellow-700 text-white font-bold rounded-lg"
@@ -1055,7 +1250,7 @@ const GamePage = () => {
                       🔧 Force Resolve Stuck Challenges
                     </button>
                   </div>
-                </div>
+                </div> */}
 
                 {/* Render new card alert */}
                 {renderNewCardAlert()}
@@ -1072,6 +1267,7 @@ const GamePage = () => {
                     drinkCount={drinksForCurrentRow}
                     onChallengeCard={handleChallengeCard}
                     setIsSelectingForChallenge={setIsSelectingForChallenge}
+                    isSelectingForChallenge={isSelectingForChallenge} // Add this line
                   />
                 )}
 
@@ -1098,6 +1294,11 @@ const GamePage = () => {
                     isVisible={isPersonallyMemorizing}
                   />
                 )}
+
+                <ChallengeResetControls
+                  gameId={id as string}
+                  playerId={playerId}
+                />
               </>
             )}
           </div>

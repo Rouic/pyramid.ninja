@@ -1,5 +1,5 @@
-// src/components/PlayerHand.tsx
-import React, { useState, useEffect } from "react";
+// src/components/PlayerHand.tsx (Update)
+import React, { useState, useEffect, useRef } from "react";
 import { Card } from "../lib/deck";
 import GameCard from "./GameCard";
 import {
@@ -7,7 +7,10 @@ import {
   updatePlayerCard,
 } from "../lib/firebase/gameCards";
 import { usePlayerContext } from "../context/PlayerContext";
-import { replacePlayerCard, clearPlayerChallengeState } from "../lib/firebase/gameState";
+import {
+  replacePlayerCard,
+  clearPlayerChallengeState,
+} from "../lib/firebase/gameState";
 import NewCardTimer from "./NewCardTimer"; // Import the timer component
 import { doc, updateDoc, getDoc, onSnapshot } from "firebase/firestore";
 import { db } from "../lib/firebase/firebase";
@@ -50,6 +53,9 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
   const [newCardTimestamp, setNewCardTimestamp] = useState<string | null>(null);
   const [hidingCard, setHidingCard] = useState<boolean>(false);
 
+  const isProcessingReplacement = useRef(false);
+
+
   // Subscribe to player's cards
   useEffect(() => {
     if (!gameId || !playerId) return;
@@ -80,22 +86,64 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
     });
 
     // Subscribe to player document to watch for needsCardReplacement flag
+    // FIXED: Use a more controlled approach with debouncing to prevent infinite loops
     const playerRef = doc(db, "games", gameId, "players", playerId);
+    let lastProcessedTime = 0;
+
     const playerUnsubscribe = onSnapshot(playerRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const playerData = snapshot.data();
-        if (playerData.needsCardReplacement && playerData.cardToReplace !== undefined) {
-          console.log(`🃏 AUTO-REPLACE: Detected card replacement needed for index ${playerData.cardToReplace}`);
-          
+      if (!snapshot.exists()) return;
+
+      const playerData = snapshot.data();
+
+      // FIX: Only process replacement requests if we're not already processing one
+      // and if enough time has passed since the last one (debounce)
+      const now = Date.now();
+      const needsReplacement =
+        playerData.needsCardReplacement === true &&
+        playerData.cardToReplace !== undefined &&
+        playerData.cardToReplace !== null;
+
+      if (
+        needsReplacement &&
+        !isProcessingReplacement.current &&
+        now - lastProcessedTime > 2000
+      ) {
+        // At least 2 seconds between processing
+
+        console.log(
+          `🃏 AUTO-REPLACE: Detected card replacement needed for index ${playerData.cardToReplace}`
+        );
+
+        // Set the flag to prevent concurrent processing
+        isProcessingReplacement.current = true;
+        lastProcessedTime = now;
+
+        // Force a small delay to ensure the card is properly shown during the challenge
+        setTimeout(() => {
           // Automatically replace the card
-          handleReplaceCard(playerData.cardToReplace);
-          
-          // Clear the flag to prevent multiple replacements
-          updateDoc(playerRef, {
-            needsCardReplacement: false,
-            cardToReplace: null
-          }).catch(err => console.error("Error clearing replacement flags:", err));
-        }
+          handleReplaceCard(playerData.cardToReplace)
+            .then(() => {
+              // Clear the flag to prevent multiple replacements, but do it after a delay
+              // to prevent Firebase update race conditions
+              setTimeout(() => {
+                updateDoc(playerRef, {
+                  needsCardReplacement: false,
+                  cardToReplace: null,
+                })
+                  .catch((err) =>
+                    console.error("Error clearing replacement flags:", err)
+                  )
+                  .finally(() => {
+                    // Reset processing flag
+                    isProcessingReplacement.current = false;
+                  });
+              }, 1000);
+            })
+            .catch((error) => {
+              console.error("Error in auto-replace:", error);
+              isProcessingReplacement.current = false;
+            });
+        }, 500);
       }
     });
 
@@ -126,6 +174,9 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
   const handleReplaceCard = async (cardIndex: number) => {
     if (!gameId || !playerId) return;
 
+    console.log(
+      `🃏 AUTO-REPLACE: Starting replacement for card at index ${cardIndex}`
+    );
     setReplacingCardIndex(cardIndex);
 
     try {
@@ -139,6 +190,9 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
 
       // Remove card from shown cards after replacement
       setShownCards((prev) => prev.filter((idx) => idx !== cardIndex));
+      console.log(
+        `🃏 AUTO-REPLACE: Successfully replaced card at index ${cardIndex}`
+      );
     } catch (error) {
       console.error("Error replacing card:", error);
     } finally {
@@ -146,10 +200,61 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
     }
   };
 
+  const saveCardPosition = async (
+    card: Card,
+    index: number,
+    newX: number,
+    newY: number
+  ) => {
+    if (!gameId || !playerId) return;
+
+    try {
+      // Create a new position that adds the delta to the current position
+      const currentPos = card.position || { x: 0, y: 0 };
+      const newPosition = {
+        x: currentPos.x + newX,
+        y: currentPos.y + newY,
+      };
+
+      console.log(
+        `Saving new position for card ${index}: (${newPosition.x}, ${newPosition.y})`
+      );
+
+      // Update the card's position in Firebase
+      const playerRef = doc(db, "games", gameId, "players", playerId);
+      const playerDoc = await getDoc(playerRef);
+
+      if (playerDoc.exists()) {
+        const playerData = playerDoc.data();
+        const cards = [...(playerData.cards || [])];
+
+        if (cards[index]) {
+          // Update the position without changing other properties
+          cards[index] = {
+            ...cards[index],
+            position: newPosition,
+          };
+
+          // Update the Firebase document
+          await updateDoc(playerRef, {
+            cards: cards,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error saving card position:", error);
+    }
+  };
+
   // Handler for card selection during challenge
   const handleCardSelect = (card: Card, index: number) => {
-    console.log("🎮 Card selected:", index, "isSelectingForChallenge:", isSelectingForChallenge);
-    
+    console.log(
+      "🎮 Card selected:",
+      index,
+      "isSelectingForChallenge:",
+      isSelectingForChallenge
+    );
+
     if (isSelectingForChallenge && onCardSelect) {
       // Only allow selection if no card is already selected or this is the selected card
       if (
@@ -158,7 +263,18 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
       ) {
         console.log("🎮 CHALLENGE FLOW: Selected card for challenge", index);
         setSelectedCardForChallenge(index);
+
+        // IMPORTANT: Call onCardSelect immediately to ensure the parent component knows
+        // which card was selected
         onCardSelect(index);
+
+        // Directly fire an event to trigger the auto-submit in DrinkAssignmentPanel
+        // This helps bridge the communication gap between components
+        console.log("🎮 CHALLENGE FLOW: Dispatching auto-submit event");
+        const customEvent = new CustomEvent("challenge:autoSubmit", {
+          detail: { cardIndex: index },
+        });
+        document.dispatchEvent(customEvent);
       }
     }
   };
@@ -169,8 +285,10 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
 
     try {
       setHidingCard(true);
-      console.log(`🃏 AUTO-HIDE: Hiding card at index ${newCardIndex} after timer ended`);
-      
+      console.log(
+        `🃏 AUTO-HIDE: Hiding card at index ${newCardIndex} after timer ended`
+      );
+
       // Find the card that needs to be hidden
       const cardToHide = playerCards[newCardIndex];
       if (!cardToHide) {
@@ -190,22 +308,19 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
       // Get the card identifier (either .i or .id)
       const cardId = cardToHide.id || cardToHide.i.toString();
 
-      console.log(`🃏 AUTO-HIDE: Processing card ${cardId} after memorization timer`);
+      console.log(
+        `🃏 AUTO-HIDE: Processing card ${cardId} after memorization timer`
+      );
 
-      // SIMPLIFIED: Don't call clearPlayerChallengeState directly to avoid infinite loops
-      // Instead, directly update our card state
-      
-      // COMPLETELY REPLACE the card object with a fresh version that has ONLY the necessary properties
-      // This prevents any lingering state that might cause the card to show "click to reveal"
       try {
         const playerRef = doc(db, "games", gameId, "players", playerId);
-        
+
         // Get all player cards
         const snapshot = await getDoc(playerRef);
         if (snapshot.exists()) {
           const playerData = snapshot.data();
           const cards = [...(playerData.cards || [])];
-          
+
           // Create a completely fresh card object with only the needed properties
           if (cards[newCardIndex]) {
             // Keep only the essential properties (like suit, value, id) and reset all state flags
@@ -214,7 +329,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
             const suit = cards[newCardIndex].suit;
             const rank = cards[newCardIndex].rank;
             const value = cards[newCardIndex].value;
-            
+
             // Create a completely fresh card with clean state
             cards[newCardIndex] = {
               i, // Index in the deck (0-51)
@@ -228,27 +343,27 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
               // Explicitly remove all challenge-related properties
               isInChallenge: false,
               challengeCardIndex: null,
-              userFlipped: false
+              userFlipped: false,
             };
-            
+
             // Aggressive update of the player document
             await updateDoc(playerRef, {
               cards,
               isInChallenge: false, // Ensure player is not in challenge mode
               challengeCardIndex: null, // Clear any selected card index
-              updatedAt: new Date().toISOString()
+              updatedAt: new Date().toISOString(),
             });
-            
+
             // SIMPLIFIED: Just clear the specific timer for this card
             const gameRef = doc(db, "games", gameId);
             await updateDoc(gameRef, {
-              [`newCardTimers.${playerId}.${cardId}`]: null
+              [`newCardTimers.${playerId}.${cardId}`]: null,
             });
           } else {
             // Just update player state if we can't find the card
             await updateDoc(playerRef, {
               isInChallenge: false,
-              challengeCardIndex: null
+              challengeCardIndex: null,
             });
           }
         }
@@ -258,13 +373,15 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
       }
 
       // Log the change
-      console.log(`🃏 AUTO-HIDE: Card ${cardId} successfully hidden after memorization`);
+      console.log(
+        `🃏 AUTO-HIDE: Card ${cardId} successfully hidden after memorization`
+      );
 
       // Reset state including challenge state
       setNewCardIndex(null);
       setNewCardTimestamp(null);
       setHidingCard(false);
-      
+
       // Remove card from shown cards to ensure UI reflects new state
       setShownCards((prev) => prev.filter((idx) => idx !== newCardIndex));
     } catch (error) {
@@ -273,17 +390,66 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
     }
   };
 
+  const ensureCardHasPosition = (card: Card, index: number): Card => {
+    // If card already has position, return it unchanged
+    if (card.position) {
+      return card;
+    }
+
+    // Otherwise, calculate default position
+    const defaultX = 20 + index * (window.innerWidth < 768 ? 25 : 35);
+    const defaultPosition = { x: defaultX, y: 10 };
+
+    // Return card with position added
+    return {
+      ...card,
+      position: defaultPosition,
+      owner: playerId, // Always ensure owner is set for drag functionality
+    };
+  };
+
+  useEffect(() => {
+    const handleCardSelectedEvent = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (
+        customEvent.detail &&
+        customEvent.detail.index !== undefined &&
+        isSelectingForChallenge
+      ) {
+        console.log(
+          "🎮 CHALLENGE FLOW: Received card selection event:",
+          customEvent.detail
+        );
+        const index = customEvent.detail.index;
+        handleCardSelect(playerCards[index], index);
+      }
+    };
+
+    document.addEventListener("card:selected", handleCardSelectedEvent);
+
+    return () => {
+      document.removeEventListener("card:selected", handleCardSelectedEvent);
+    };
+  }, [isSelectingForChallenge, playerCards, onCardSelect]);
+
   return (
-    <div className="w-full h-48 md:h-56 relative border-t-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 mt-8 pt-4">
-      <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2 px-4 flex justify-between items-center">
-        <span>Your Cards</span>
+    <div className="w-full h-48 md:h-56 relative border-t-2 border-game-neon-purple border-opacity-40 mt-8 pt-5 rounded-b-lg shadow-xl" 
+      style={{
+        background: "#1b084e",
+        backgroundImage: "linear-gradient(to right, rgba(30, 14, 96, 0.8), rgba(66, 21, 143, 0.4)), linear-gradient(to bottom, rgba(30, 14, 96, 0.8), rgba(89, 30, 184, 0.2))",
+        boxShadow: "inset 0 0 40px rgba(0, 0, 0, 0.5)"
+      }}>
+      <h3 className="text-lg font-game-fallback tracking-wide mb-4 px-5 flex justify-between items-center">
+        <span className="text-game-neon-yellow animate-pulse-fast font-game-fallback">YOUR CARDS</span>
         {isLoading && (
-          <span className="text-xs text-gray-500">(loading...)</span>
+          <span className="text-xs text-white font-sans bg-black bg-opacity-40 px-2 py-1 rounded-md animate-pulse">
+            LOADING...
+          </span>
         )}
         {!showFaceUp && !isLoading && (
-          <span className="text-xs text-red-500 inline-flex items-center">
+          <span className="text-sm text-game-neon-red inline-flex items-center font-game-fallback px-3 py-1 bg-black bg-opacity-30 rounded-lg border border-game-neon-red border-opacity-30">
             <svg
-              className="h-4 w-4 mr-1"
+              className="h-5 w-5 mr-2"
               viewBox="0 0 20 20"
               fill="currentColor"
             >
@@ -293,29 +459,31 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
                 clipRule="evenodd"
               />
             </svg>
-            Cards hidden - remember what you have!
+            CARDS HIDDEN
           </span>
         )}
 
         {isSelectingForChallenge && (
-          <span className="text-xs text-yellow-500 font-bold animate-pulse">
-            Select a card to show for the challenge
+          <span className="text-sm text-game-neon-yellow font-game-fallback tracking-wide animate-pulse-fast bg-black bg-opacity-40 px-3 py-1 rounded-lg border border-game-neon-yellow border-opacity-40 shadow-neon-yellow">
+            SELECT CARD TO SHOW
           </span>
         )}
       </h3>
 
       <div className="relative h-36 md:h-44 w-full px-4">
         {playerCards.length === 0 && !isLoading ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-white bg-black bg-opacity-30 rounded-lg shadow-inner border border-white border-opacity-5 font-game-fallback tracking-wide px-3">
             {isGameStarted
-              ? "No cards in your hand yet. Waiting for deal..."
-              : "Cards will appear here once the game starts"}
+              ? "NO CARDS YET. WAITING FOR DEAL..."
+              : "CARDS WILL APPEAR WHEN GAME STARTS"}
           </div>
         ) : (
-          playerCards.map((card, index) => {
-            // Calculate default fan layout if position not set
-            const defaultX = 20 + index * (window.innerWidth < 768 ? 25 : 35);
-            const position = card.position || { x: defaultX, y: 10 };
+          playerCards.map((cardData, index) => {
+            // Make sure card has position data
+            const card = ensureCardHasPosition(cardData, index);
+
+            // Calculate default fan layout using the card's position
+            const position = card.position;
 
             // Determine if this specific card is being challenged
             const isBeingChallenged = challengedCardIndex === index;
@@ -328,7 +496,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
 
             // Clear shown state for new cards (important to prevent issues after replacement)
             if (card.newCard && hasBeenShown) {
-              setShownCards(prev => prev.filter(idx => idx !== index));
+              setShownCards((prev) => prev.filter((idx) => idx !== index));
             }
 
             // Determine if this card is selectable for challenge
@@ -356,10 +524,10 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
             // Fix for card visibility - update logic for when to show card face
             // Include a check for specific cases where we want to show the card
             const showCardFace =
-              showFaceUp || 
-              isBeingChallenged || 
-              card.newCard || 
-              (card.faceVisible === true);
+              showFaceUp ||
+              isBeingChallenged ||
+              card.newCard ||
+              card.faceVisible === true;
 
             return (
               <div key={card.id || index} className="relative">
@@ -369,6 +537,9 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
                   position={position}
                   isRevealing={false}
                   canInteract={isGameStarted}
+                  onDragEnd={(delta) =>
+                    saveCardPosition(card, index, delta.x, delta.y)
+                  }
                   className={`cursor-move ${
                     shouldHighlight || isBeingChallenged
                       ? "ring-4 ring-yellow-400 z-20"
@@ -402,27 +573,26 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
                     <div className="text-sm">Memorize this card!</div>
                   </div>
                 )}
-
-                {/* Card needs replacement indicator (removed - now automatically handled by the challenge flow) */}
-
-                
               </div>
             );
           })
         )}
 
         {isLoading && isGameStarted && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
+          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 rounded-lg">
+            <div className="bg-game-card rounded-lg p-4 shadow-lg border border-game-neon-purple border-opacity-40 flex items-center">
+              <div className="animate-spin rounded-full h-6 w-6 border-4 border-game-neon-purple border-t-transparent mr-3"></div>
+              <span className="text-white font-game-fallback tracking-wide">LOADING CARDS...</span>
+            </div>
           </div>
         )}
 
         {hidingCard && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 z-40 rounded-lg">
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-3 shadow-lg">
+          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 z-40 rounded-lg backdrop-blur-sm">
+            <div className="bg-game-card rounded-lg p-5 shadow-lg border-2 border-game-neon-yellow border-opacity-40 shadow-neon-yellow">
               <div className="flex items-center">
-                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500 mr-2"></div>
-                <span className="text-sm font-medium">Hiding card...</span>
+                <div className="animate-spin rounded-full h-6 w-6 border-3 border-game-neon-yellow border-t-transparent mr-3"></div>
+                <span className="text-base font-game-fallback tracking-wide text-white">HIDING CARD...</span>
               </div>
             </div>
           </div>

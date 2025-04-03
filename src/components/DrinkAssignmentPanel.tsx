@@ -22,6 +22,7 @@ interface DrinkAssignmentPanelProps {
   drinkCount: number;
   onChallengeCard?: (cardIndex: number) => void; // Callback for card challenges
   setIsSelectingForChallenge?: (selecting: boolean) => void; // Callback to indicate card selection mode
+  isSelectingForChallenge?: boolean; // Add this to props
 }
 
 const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
@@ -34,6 +35,7 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
   drinkCount,
   onChallengeCard,
   setIsSelectingForChallenge,
+  isSelectingForChallenge = false, // Default value
 }) => {
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
   const [activeChallenge, setActiveChallenge] = useState<number | null>(null);
@@ -49,6 +51,11 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
     to: string;
   } | null>(null);
 
+  // Track local selection mode state to avoid TypeScript errors
+  const [localSelectionMode, setLocalSelectionMode] = useState<boolean>(
+    isSelectingForChallenge
+  );
+
   // Keep track of handled challenges to avoid reprocessing them
   const [handledChallenges, setHandledChallenges] = useState<Set<number>>(
     new Set()
@@ -59,9 +66,14 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
 
   // Also store the challenge resolution timer
   const challengeTimerRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   // Track if we're in the post-challenge cleanup phase
   const [cleaningUpChallenge, setCleaningUpChallenge] = useState(false);
+
+  // Update local state when prop changes
+  useEffect(() => {
+    setLocalSelectionMode(isSelectingForChallenge);
+  }, [isSelectingForChallenge]);
 
   // Filter assignments to show only the relevant ones
   // First, get all pending or challenged assignments
@@ -103,109 +115,131 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
 
       if (setIsSelectingForChallenge) {
         setIsSelectingForChallenge(false);
+        setLocalSelectionMode(false);
       }
 
       if (onChallengeCard) {
         onChallengeCard(-1);
       }
-      
+
       // Explicitly clear challenge state in Firebase
       if (gameId && currentPlayerId) {
         console.log("Clearing challenge state on assignments reset");
-        clearPlayerChallengeState(gameId, currentPlayerId).catch(err => 
+        clearPlayerChallengeState(gameId, currentPlayerId).catch((err) =>
           console.error("Error clearing challenge state on reset:", err)
         );
       }
     }
-  }, [assignments, setIsSelectingForChallenge, onChallengeCard, gameId, currentPlayerId]);
+  }, [
+    assignments,
+    setIsSelectingForChallenge,
+    onChallengeCard,
+    gameId,
+    currentPlayerId,
+  ]);
 
   // Automatically enter selection mode when there are new challenges to resolve
   useEffect(() => {
-    // CRITICAL FIX: The person who ASSIGNED the drink (from) is the one 
+    // Only run this effect when assignments change, not on every state change
+    // This prevents infinite cycles of state updates
+
+    // CRITICAL FIX: The person who ASSIGNED the drink (from) is the one
     // who needs to select a card to show when challenged
     const challengedAssignmentsFromMe = assignments.filter(
-      a => a.status === "challenged" && a.from === currentPlayerId
+      (a) => a.status === "challenged" && a.from === currentPlayerId
     );
-    
-    // If we have challenges that require our action (we're the drink assigner),
-    // make sure we're in selection mode
-    if (challengedAssignmentsFromMe.length > 0 && !processingChallenge) {
-      console.log("🔄 CHALLENGE FLOW: I was challenged and need to select a card to show");
-      
-      // Force UI into selection mode
-      if (setIsSelectingForChallenge) {
-        setIsSelectingForChallenge(true);
-      }
-      
+
+    // DEBUG: Log only on actual changes, not every render
+    const hasActiveChallenge = activeChallenge !== null;
+    const isCurrentlyProcessing = processingChallenge;
+
+    if (!isCurrentlyProcessing && challengedAssignmentsFromMe.length > 0) {
+      console.log(
+        "🔄 CHALLENGE FLOW: I was challenged and need to select a card to show"
+      );
+
       // Find the first challenge that needs resolution
       const challengeIndex = assignments.findIndex(
-        a => a.status === "challenged" && a.from === currentPlayerId
+        (a) => a.status === "challenged" && a.from === currentPlayerId
       );
-      
-      if (challengeIndex !== -1) {
+
+      if (challengeIndex !== -1 && !hasActiveChallenge) {
+        // Force UI into selection mode - IMPORTANT: Only call these if the state
+        // actually needs to change to prevent infinite update cycles
+        if (setIsSelectingForChallenge && !localSelectionMode) {
+          setIsSelectingForChallenge(true);
+          setLocalSelectionMode(true);
+        }
+
         setActiveChallenge(challengeIndex);
         setProcessingChallenge(true);
       }
-    }
-    
-    // If we no longer have any challenges in the pending state, make sure we exit challenge mode
-    else if (
-      challengedAssignmentsFromMe.length === 0 && 
-      processingChallenge &&
+    } else if (
+      isCurrentlyProcessing &&
+      challengedAssignmentsFromMe.length === 0 &&
       !challengeResult &&
       !cleaningUpChallenge &&
       !isSubmitting
     ) {
-      console.log("🔄 CHALLENGE FLOW: No more pending challenges, exiting selection mode");
-      
-      // Exit challenge mode
+      console.log(
+        "🔄 CHALLENGE FLOW: No more pending challenges, exiting selection mode"
+      );
+
+      // Exit challenge mode - only if currently in challenge mode
       setProcessingChallenge(false);
       setActiveChallenge(null);
-      
-      if (setIsSelectingForChallenge) {
+
+      if (setIsSelectingForChallenge && localSelectionMode) {
         setIsSelectingForChallenge(false);
+        setLocalSelectionMode(false);
       }
-      
+
       if (onChallengeCard) {
         onChallengeCard(-1);
       }
     }
-    
-    // We still need a timeout to automatically clear challenge state if it gets stuck
-    const now = Date.now();
-    if (
-      challengeResolvedTimeRef.current &&
-      now - challengeResolvedTimeRef.current > 5000 && // Extended timeout for better reliability
-      processingChallenge &&
-      !cleaningUpChallenge
-    ) {
-      console.log("🔄 CHALLENGE FLOW: Auto-timeout, forcing exit from challenge mode");
-      
-      // Reset all local UI state
-      setProcessingChallenge(false);
-      setChallengeResult(null);
-      challengeResolvedTimeRef.current = null;
-      setActiveChallenge(null);
-      setSelectedCardIndex(null);
-      setCleaningUpChallenge(false);
-      
-      if (setIsSelectingForChallenge) {
-        setIsSelectingForChallenge(false);
-      }
-      
-      if (onChallengeCard) {
-        onChallengeCard(-1);
+
+    // We still need a timeout to automatically clear challenge state if it gets stuck,
+    // but we'll use a ref to track time instead of re-running the effect
+    if (challengeResolvedTimeRef.current) {
+      const now = Date.now();
+      const elapsed = now - challengeResolvedTimeRef.current;
+
+      if (elapsed > 5000 && processingChallenge && !cleaningUpChallenge) {
+        console.log(
+          "🔄 CHALLENGE FLOW: Auto-timeout, forcing exit from challenge mode"
+        );
+
+        // Reset all local UI state
+        setProcessingChallenge(false);
+        setChallengeResult(null);
+        challengeResolvedTimeRef.current = null;
+        setActiveChallenge(null);
+        setSelectedCardIndex(null);
+        setCleaningUpChallenge(false);
+
+        if (setIsSelectingForChallenge && localSelectionMode) {
+          setIsSelectingForChallenge(false);
+          setLocalSelectionMode(false);
+        }
+
+        if (onChallengeCard) {
+          onChallengeCard(-1);
+        }
       }
     }
+    // IMPORTANT: Update dependency array to include necessary values but avoid causing infinite loops
   }, [
     assignments,
     currentPlayerId,
-    setIsSelectingForChallenge,
+    activeChallenge,
     processingChallenge,
+    localSelectionMode,
     challengeResult,
-    onChallengeCard,
     cleaningUpChallenge,
     isSubmitting,
+    setIsSelectingForChallenge,
+    onChallengeCard,
   ]);
 
   // Clean up selection mode when component unmounts
@@ -279,24 +313,48 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
   };
 
   // Used by the person who is being challenged (the assigner of the drink)
-  const handleSelectCardForChallenge = (cardIndex: number) => {
-    console.log("🎮 CHALLENGE FLOW: Card selected for challenge:", cardIndex);
-    
-    // Notify parent component to show this specific card
-    if (onChallengeCard) {
-      onChallengeCard(cardIndex);
-    }
-    
-    // IMPORTANT: Set the selected card index AFTER calling onChallengeCard
-    // This ensures the card is visible when the auto-resolve useEffect runs
-    setSelectedCardIndex(cardIndex);
-  };
-  
+ const handleSelectCardForChallenge = (cardIndex: number) => {
+   console.log("🎮 CHALLENGE FLOW: Card selected for challenge:", cardIndex);
+
+   // Notify parent component to show this specific card
+   if (onChallengeCard) {
+     onChallengeCard(cardIndex);
+   }
+
+   // IMPORTANT: Set the selected card index AFTER calling onChallengeCard
+   // This ensures the card is visible when the auto-resolve useEffect runs
+   setSelectedCardIndex(cardIndex);
+
+   // CRITICAL FIX: Directly trigger resolution if we have an active challenge
+   // This ensures the challenge is resolved even if the useEffect doesn't trigger
+   if (activeChallenge !== null) {
+     console.log("🎮 CHALLENGE FLOW: Directly triggering challenge resolution");
+     // Use a short timeout to allow the card to be shown first
+     setTimeout(() => {
+       try {
+         handleResolveChallenge(activeChallenge);
+       } catch (err) {
+         console.error("Error in direct resolution:", err);
+       }
+     }, 1000);
+   }
+ };
+
   // Auto-resolve the challenge when a card is selected
   useEffect(() => {
-    // If we have both selected a card and have an active challenge, auto-resolve it
-    if (selectedCardIndex !== null && activeChallenge !== null && !isSubmitting && processingChallenge) {
-      console.log("🎮 CHALLENGE FLOW: Auto-resolving challenge with selected card", selectedCardIndex);
+    if (!selectedCardIndex || selectedCardIndex === null) {
+      return; // Exit early if no card selected
+    }
+
+    if (activeChallenge !== null && !isSubmitting && processingChallenge) {
+      console.log(
+        "🎮 CHALLENGE FLOW: Auto-resolving challenge with selected card",
+        selectedCardIndex
+      );
+      console.log("Active challenge:", activeChallenge);
+      console.log("Processing challenge:", processingChallenge);
+      console.log("Is submitting:", isSubmitting);
+
       // Use a short timeout to allow the card to be shown first
       const timer = setTimeout(() => {
         try {
@@ -306,44 +364,78 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
           console.error("Error in auto-resolution:", err);
         }
       }, 2000);
-      
+
       return () => clearTimeout(timer);
+    } else {
+      console.log("🎮 Auto-resolution conditions not met:", {
+        selectedCardIndex,
+        activeChallenge,
+        isSubmitting,
+        processingChallenge,
+      });
     }
   }, [selectedCardIndex, activeChallenge, isSubmitting, processingChallenge]);
 
   // Used by the person who is being challenged (the assigner of the drink)
   const handleResolveChallenge = async (assignmentIndex: number) => {
     try {
-      if (selectedCardIndex === null || assignmentIndex === null) {
-        // Require card selection before submission
+      console.log(
+        "🎮 CHALLENGE FLOW: handleResolveChallenge called with index",
+        assignmentIndex
+      );
+
+      if (selectedCardIndex === null) {
+        console.error("Cannot resolve challenge: No card selected");
         return;
       }
-      
+
+      // Double-check that the assignment exists
+      if (!assignments[assignmentIndex]) {
+        console.error(
+          "Cannot resolve challenge: Invalid assignment index",
+          assignmentIndex
+        );
+        return;
+      }
+
+      // Double-check the assignment is still in challenged status
+      if (assignments[assignmentIndex].status !== "challenged") {
+        console.log(
+          "Challenge already resolved. Status:",
+          assignments[assignmentIndex].status
+        );
+        return;
+      }
+
       // Save a reference to the selected card index before we do anything else
       const cardToReveal = selectedCardIndex;
-      
+
       console.log("🎮 CHALLENGE FLOW: Starting challenge resolution process");
-      
+      console.log("Selected card index:", cardToReveal);
+      console.log("Assignment index:", assignmentIndex);
+
       // IMPORTANT: First disable challenges UI immediately
       // Set state variables in a very specific order to ensure consistent UI
       setIsSubmitting(true);
       setProcessingChallenge(false);
       setActiveChallenge(null);
-      
+
       // First make sure we've shown the card by calling the parent handler
       console.log("🎮 CHALLENGE FLOW: Showing card", cardToReveal);
       if (onChallengeCard) {
         onChallengeCard(cardToReveal);
       }
-      
+
       // Find the current challenge
       const challenge = assignments[assignmentIndex];
 
       // Find player name (for better logging)
       const fromPlayerName = getPlayerName(challenge.from);
       const toPlayerName = getPlayerName(challenge.to);
-      
-      console.log(`🎮 CHALLENGE FLOW: ${fromPlayerName} is showing a card to ${toPlayerName}`);
+
+      console.log(
+        `🎮 CHALLENGE FLOW: ${fromPlayerName} is showing a card to ${toPlayerName}`
+      );
 
       // Find the player's cards
       const playerRef = doc(db, "games", gameId, "players", currentPlayerId);
@@ -358,18 +450,25 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
       const playerData = playerDoc.data();
       const playerCards = playerData.cards || [];
 
-      if (!playerCards[selectedCardIndex]) {
-        console.error("Selected card not found");
+      console.log("Player has", playerCards.length, "cards");
+      console.log("Selected card index:", cardToReveal);
+      console.log("Card at index:", playerCards[cardToReveal]);
+
+      if (!playerCards[cardToReveal]) {
+        console.error("Selected card not found at index", cardToReveal);
+        console.log("Available cards:", playerCards);
         setIsSubmitting(false);
         return;
       }
 
       // Get the selected card details
-      const selectedCard = playerCards[selectedCardIndex];
+      const selectedCard = playerCards[cardToReveal];
+      console.log("Selected card:", selectedCard);
 
       // Get the card rank (we need to convert from the numeric index to the actual rank)
       if (selectedCard.i === undefined) {
         console.error("Selected card has no index property");
+        console.log("Card data:", selectedCard);
         setIsSubmitting(false);
         return;
       }
@@ -399,163 +498,125 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
       const wasSuccessful = actualRank === challenge.cardRank;
 
       console.log(
-        `🎮 CHALLENGE RESULT: Card is ${actualRank}, claimed ${challenge.cardRank}, match: ${wasSuccessful ? 'YES ✅' : 'NO ❌'}`
+        `🎮 CHALLENGE RESULT: Card is ${actualRank}, claimed ${
+          challenge.cardRank
+        }, match: ${wasSuccessful ? "YES ✅" : "NO ❌"}`
       );
-      
-      // CRITICAL FIX: Immediately update the assignment in Firebase FIRST
-      // This makes sure challenge status properly updates to get out of challenged state
-      const gameRef = doc(db, "games", gameId);
-      const gameDoc = await getDoc(gameRef);
-      
+
+      // Store the timestamp when we resolved this challenge
+      challengeResolvedTimeRef.current = Date.now();
+
+      // STEP 1: CRITICAL FIX - Set challenge result in local state immediately
+      // This ensures the UI updates right away with the result
+      setChallengeResult({
+        index: assignmentIndex,
+        result: wasSuccessful,
+        from: challenge.from,
+        to: challenge.to,
+      });
+
+      // STEP 2: Aggressive update of the assignment status first
       try {
+        console.log("🎮 CHALLENGE FLOW: Updating assignment status");
+        const gameRef = doc(db, "games", gameId);
+        const gameDoc = await getDoc(gameRef);
+
         if (gameDoc.exists()) {
           const gameData = gameDoc.data();
           const currentAssignments = [...(gameData.drinkAssignments || [])];
-          
+
           if (currentAssignments[assignmentIndex]) {
-            console.log("🎮 CHALLENGE FLOW: Updating assignment status in Firebase");
-            
-            // Immediately update the assignment's status 
+            // Update ONLY this assignment's status
             currentAssignments[assignmentIndex] = {
               ...currentAssignments[assignmentIndex],
-              status: wasSuccessful ? 'successful_challenge' : 'failed_challenge',
+              status: wasSuccessful
+                ? "successful_challenge"
+                : "failed_challenge",
               resolvedAt: Date.now(),
-              isResolved: true // Mark explicitly as resolved
+              isResolved: true,
             };
-            
-            // First update just the status to avoid race conditions
+
+            // Update JUST the assignments first
             await updateDoc(gameRef, {
-              drinkAssignments: currentAssignments
+              drinkAssignments: currentAssignments,
             });
-            
-            console.log("🎮 CHALLENGE FLOW: Assignment status updated successfully");
+
+            console.log("🎮 Assignment status updated successfully");
           }
         }
-      } catch (err) {
-        console.error("❌ ERROR: Failed to update assignment status:", err);
-        // Even if this fails, continue with the rest of the flow
+      } catch (updateError) {
+        console.error("Error updating assignment status:", updateError);
       }
-      
-      // Keep track of the card to replace
-      const cardIndexToReplace = cardToReveal;
-      
-      // STEP 1: Mark card for replacement immediately
-      console.log(`🎮 CHALLENGE FLOW: Marking card ${cardIndexToReplace} for replacement`);
-      await markCardForReplacement(gameId, currentPlayerId, cardIndexToReplace);
-      
-      // STEP 2: Directly update the assignment status to ensure it's not in "challenged" state
-      const assignmentGameRef = doc(db, "games", gameId);
-      const assignmentGameDoc = await getDoc(assignmentGameRef);
-      
-      if (assignmentGameDoc.exists()) {
-        const assignmentGameData = assignmentGameDoc.data();
-        const currentAssignments = [...(assignmentGameData.drinkAssignments || [])];
-        
-        if (currentAssignments[assignmentIndex]) {
-          // Immediately mark as resolved
-          currentAssignments[assignmentIndex] = {
-            ...currentAssignments[assignmentIndex],
-            status: wasSuccessful ? 'successful_challenge' : 'failed_challenge',
-            resolvedAt: Date.now(),
-            isResolved: true
-          };
-          
-          // Update assignments in database first
-          await updateDoc(assignmentGameRef, {
-            drinkAssignments: currentAssignments,
-          });
-        }
-      }
-      
-      // STEP 3: Resolve the challenge in Firebase and update drink counts
-      console.log(`🎮 CHALLENGE FLOW: Resolving challenge outcome...`);
-      await resolveDrinkChallenge(gameId, assignmentIndex, wasSuccessful);
-      
-      // STEP 4: IMPORTANT - Update player's state directly to ensure they have the card replaced
+
+      // STEP 3: Mark card for replacement immediately
       try {
-        const playerRef = doc(db, "games", gameId, "players", currentPlayerId);
-        // Set the flag to trigger automatic card replacement
+        console.log(
+          `🎮 CHALLENGE FLOW: Marking card ${cardToReveal} for replacement`
+        );
+        await markCardForReplacement(gameId, currentPlayerId, cardToReveal);
+      } catch (markError) {
+        console.error("Error marking card for replacement:", markError);
+      }
+
+      // STEP 4: Call resolveDrinkChallenge to handle drink assignment logic
+      try {
+        console.log("🎮 CHALLENGE FLOW: Calling resolveDrinkChallenge");
+        await resolveDrinkChallenge(gameId, assignmentIndex, wasSuccessful);
+        console.log("🎮 Drink challenge resolved successfully");
+      } catch (resolveError) {
+        console.error("Error resolving drink challenge:", resolveError);
+      }
+
+      // STEP 5: Exit selection mode
+      if (setIsSelectingForChallenge) {
+        console.log("🎮 CHALLENGE FLOW: Exiting selection mode");
+        setIsSelectingForChallenge(false);
+        setLocalSelectionMode(false);
+      }
+
+      // STEP 6: Update player state to trigger card replacement
+      try {
+        console.log(
+          `🎮 CHALLENGE FLOW: Setting player state for card replacement`
+        );
         await updateDoc(playerRef, {
           needsCardReplacement: true,
-          cardToReplace: cardIndexToReplace,
+          cardToReplace: cardToReveal,
           isInChallenge: false,
           inChallenge: false,
           challengeCardIndex: null,
           selectingForChallenge: false,
           challengeComplete: true,
-          updatedAt: new Date().toISOString()
+          updatedAt: new Date().toISOString(),
         });
-      } catch (err) {
-        console.error("Error updating player state:", err);
-      }
-      
-      // Add this challenge to the set of handled challenges
-      setHandledChallenges(new Set([...Array.from(handledChallenges), assignmentIndex]));
-      
-      // Store the timestamp when we resolved this challenge
-      challengeResolvedTimeRef.current = Date.now();
-      
-      // Note: We don't show the challenge result here,
-      // it will be shown after the card replacement is set up
-      
-      // Ensure the card is visible during the resolution
-      if (onChallengeCard) {
-        console.log("🎮 CHALLENGE FLOW: Making sure card is visible during resolution");
-        onChallengeCard(cardToReveal);
+      } catch (playerUpdateError) {
+        console.error("Error updating player state:", playerUpdateError);
       }
 
-      // IMPORTANT: Trigger card replacement AUTOMATICALLY when a challenge is resolved
-      // This is the key to fixing the flow - we need to call replacePlayerCard right away
-      try {
-        console.log("🎮 CHALLENGE FLOW: Automatically replacing card after challenge");
-        const playerRef = doc(db, "games", gameId, "players", currentPlayerId);
-        
-        // Update the player document to trigger card replacement
-        await updateDoc(playerRef, {
-          needsCardReplacement: true,
-          cardToReplace: cardIndexToReplace,
-          updatedAt: new Date().toISOString()
-        });
-        
-        // Display challenge resolution result
-        console.log("🎮 CHALLENGE FLOW: Displaying challenge result notification");
-        setChallengeResult({
-          index: assignmentIndex,
-          result: wasSuccessful,
-          from: challenge.from,
-          to: challenge.to,
-        });
-        
-        // Exit selection mode
-        if (setIsSelectingForChallenge) {
-          setIsSelectingForChallenge(false);
-        }
-        
-        // Wait a moment to let user see the card and result
-        setTimeout(() => {
-          // Hide the card
-          if (onChallengeCard) {
-            console.log("🎮 CHALLENGE FLOW: Hiding card after showing result");
-            onChallengeCard(-1);
-          }
-          
-          // Then after another short delay, hide the result
-          setTimeout(() => {
-            console.log("🎮 CHALLENGE FLOW: Final cleanup");
-            setSelectedCardIndex(null);
-            setChallengeResult(null); 
-            setActiveChallenge(null);
-            setProcessingChallenge(false);
-            setCleaningUpChallenge(false);
-            setIsSubmitting(false);
-          }, 3000);
-        }, 3000);
-      } catch (replaceError) {
-        console.error("Error setting up card replacement:", replaceError);
-      }
+      // STEP 7: Add this challenge to handled set
+      setHandledChallenges(
+        (prev) => new Set([...Array.from(prev), assignmentIndex])
+      );
 
       console.log("🎮 CHALLENGE FLOW: Challenge resolution complete!");
-      setIsSubmitting(false);
+
+      // STEP 8: Wait a moment to let user see the card and result
+      setTimeout(() => {
+        // Hide the card after a delay
+        if (onChallengeCard) {
+          console.log("🎮 CHALLENGE FLOW: Hiding card after showing result");
+          onChallengeCard(-1);
+        }
+
+        // Then after another short delay, clean up
+        setTimeout(() => {
+          console.log("🎮 CHALLENGE FLOW: Final cleanup");
+          setSelectedCardIndex(null);
+          setActiveChallenge(null);
+          setCleaningUpChallenge(false);
+          setIsSubmitting(false);
+        }, 2000);
+      }, 3000);
     } catch (error) {
       console.error("❌ CHALLENGE ERROR:", error);
       setIsSubmitting(false);
@@ -566,21 +627,117 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
       setChallengeResult(null);
       setSelectedCardIndex(null);
       setCleaningUpChallenge(false);
-      
+
       if (setIsSelectingForChallenge) {
         setIsSelectingForChallenge(false);
+        setLocalSelectionMode(false);
       }
       if (onChallengeCard) {
         onChallengeCard(-1);
       }
-      
+
       // Force clear Firebase state
       clearPlayerChallengeState(gameId, currentPlayerId);
     }
   };
 
+  useEffect(() => {
+    // Handler for auto-submit events - this directly triggers challenge resolution
+    const handleAutoSubmit = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      console.log(
+        "🚀 AUTO-SUBMIT: Received event with data:",
+        customEvent.detail
+      );
+
+      // Make sure we have an active challenge to resolve
+      if (activeChallenge === null && challengesToResolve.length > 0) {
+        // If we don't have an active challenge but there are challenges to resolve,
+        // set the active challenge to the first one
+        const challengeIndex = assignments.findIndex(
+          (a) => a.status === "challenged" && a.from === currentPlayerId
+        );
+
+        if (challengeIndex !== -1) {
+          console.log(
+            "🚀 AUTO-SUBMIT: Setting active challenge to",
+            challengeIndex
+          );
+          setActiveChallenge(challengeIndex);
+
+          // Now directly handle resolution with this index
+          if (
+            customEvent.detail &&
+            customEvent.detail.cardIndex !== undefined
+          ) {
+            const cardIndex = customEvent.detail.cardIndex;
+            console.log("🚀 AUTO-SUBMIT: Selected card index is", cardIndex);
+
+            // Set the selected card index if needed
+            if (selectedCardIndex !== cardIndex) {
+              setSelectedCardIndex(cardIndex);
+            }
+
+            // Give a moment for state to update, then resolve
+            setTimeout(() => {
+              console.log(
+                "🚀 AUTO-SUBMIT: Directly resolving challenge",
+                challengeIndex
+              );
+              handleResolveChallenge(challengeIndex);
+            }, 500);
+          }
+        } else {
+          console.log("🚀 AUTO-SUBMIT: No valid challenge found to resolve");
+        }
+      }
+      // If we already have an active challenge, just resolve it
+      else if (activeChallenge !== null) {
+        if (customEvent.detail && customEvent.detail.cardIndex !== undefined) {
+          const cardIndex = customEvent.detail.cardIndex;
+          console.log("🚀 AUTO-SUBMIT: Selected card index is", cardIndex);
+
+          // Set the selected card index if needed
+          if (selectedCardIndex !== cardIndex) {
+            setSelectedCardIndex(cardIndex);
+          }
+
+          // Give a moment for state to update, then resolve
+          setTimeout(() => {
+            console.log(
+              "🚀 AUTO-SUBMIT: Directly resolving active challenge",
+              activeChallenge
+            );
+            handleResolveChallenge(activeChallenge);
+          }, 500);
+        }
+      } else {
+        console.log("🚀 AUTO-SUBMIT: No active challenge to resolve");
+        console.log("Active challenge:", activeChallenge);
+        console.log("Challenges to resolve:", challengesToResolve);
+      }
+    };
+
+    // Add the event listener
+    document.addEventListener("challenge:autoSubmit", handleAutoSubmit);
+
+    // Cleanup
+    return () => {
+      document.removeEventListener("challenge:autoSubmit", handleAutoSubmit);
+    };
+  }, [
+    activeChallenge,
+    challengesToResolve,
+    assignments,
+    currentPlayerId,
+    selectedCardIndex,
+  ]);
+
   return (
-    <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4" data-component="drink-assignment-panel">
+    <div
+      className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4"
+      data-component="drink-assignment-panel"
+    >
       <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-2">
         Drink Assignments
       </h3>
@@ -763,7 +920,6 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
                 </button>
               </div>
             )}
-            
           </div>
         )}
 

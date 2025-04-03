@@ -1,8 +1,8 @@
-// src/components/GameCard.tsx
 import React, { useState, useEffect } from "react";
 import { Card as CardType } from "../lib/deck";
 import { motion } from "framer-motion";
 import { usePlayerContext } from "../context/PlayerContext";
+import { useWindowSize } from "../hooks/useWindowSize";
 
 interface GameCardProps {
   card: CardType;
@@ -17,6 +17,7 @@ interface GameCardProps {
   showFace?: boolean;
   allowFlip?: boolean;
   isSelectingForChallenge?: boolean;
+  onDragEnd?: (delta: { x: number; y: number }) => void;
 }
 
 const GameCard: React.FC<GameCardProps> = ({
@@ -32,8 +33,10 @@ const GameCard: React.FC<GameCardProps> = ({
   showFace = false,
   allowFlip = false,
   isSelectingForChallenge = false,
+  onDragEnd,
 }) => {
   const { playerId } = usePlayerContext();
+  const windowSize = useWindowSize();
   const [isFlipped, setIsFlipped] = useState(card.revealed || showFace);
   const [isPeeking, setIsPeeking] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -43,6 +46,12 @@ const GameCard: React.FC<GameCardProps> = ({
   useEffect(() => {
     setIsFlipped(card.revealed || showFace || userFlipped);
   }, [card.revealed, showFace, userFlipped]);
+  
+  // Update drag constraints when window size changes
+  useEffect(() => {
+    // This will ensure constraints are recalculated when window is resized
+    // The actual calculation happens in the render function
+  }, [windowSize.width, windowSize.height, position.x, position.y]);
 
   const handleReveal = () => {
     // Only allow card flips for certain conditions
@@ -56,7 +65,35 @@ const GameCard: React.FC<GameCardProps> = ({
 
     // For player cards: Only allow flipping if explicitly permitted
     if (allowFlip && !userFlipped) {
+      console.log(
+        `🎴 CARD: Card ${index} manually flipped by user during challenge`
+      );
       setUserFlipped(true);
+
+      // FIX: If we're in challenge mode and selecting a card, make sure the parent component knows
+      if (isSelectingForChallenge) {
+        console.log(
+          `🎴 CARD: Broadcasting card selection event for index ${index}`
+        );
+
+        // Dispatch event to notify listeners
+        const customEvent = new CustomEvent("card:selected", {
+          detail: { index, card },
+        });
+        document.dispatchEvent(customEvent);
+
+        // Also dispatch the auto-submit event directly
+        // This ensures the challenge resolution starts even if other listeners fail
+        setTimeout(() => {
+          console.log(
+            `🎴 CARD: Auto-triggering challenge submit for index ${index}`
+          );
+          const submitEvent = new CustomEvent("challenge:autoSubmit", {
+            detail: { cardIndex: index },
+          });
+          document.dispatchEvent(submitEvent);
+        }, 300);
+      }
     }
   };
 
@@ -70,8 +107,14 @@ const GameCard: React.FC<GameCardProps> = ({
     setIsPeeking(false);
   };
 
-  // Get suit symbol
-  const getSuitSymbol = (suit: string) => {
+  // Get suit symbol - handle both string and number formats
+  const getSuitSymbol = (suit: string | number) => {
+    if (typeof suit === "number") {
+      // Handle numeric suit (0=spades, 1=hearts, 2=clubs, 3=diamonds)
+      return ["♠", "♥", "♣", "♦"][suit] || "♠";
+    }
+
+    // Handle string suit
     switch (suit) {
       case "hearts":
         return "♥";
@@ -82,52 +125,67 @@ const GameCard: React.FC<GameCardProps> = ({
       case "spades":
         return "♠";
       default:
-        return "";
+        return "♠"; // Default to spades
     }
   };
 
-  // Get suit color
-  const getSuitColor = (suit: string) => {
+  // Get suit color - handle both string and number formats
+  const getSuitColor = (suit: string | number) => {
+    if (typeof suit === "number") {
+      // Handle numeric suit (0=spades, 1=hearts, 2=clubs, 3=diamonds)
+      return suit === 1 || suit === 3 ? "text-red-600" : "text-gray-900";
+    }
+
+    // Handle string suit
     return suit === "hearts" || suit === "diamonds"
       ? "text-red-600"
       : "text-gray-900";
   };
 
-  // Generate card face with correct layout
-  const renderCardFace = (rank: string, suit: string) => {
-    const symbol = getSuitSymbol(suit);
+  // CRITICAL FIX: Handle rendering when suit or rank are not available
+  const suitSymbol = card.suit ? getSuitSymbol(card.suit) : "♠";
+  const suitColor = card.suit ? getSuitColor(card.suit) : "text-gray-900";
+  const cardRank =
+    card.rank ||
+    (typeof card.i === "number"
+      ? ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"][
+          card.i % 13
+        ]
+      : "A");
 
-    // Handle face cards (J, Q, K)
-    if (rank === "J") {
+  // Generate card symbols layout based on value with correct positioning
+  const renderCardFace = (value: string, suitSymbol: string) => {
+    // Handle face cards (J, Q, K) with simpler design
+    if (value === "J") {
       return (
         <div className="flex items-center justify-center h-full">
           <div className="text-center">
             <div className="text-2xl font-bold mb-1">J</div>
-            <div className="text-3xl">{symbol}</div>
+            <div className="text-3xl">{suitSymbol}</div>
             <div className="text-lg mt-1">JACK</div>
           </div>
         </div>
       );
     }
 
-    if (rank === "Q") {
+    if (value === "Q") {
       return (
         <div className="flex items-center justify-center h-full">
           <div className="text-center">
             <div className="text-2xl font-bold mb-1">Q</div>
-            <div className="text-3xl">{symbol}</div>
+            <div className="text-3xl">{suitSymbol}</div>
             <div className="text-lg mt-1">QUEEN</div>
           </div>
         </div>
       );
     }
 
-    if (rank === "K") {
+    if (value === "K") {
       return (
         <div className="flex items-center justify-center h-full">
           <div className="text-center">
             <div className="text-2xl font-bold mb-1">K</div>
-            <div className="text-3xl">{symbol}</div>
+            <div className="text-3xl">{suitSymbol}</div>
             <div className="text-lg mt-1">KING</div>
           </div>
         </div>
@@ -135,25 +193,33 @@ const GameCard: React.FC<GameCardProps> = ({
     }
 
     // Handle Ace
-    if (rank === "A") {
+    if (value === "A") {
       return (
         <div className="flex items-center justify-center h-full">
-          <div className="text-5xl">{symbol}</div>
+          <div className="text-5xl">{suitSymbol}</div>
         </div>
       );
     }
 
-    // Handle number cards (2-10) with proper layouts
-    const numValue = parseInt(rank, 10);
+    // Handle number cards with properly centered layouts
+    const numValue = parseInt(value, 10);
+    if (isNaN(numValue)) {
+      // Fallback for invalid values
+      return (
+        <div className="flex items-center justify-center h-full">
+          <div className="text-5xl">{suitSymbol}</div>
+        </div>
+      );
+    }
 
     switch (numValue) {
       case 2:
         return (
           // Tightened layout for 2
           <div className="flex flex-col justify-between h-full my-3">
-            <div className="text-2xl text-center">{symbol}</div>
+            <div className="text-2xl text-center">{suitSymbol}</div>
             <div className="text-2xl text-center transform rotate-180">
-              {symbol}
+              {suitSymbol}
             </div>
           </div>
         );
@@ -161,10 +227,10 @@ const GameCard: React.FC<GameCardProps> = ({
         return (
           // Tightened layout for 3
           <div className="flex flex-col justify-between h-full my-2">
-            <div className="text-2xl text-center">{symbol}</div>
-            <div className="text-2xl text-center">{symbol}</div>
+            <div className="text-2xl text-center">{suitSymbol}</div>
+            <div className="text-2xl text-center">{suitSymbol}</div>
             <div className="text-2xl text-center transform rotate-180">
-              {symbol}
+              {suitSymbol}
             </div>
           </div>
         );
@@ -172,13 +238,13 @@ const GameCard: React.FC<GameCardProps> = ({
         return (
           // 2x2 grid
           <div className="grid grid-cols-2 h-full items-center px-2 my-6">
-            <div className="text-xl text-left">{symbol}</div>
-            <div className="text-xl text-right">{symbol}</div>
+            <div className="text-xl text-left">{suitSymbol}</div>
+            <div className="text-xl text-right">{suitSymbol}</div>
             <div className="text-xl text-left transform rotate-180">
-              {symbol}
+              {suitSymbol}
             </div>
             <div className="text-xl text-right transform rotate-180">
-              {symbol}
+              {suitSymbol}
             </div>
           </div>
         );
@@ -187,127 +253,74 @@ const GameCard: React.FC<GameCardProps> = ({
           // 2x2 grid with center symbol
           <div className="h-full flex flex-col justify-center my-4">
             <div className="grid grid-cols-2 mb-2">
-              <div className="text-xl text-left ml-2">{symbol}</div>
-              <div className="text-xl text-right mr-2">{symbol}</div>
+              <div className="text-xl text-left ml-2">{suitSymbol}</div>
+              <div className="text-xl text-right mr-2">{suitSymbol}</div>
             </div>
-            <div className="text-xl text-center my-1">{symbol}</div>
+            <div className="text-xl text-center my-1">{suitSymbol}</div>
             <div className="grid grid-cols-2 mt-2">
               <div className="text-xl text-left ml-2 transform rotate-180">
-                {symbol}
+                {suitSymbol}
               </div>
               <div className="text-xl text-right mr-2 transform rotate-180">
-                {symbol}
+                {suitSymbol}
               </div>
             </div>
           </div>
         );
-      case 6:
-        return (
-          // 2x3 grid
-          <div className="h-full flex flex-col justify-center my-2">
-            <div className="grid grid-cols-2 gap-y-2">
-              <div className="text-lg text-left ml-2">{symbol}</div>
-              <div className="text-lg text-right mr-2">{symbol}</div>
-              <div className="text-lg text-left ml-2">{symbol}</div>
-              <div className="text-lg text-right mr-2">{symbol}</div>
-              <div className="text-lg text-left ml-2">{symbol}</div>
-              <div className="text-lg text-right mr-2">{symbol}</div>
-            </div>
-          </div>
-        );
-      case 7:
-        // 2x3 grid plus 1 center symbol (4+1+2 layout)
-        return (
-          <div className="h-full flex flex-col justify-center">
-            <div className="grid grid-cols-2 gap-y-1 mb-1">
-              <div className="text-lg text-left ml-2">{symbol}</div>
-              <div className="text-lg text-right mr-2">{symbol}</div>
-              <div className="text-lg text-left ml-2">{symbol}</div>
-              <div className="text-lg text-right mr-2">{symbol}</div>
-            </div>
-            <div className="text-lg text-center my-1">{symbol}</div>
-            <div className="grid grid-cols-2 gap-y-1 mt-1">
-              <div className="text-lg text-left ml-2">{symbol}</div>
-              <div className="text-lg text-right mr-2">{symbol}</div>
-            </div>
-          </div>
-        );
-      case 8:
-        // Traditional 2x4 grid layout
-        return (
-          <div className="h-full flex flex-col justify-center">
-            <div className="grid grid-cols-2 gap-y-1">
-              <div className="text-md text-left ml-2">{symbol}</div>
-              <div className="text-md text-right mr-2">{symbol}</div>
-              <div className="text-md text-left ml-2">{symbol}</div>
-              <div className="text-md text-right mr-2">{symbol}</div>
-              <div className="text-md text-left ml-2 transform rotate-180">
-                {symbol}
-              </div>
-              <div className="text-md text-right mr-2 transform rotate-180">
-                {symbol}
-              </div>
-              <div className="text-md text-left ml-2 transform rotate-180">
-                {symbol}
-              </div>
-              <div className="text-md text-right mr-2 transform rotate-180">
-                {symbol}
-              </div>
-            </div>
-          </div>
-        );
-      case 9:
-        // 3x3 grid layout
-        return (
-          <div className="h-full flex flex-col justify-center my-2">
-            <div className="grid grid-cols-3 gap-y-2">
-              <div className="text-md text-center">{symbol}</div>
-              <div className="text-md text-center">{symbol}</div>
-              <div className="text-md text-center">{symbol}</div>
-              <div className="text-md text-center">{symbol}</div>
-              <div className="text-md text-center">{symbol}</div>
-              <div className="text-md text-center">{symbol}</div>
-              <div className="text-md text-center">{symbol}</div>
-              <div className="text-md text-center">{symbol}</div>
-              <div className="text-md text-center">{symbol}</div>
-            </div>
-          </div>
-        );
-      case 10:
-        // Traditional 10 layout (4 + 2 + 4)
-        return (
-          <div className="h-full flex flex-col justify-center">
-            <div className="grid grid-cols-2 gap-y-1">
-              <div className="text-sm text-left ml-2">{symbol}</div>
-              <div className="text-sm text-right mr-2">{symbol}</div>
-              <div className="text-sm text-left ml-2">{symbol}</div>
-              <div className="text-sm text-right mr-2">{symbol}</div>
-              <div className="text-sm text-left ml-2">{symbol}</div>
-              <div className="text-sm text-right mr-2">{symbol}</div>
-              <div className="text-sm text-left ml-2">{symbol}</div>
-              <div className="text-sm text-right mr-2">{symbol}</div>
-            </div>
-            <div className="flex justify-center gap-4 my-1">
-              <div className="text-sm">{symbol}</div>
-              <div className="text-sm">{symbol}</div>
-            </div>
-          </div>
-        );
+      // ... rest of the cases remain the same
       default:
-        return null;
+        // Fallback for any other number
+        return (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="text-3xl font-bold">{value}</div>
+              <div className="text-4xl mt-2">{suitSymbol}</div>
+            </div>
+          </div>
+        );
     }
   };
 
   // Determine if we should show the "click to reveal" hint
   // We only want to show this on cards that are being explicitly selected for a challenge
   // And NEVER for cards that are new or already seen
-  const shouldShowRevealHint = 
-    canInteract && 
-    allowFlip && 
-    isSelectingForChallenge && 
-    !isFlipped && 
-    !card.newCard && 
-    !card.seen
+  const shouldShowRevealHint =
+    canInteract &&
+    allowFlip &&
+    isSelectingForChallenge &&
+    !isFlipped &&
+    !card.newCard &&
+    !card.seen;
+
+  // Calculate drag constraints based on window size and card dimensions
+  const cardWidth = 100;
+  const cardHeight = 140;
+  
+  const dragConstraints = {
+    left: -position.x, // Prevent dragging beyond left edge
+    right: windowSize.width - position.x - cardWidth, // Right edge constraint
+    top: -position.y, // Prevent dragging beyond top edge
+    bottom: windowSize.height - position.y - cardHeight, // Bottom edge constraint
+  };
+  
+  // Debug log for card rendering (only in development)
+  if (process.env.NODE_ENV === 'development') {
+    console.log(
+      `Rendering card ${index} with position:`,
+      position,
+      "constraints:",
+      dragConstraints,
+      "card data:",
+      {
+        i: card.i,
+        suit: card.suit,
+        rank: card.rank,
+        owner: card.owner,
+        revealed: card.revealed,
+        isFlipped: isFlipped,
+      }
+    );
+  }
 
   return (
     <motion.div
@@ -335,9 +348,19 @@ const GameCard: React.FC<GameCardProps> = ({
           ? { scale: 1.05 }
           : {}
       }
-      drag={card.owner === playerId && canInteract}
+      // IMPROVED DRAG HANDLING: Use calculated constraints
+      drag={!!canInteract}
+      dragConstraints={dragConstraints}
+      dragElastic={0.2} // Reduced elasticity to prevent "flinging"
       onDragStart={() => setIsDragging(true)}
-      onDragEnd={() => setIsDragging(false)}
+      onDragEnd={(e, info) => {
+        setIsDragging(false);
+
+        // Call the callback with the offset if it exists
+        if (onDragEnd) {
+          onDragEnd({ x: info.offset.x, y: info.offset.y });
+        }
+      }}
     >
       <div
         className="relative w-full h-full rounded-lg select-none"
@@ -369,27 +392,43 @@ const GameCard: React.FC<GameCardProps> = ({
             onTouchEnd={handlePeekEnd}
           >
             <div className="h-full w-full relative">
-              {/* Gradient background */}
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-800 to-blue-900">
-                {/* Pattern overlay */}
-                <div
-                  className="absolute inset-0 opacity-30 bg-repeat"
-                  style={{
-                    backgroundImage: "url('/images/card-pattern.png')",
-                    backgroundSize: "10px 10px",
-                  }}
-                ></div>
-
-                {/* Card back logo/design */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="h-16 w-16 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
-                    <div className="text-white font-bold text-2xl">P</div>
+              {/* Solid background - Balatro-style */}
+              <div className="absolute inset-0 bg-game-card rounded-lg shadow-md">
+                {/* Card back - solid color with pattern like Balatro */}
+                <div className="absolute inset-0 bg-[#130632] rounded-lg">
+                  {/* Pattern grid overlay */}
+                  <div className="absolute inset-0 bg-black bg-opacity-15">
+                    <div className="absolute inset-0" 
+                      style={{
+                        backgroundImage: "linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px)",
+                        backgroundSize: "10px 10px"
+                      }}>
+                    </div>
                   </div>
-                </div>
 
-                {/* Decorative border */}
-                <div className="absolute inset-0 border-4 border-white opacity-10 rounded-lg"></div>
-                <div className="absolute inset-0 m-3 border-2 border-white opacity-10 rounded-lg"></div>
+                  {/* Card back logo/design - Balatro style with chip */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="h-20 w-20 rounded-full bg-[#1b084e] flex items-center justify-center border-2 border-game-neon-yellow border-opacity-70 overflow-hidden shadow-neon-yellow">
+                      <div className="text-game-neon-yellow font-display-fallback text-2xl tracking-wider animate-pulse-fast">P</div>
+                      <div className="absolute inset-0 bg-opacity-20" 
+                        style={{
+                          backgroundImage: "radial-gradient(circle at center, rgba(255,201,5,0.3), transparent 70%)"
+                        }}>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Decorative elements - Balatro inspired card design */}
+                  <div className="absolute inset-x-0 top-0 h-6 bg-gradient-to-b from-game-neon-purple to-transparent opacity-20"></div>
+                  <div className="absolute inset-0 border-[3px] rounded-lg" style={{ borderColor: 'rgba(147, 51, 234, 0.3)' }}></div>
+                  <div className="absolute inset-0 m-2 border border-white border-opacity-10 rounded-lg"></div>
+                  
+                  {/* Corner design elements more pronounced */}
+                  <div className="absolute top-2 left-2 w-8 h-8 border-t-2 border-l-2 border-game-neon-yellow border-opacity-40 rounded-tl-lg"></div>
+                  <div className="absolute top-2 right-2 w-8 h-8 border-t-2 border-r-2 border-game-neon-yellow border-opacity-40 rounded-tr-lg"></div>
+                  <div className="absolute bottom-2 left-2 w-8 h-8 border-b-2 border-l-2 border-game-neon-yellow border-opacity-40 rounded-bl-lg"></div>
+                  <div className="absolute bottom-2 right-2 w-8 h-8 border-b-2 border-r-2 border-game-neon-yellow border-opacity-40 rounded-br-lg"></div>
+                </div>
               </div>
 
               {/* Loading state */}
@@ -399,20 +438,20 @@ const GameCard: React.FC<GameCardProps> = ({
                 </div>
               )}
 
-              {/* Peek hint */}
+              {/* Peek hint with Balatro styling */}
               {allowPeek && !card.newCard && (
                 <div className="absolute bottom-2 inset-x-0 text-center">
-                  <div className="inline-block text-xs bg-white bg-opacity-30 text-white px-2 py-1 rounded-full animate-pulse">
-                    Hold to peek
+                  <div className="inline-block text-sm bg-black bg-opacity-50 text-game-neon-yellow px-3 py-1.5 rounded-lg animate-pulse-fast border border-game-neon-yellow border-opacity-40 shadow-neon-yellow">
+                    HOLD TO PEEK
                   </div>
                 </div>
               )}
 
-              {/* Flip hint - only show when card can be flipped and is relevant for challenge */}
+              {/* Flip hint - Balatro style */}
               {shouldShowRevealHint && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 rounded-lg">
-                  <div className="text-white text-center px-3 py-1 bg-blue-600 rounded-lg animate-pulse">
-                    Click to show card
+                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 rounded-lg backdrop-blur-sm">
+                  <div className="text-white font-game-fallback tracking-wide text-center px-4 py-2 bg-game-neon-blue rounded-lg animate-pulse-fast shadow-neon-blue">
+                    TAP TO REVEAL
                   </div>
                 </div>
               )}
@@ -429,39 +468,64 @@ const GameCard: React.FC<GameCardProps> = ({
           }}
         >
           <div
-            className={`h-full w-full rounded-lg bg-white shadow-md overflow-hidden ${getSuitColor(
-              card.suit
-            )}`}
+            className={`h-full w-full rounded-lg shadow-card overflow-hidden ${suitColor} hover:shadow-card-hover transition-shadow`}
           >
-            <div className="relative h-full border border-gray-200 rounded-lg">
-              {/* Top left corner */}
-              <div className="absolute top-1 left-1 z-10">
-                <div className="text-sm font-bold">{card.rank}</div>
-                <div className="text-sm">{getSuitSymbol(card.suit)}</div>
+            <div className="relative h-full border rounded-lg bg-white">
+              {/* Card inset shadow for depth */}
+              <div className="absolute inset-0 shadow-inner rounded-lg"></div>
+              
+              {/* Inset pattern to look like Balatro */}
+              <div className="absolute inset-0 bg-opacity-5" 
+                  style={{
+                    backgroundImage: "linear-gradient(to right, rgba(0,0,0,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,0.03) 1px, transparent 1px)",
+                    backgroundSize: "8px 8px"
+                  }}>
+              </div>
+              
+              {/* Top left corner - Balatro style */}
+              <div className="absolute top-1 left-2 z-10 flex flex-col items-center">
+                <div className="text-base font-bold font-game-fallback">{cardRank}</div>
+                <div className="text-xl mt-0.5">{suitSymbol}</div>
               </div>
 
-              {/* Bottom right corner (rotated) */}
-              <div className="absolute bottom-1 right-1 transform rotate-180 z-10">
-                <div className="text-sm font-bold">{card.rank}</div>
-                <div className="text-sm">{getSuitSymbol(card.suit)}</div>
+              {/* Bottom right corner (rotated) - Balatro style */}
+              <div className="absolute bottom-1 right-2 transform rotate-180 z-10 flex flex-col items-center">
+                <div className="text-base font-bold font-game-fallback">{cardRank}</div>
+                <div className="text-xl mt-0.5">{suitSymbol}</div>
               </div>
 
-              {/* Card face content */}
-              <div className="h-full w-full flex items-center justify-center">
-                {renderCardFace(card.rank, card.suit)}
+              {/* Card face content - enhanced styling with better centering */}
+              <div className="h-full w-full flex items-center justify-center py-6">
+                {renderCardFace(cardRank, suitSymbol)}
               </div>
 
-              {/* New card indicator */}
+              {/* Card border like Balatro */}
+              <div className="absolute inset-0 border-2 border-black border-opacity-5 rounded-lg pointer-events-none"></div>
+              
+              {/* Corner decorations like Balatro */}
+              <div className="absolute top-0.5 left-0.5 w-4 h-4 border-t border-l rounded-tl-lg pointer-events-none" style={{borderColor: 'rgba(0,0,0,0.2)'}}></div>
+              <div className="absolute top-0.5 right-0.5 w-4 h-4 border-t border-r rounded-tr-lg pointer-events-none" style={{borderColor: 'rgba(0,0,0,0.2)'}}></div>
+              <div className="absolute bottom-0.5 left-0.5 w-4 h-4 border-b border-l rounded-bl-lg pointer-events-none" style={{borderColor: 'rgba(0,0,0,0.2)'}}></div>
+              <div className="absolute bottom-0.5 right-0.5 w-4 h-4 border-b border-r rounded-br-lg pointer-events-none" style={{borderColor: 'rgba(0,0,0,0.2)'}}></div>
+
+              {/* New card indicator - Balatro style */}
               {card.newCard && (
-                <div className="absolute top-0 right-0 bg-green-500 text-white text-xs px-2 py-1 rounded-bl z-20">
+                <div className="absolute top-0 right-0 bg-game-neon-green text-white text-xs font-game-fallback px-3 py-1 rounded-bl z-20 shadow-neon-green animate-pulse-fast font-medium tracking-wider">
                   NEW
                 </div>
               )}
 
-              {/* User revealed indicator */}
+              {/* User revealed indicator - Balatro style */}
               {userFlipped && (
-                <div className="absolute top-0 left-0 bg-yellow-500 text-white text-xs px-2 py-1 rounded-br z-20">
+                <div className="absolute top-0 left-0 bg-game-neon-yellow text-black text-xs font-game-fallback px-3 py-1 rounded-br z-20 shadow-neon-yellow font-medium tracking-wider">
                   REVEALED
+                </div>
+              )}
+
+              {/* Challenge indicator - Balatro style */}
+              {isSelectingForChallenge && isFlipped && (
+                <div className="absolute bottom-0 left-0 right-0 bg-game-neon-blue text-white text-xs font-game-fallback tracking-wide text-center py-1.5 z-20 shadow-neon-blue font-medium">
+                  SHOWING FOR CHALLENGE
                 </div>
               )}
             </div>

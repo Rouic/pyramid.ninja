@@ -119,19 +119,24 @@ const GamePyramid: React.FC<GamePyramidProps> = ({
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-64 sm:h-80 md:h-96 lg:h-[650px] mx-auto bg-emerald-50 dark:bg-emerald-900/30 rounded-lg p-4"
+      className="relative w-full h-64 sm:h-80 md:h-96 lg:h-[650px] mx-auto rounded-lg p-6 border-2 border-game-neon-purple border-opacity-30"
+      style={{
+        background: "#1b084e",
+        backgroundImage: "linear-gradient(to right, rgba(30, 14, 96, 0.8), rgba(66, 21, 143, 0.4)), linear-gradient(to bottom, rgba(30, 14, 96, 0.8), rgba(89, 30, 184, 0.2))",
+        boxShadow: "inset 0 0 60px rgba(0, 0, 0, 0.5)"
+      }}
     >
-      {/* Row indicators - showing drink values */}
+      {/* Row indicators - showing drink values with Balatro styling */}
       {isGameStarted && (
-        <div className="absolute left-2 top-1/2 transform -translate-y-1/2 flex flex-col justify-around h-full">
+        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex flex-col justify-around h-full">
           {rowDrinkMap.map((drinks, index) => (
             <div
               key={index}
-              className={`flex items-center justify-center w-8 h-8 rounded-full mb-2 text-xs
+              className={`flex items-center justify-center w-10 h-10 rounded-full mb-2 text-sm
                 ${
                   drinks === drinksForCurrentRow
-                    ? "bg-yellow-400 text-yellow-900 font-bold animate-pulse"
-                    : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                    ? "bg-game-neon-yellow text-black font-bold animate-pulse-fast shadow-neon-yellow font-game-fallback"
+                    : "bg-black bg-opacity-40 text-white border border-white border-opacity-20 font-game-fallback"
                 }`}
             >
               {drinks}
@@ -163,18 +168,21 @@ const GamePyramid: React.FC<GamePyramidProps> = ({
             canInteract={isGameStarted && canRevealCards}
             className={`${
               isGameStarted && canRevealCards && !card.revealed
-                ? "cursor-pointer hover:scale-105 hover:shadow-lg transition-transform"
-                : ""
-            }`}
+                ? "cursor-pointer hover:scale-110 hover:shadow-card-hover transition-all duration-300 animate-float"
+                : "transform hover:scale-105 transition-transform duration-300"
+            } card-enhanced`}
             isHighlighted={isHighlighted}
           />
         );
       })}
 
       {pyramidCards.length === 0 && isGameStarted && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-gray-500 dark:text-gray-400">
-            Setting up pyramid...
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded-lg">
+          <div className="bg-game-card px-6 py-4 rounded-lg border border-game-neon-blue shadow-neon-blue border-opacity-40">
+            <div className="flex items-center">
+              <div className="animate-spin rounded-full h-6 w-6 border-3 border-game-neon-blue border-t-transparent mr-3"></div>
+              <span className="text-white font-game-fallback tracking-wide">SETTING UP PYRAMID...</span>
+            </div>
           </div>
         </div>
       )}

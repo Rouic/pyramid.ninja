@@ -122,69 +122,69 @@ export function GameControls({
   };
 
   return (
-    <div className="flex flex-col space-y-4">
+    <div className="flex flex-col space-y-6">
       {isHost &&
         (currentPhase === "memorizing" || currentPhase === "ready") && (
-          <div className="mt-4 p-4 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-            <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2">
-              Host Controls
+          <div className="mt-4 p-5 bg-game-card rounded-xl border border-game-neon-blue border-opacity-30 shadow-lg">
+            <h4 className="font-game-fallback tracking-wide text-game-neon-blue text-lg mb-3">
+              HOST CONTROLS
             </h4>
-            <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
+            <p className="text-white mb-4">
               You can click any pyramid card at any time to start the game.
               {currentPhase === "memorizing" &&
-                "Players are currently memorizing their cards."}
+                " Players are currently memorizing their cards."}
               {currentPhase === "ready" &&
-                "Players are ready to start memorizing."}
+                " Players are ready to start memorizing."}
             </p>
 
             {currentPhase === "memorizing" && allPlayersReady && (
               <button
                 onClick={onStartPlaying}
-                className="w-full mt-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+                className="w-full mt-2 px-6 py-3 bg-game-neon-green hover:shadow-neon-green text-white rounded-lg font-game-fallback tracking-wide transition-all duration-300 hover:scale-105 btn-neon"
               >
-                Everyone's Ready - Start Playing Phase
+                EVERYONE'S READY - START GAME
               </button>
             )}
 
-            <div className="mt-2 text-xs text-blue-600 dark:text-blue-400">
-              <strong>Tip:</strong> Clicking any pyramid card will automatically
+            <div className="mt-3 text-sm text-game-neon-blue">
+              <strong>TIP:</strong> Clicking any pyramid card will automatically
               start the game for everyone.
             </div>
           </div>
         )}
       {currentPhase === "memorizing" && (
-        <div className="flex flex-col space-y-2">
+        <div className="flex flex-col space-y-4">
           {isMemorizing ? (
-            <div className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 p-4 rounded-lg">
-              <div className="font-medium">Memorizing your cards!</div>
-              <div className="text-xl font-bold mt-1">
-                {memorizeTimeLeft} seconds left
+            <div className="bg-game-card border border-game-neon-yellow border-opacity-40 p-5 rounded-xl shadow-lg">
+              <div className="font-game-fallback tracking-wide text-game-neon-yellow text-lg">MEMORIZING YOUR CARDS!</div>
+              <div className="text-2xl font-bold font-game-fallback mt-2 text-white">
+                {memorizeTimeLeft} SECONDS LEFT
               </div>
-              <div className="w-full bg-yellow-200 dark:bg-yellow-800 h-2 rounded-full mt-2 overflow-hidden">
+              <div className="w-full bg-black bg-opacity-50 h-3 rounded-full mt-3 overflow-hidden border border-white border-opacity-10">
                 <div
-                  className="bg-yellow-500 h-full transition-all duration-1000"
+                  className="bg-game-neon-yellow h-full transition-all duration-1000 shadow-neon-yellow"
                   style={{ width: `${(memorizeTimeLeft / 10) * 100}%` }}
                 ></div>
               </div>
             </div>
           ) : personalMemorizationComplete || isReady ? (
-            <div className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 p-4 rounded-lg">
-              <div className="font-medium">You've memorized your cards!</div>
-              <div className="text-sm mt-1">
+            <div className="bg-game-card border border-game-neon-green border-opacity-40 p-5 rounded-xl shadow-lg">
+              <div className="font-game-fallback tracking-wide text-game-neon-green text-lg">CARDS MEMORIZED!</div>
+              <div className="text-white mt-2">
                 Waiting for other players to finish memorizing...
               </div>
             </div>
           ) : (
             <button
               onClick={startPersonalMemorization}
-              className="px-6 py-3 rounded-lg font-medium text-white transition-colors bg-blue-600 hover:bg-blue-700"
+              className="px-6 py-4 rounded-lg font-game-fallback tracking-wide text-white transition-all bg-game-neon-blue hover:shadow-neon-blue hover:scale-105 duration-300 text-lg btn-neon"
             >
-              Start Memorizing My Cards
+              START MEMORIZING MY CARDS
             </button>
           )}
 
           {!isMemorizing && !personalMemorizationComplete && !isReady && (
-            <div className="mt-2 text-sm text-gray-600 dark:text-gray-400 text-center">
+            <div className="mt-1 text-sm text-gray-300 text-center">
               Click to start your 10-second memorization period
             </div>
           )}
@@ -194,62 +194,79 @@ export function GameControls({
       {currentPhase === "ready" && !isReady && (
         <button
           onClick={startPersonalMemorization}
-          className="px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-medium transition-colors"
+          className="px-6 py-4 rounded-lg font-game-fallback tracking-wide text-white transition-all bg-game-neon-yellow hover:shadow-neon-yellow hover:scale-105 duration-300 text-lg btn-neon"
         >
-          Start Memorizing My Cards
+          START MEMORIZING MY CARDS
         </button>
       )}
 
-      {/* Player readiness status with modern UI */}
+      {/* Player readiness status with Balatro styling */}
       {(currentPhase === "memorizing" ||
         (isHost && currentPhase === "ready")) && (
-        <div className="mt-4 bg-white dark:bg-gray-800 rounded-xl shadow p-4">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-gray-700 dark:text-gray-300">
-              Player Status
+        <div className="mt-5 bg-game-card rounded-xl shadow-lg border border-game-neon-purple border-opacity-30 p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-game-fallback text-lg tracking-wide text-game-neon-purple animate-pulse-fast">
+              PLAYER STATUS
             </h3>
-            <span className="text-sm text-gray-500 dark:text-gray-400">
-              {readyCount}/{totalPlayers} Ready
-            </span>
+            <div className="font-game-fallback text-white px-3 py-1 bg-black bg-opacity-40 rounded-lg border-2 border-white border-opacity-10 flex items-center space-x-2">
+              <span className="text-game-neon-green font-bold">{readyCount}</span>
+              <span className="text-xs opacity-70">/</span>
+              <span>{totalPlayers} READY</span>
+            </div>
           </div>
 
-          {/* Progress bar */}
-          <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full mb-3">
-            <div
-              className="h-full bg-green-500 rounded-full transition-all duration-500"
-              style={{ width: `${readyPercentage}%` }}
-            ></div>
+          {/* Progress bar - Balatro style with segments */}
+          <div className="w-full h-4 bg-black bg-opacity-40 rounded-lg my-4 overflow-hidden border border-white border-opacity-5 p-0.5">
+            <div className="relative h-full w-full flex">
+              {Array.from({ length: totalPlayers }).map((_, i) => (
+                <div key={i} className="h-full flex-1 px-0.5">
+                  <div 
+                    className={`h-full rounded-sm transition-all duration-300 ${
+                      i < readyCount 
+                      ? "bg-gradient-to-r from-game-neon-green to-game-neon-blue" 
+                      : "bg-game-card bg-opacity-40"
+                    }`}
+                    style={{
+                      boxShadow: i < readyCount ? "0 0 10px rgba(50, 252, 88, 0.5)" : "none"
+                    }}
+                  ></div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="space-y-2 max-h-60 overflow-y-auto">
+          <div className="space-y-3 max-h-60 overflow-y-auto">
             {loading ? (
-              <div className="text-center py-2 text-gray-500 dark:text-gray-400">
-                Loading player status...
+              <div className="text-center py-4 text-white flex items-center justify-center bg-black bg-opacity-20 rounded-lg border border-white border-opacity-10">
+                <div className="animate-spin rounded-full h-6 w-6 border-3 border-game-neon-blue border-t-transparent mr-3"></div>
+                <span className="font-game-fallback tracking-wide">LOADING PLAYERS...</span>
               </div>
             ) : (
               Object.entries(playerReadiness).map(([playerId, ready]) => (
                 <div
                   key={playerId}
-                  className="flex items-center justify-between py-2 px-3 rounded-lg bg-gray-50 dark:bg-gray-700/50"
+                  className="flex items-center justify-between py-3 px-4 rounded-lg bg-black bg-opacity-20 border border-white border-opacity-5"
                 >
                   <div className="flex items-center">
                     <span
-                      className={`h-3 w-3 rounded-full mr-2 ${
-                        ready ? "bg-green-500" : "bg-amber-500"
+                      className={`h-4 w-4 rounded-full mr-3 ${
+                        ready 
+                        ? "bg-game-neon-green animate-pulse-fast shadow-neon-green" 
+                        : "bg-game-neon-red shadow-neon-red"
                       }`}
                     ></span>
-                    <span className="text-gray-700 dark:text-gray-300 font-medium">
+                    <span className="text-white font-medium">
                       {getPlayerName(playerId)}
                     </span>
                   </div>
                   <span
-                    className={`text-xs px-2 py-1 rounded-full ${
+                    className={`text-sm px-3 py-1 rounded-lg font-game-fallback ${
                       ready
-                        ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                        : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"
+                        ? "bg-game-neon-green text-black"
+                        : "bg-game-neon-red text-white"
                     }`}
                   >
-                    {ready ? "Ready" : "Not Ready"}
+                    {ready ? "READY" : "WAITING"}
                   </span>
                 </div>
               ))
@@ -259,9 +276,9 @@ export function GameControls({
           {isHost && allPlayersReady && currentPhase === "memorizing" && (
             <button
               onClick={onStartPlaying}
-              className="w-full mt-4 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+              className="w-full mt-5 px-6 py-4 bg-game-neon-green hover:shadow-neon-green text-black rounded-lg font-game-fallback tracking-wide transition-all hover:scale-105 text-lg btn-neon"
             >
-              Everyone's Ready - Start Game
+              EVERYONE'S READY - START GAME
             </button>
           )}
         </div>

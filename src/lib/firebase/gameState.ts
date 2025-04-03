@@ -1,5 +1,5 @@
 // src/lib/firebase/gameState.ts
-import { doc, updateDoc, onSnapshot, getDoc, setDoc, collection, getDocs, arrayUnion, deleteField } from 'firebase/firestore';
+import { doc, updateDoc, onSnapshot, getDoc, setDoc, collection, getDocs, arrayUnion, deleteField, getDocFromServer } from 'firebase/firestore';
 import { db } from './firebase';
 import { revealPyramidCard } from './gameCards';
 
@@ -290,17 +290,18 @@ export async function resolveDrinkChallenge(
   wasSuccessful: boolean
 ) {
   if (!gameId) {
-    console.error("Missing gameId in resolveDrinkChallenge");
+    console.error("❌ CRITICAL: Missing gameId in resolveDrinkChallenge");
     return;
   }
 
+  console.log(`🍺 DRINK RESOLUTION: Starting resolution for assignment #${assignmentIndex}, success=${wasSuccessful}`);
+
   try {
-    console.log(`🔄 RESOLVING CHALLENGE: assignmentIndex=${assignmentIndex}, wasSuccessful=${wasSuccessful}`);
-    
     const gameRef = doc(db, "games", gameId);
     const gameDoc = await getDoc(gameRef);
     
     if (!gameDoc.exists()) {
+      console.error("❌ CRITICAL: Game not found in resolveDrinkChallenge");
       throw new Error('Game not found');
     }
     
@@ -308,6 +309,7 @@ export async function resolveDrinkChallenge(
     const assignments = gameData.drinkAssignments || [];
     
     if (!assignments[assignmentIndex]) {
+      console.error("❌ CRITICAL: Assignment not found in resolveDrinkChallenge");
       throw new Error('Assignment not found');
     }
     
@@ -317,79 +319,104 @@ export async function resolveDrinkChallenge(
     const cardRank = assignments[assignmentIndex].cardRank;
     const drinkCount = assignments[assignmentIndex].count || 1;
     
-    // Find player names for clearer logging
+    // Find player names
     let fromPlayerName = 'Player 1';
     let toPlayerName = 'Player 2';
     
     if (gameData.players) {
-      const fromPlayer = gameData.players.find(p => p.id === fromPlayerId);
-      const toPlayer = gameData.players.find(p => p.id === toPlayerId);
-      
-      if (fromPlayer) fromPlayerName = fromPlayer.name;
-      if (toPlayer) toPlayerName = toPlayer.name;
+      try {
+        const fromPlayer = gameData.players.find(p => p.id === fromPlayerId);
+        const toPlayer = gameData.players.find(p => p.id === toPlayerId);
+        
+        if (fromPlayer) fromPlayerName = fromPlayer.name;
+        if (toPlayer) toPlayerName = toPlayer.name;
+      } catch (error) {
+        console.error("Error finding player names:", error);
+      }
     }
     
-    // Log detailed challenge information
-    console.log(`🔄 Challenge details:
-      - From: ${fromPlayerName} (${fromPlayerId})
-      - To: ${toPlayerName} (${toPlayerId})
-      - Card: ${cardRank}
-      - Original drinks: ${drinkCount}
-      - Result: ${wasSuccessful ? 'SUCCESSFUL ✓' : 'FAILED ✗'}
-      - Double drinks: ${drinkCount * 2}
-      - Drinks assigned to: ${wasSuccessful ? toPlayerName : fromPlayerName}
-    `);
+    console.log(`🍺 DRINK RESOLUTION: Challenge between ${fromPlayerName} and ${toPlayerName} for ${cardRank}`);
+    console.log(`🍺 DRINK RESOLUTION: Result is ${wasSuccessful ? 'SUCCESS' : 'FAILURE'}`);
     
     // Create a timestamped resolution message
     const resolutionTime = new Date().toISOString();
     const resultMessage = wasSuccessful
       ? `${fromPlayerName} successfully proved they had the ${cardRank}. ${toPlayerName} drinks double (${drinkCount * 2}).`
       : `${fromPlayerName} failed to prove they had the ${cardRank}. ${fromPlayerName} drinks double (${drinkCount * 2}).`;
-      
-    // Update ONLY THIS assignment with proper status and message
-    assignments[assignmentIndex] = {
-      ...assignments[assignmentIndex],
-      status: wasSuccessful ? 'successful_challenge' : 'failed_challenge',
-      resolvedAt: Date.now(),
-      isResolved: true,
-      resolution: {
-        time: resolutionTime,
-        message: resultMessage,
-        wasSuccessful: wasSuccessful,
-        doubleDrinks: drinkCount * 2,
-        drinker: wasSuccessful ? toPlayerId : fromPlayerId
-      }
-    };
     
-    // Update the game document with just this assignment's updated status
-    await updateDoc(gameRef, {
-      drinkAssignments: assignments,
-      lastAction: {
-        type: wasSuccessful ? 'successful_challenge' : 'failed_challenge',
-        fromPlayer: fromPlayerId,
-        toPlayer: toPlayerId,
-        fromPlayerName: fromPlayerName,
-        toPlayerName: toPlayerName,
-        cardRank: cardRank, 
-        timestamp: resolutionTime,
-        drinkCount: drinkCount * 2,
-        message: resultMessage,
-        assignedTo: wasSuccessful ? toPlayerId : fromPlayerId
+    console.log(`🍺 DRINK RESOLUTION: Message: ${resultMessage}`);
+    
+    // First, update just the assignment status to ensure it's not in "challenged" state anymore
+    try {
+      // Get fresh assignments to avoid conflicts
+      const freshGameDoc = await getDocFromServer(gameRef);
+      const freshGameData = freshGameDoc.data();
+      const freshAssignments = [...(freshGameData.drinkAssignments || [])];
+      
+      if (freshAssignments[assignmentIndex]) {
+        freshAssignments[assignmentIndex] = {
+          ...freshAssignments[assignmentIndex],
+          status: wasSuccessful ? 'successful_challenge' : 'failed_challenge',
+          resolvedAt: Date.now(),
+          isResolved: true,
+          resolution: {
+            time: resolutionTime,
+            message: resultMessage,
+            wasSuccessful: wasSuccessful,
+            doubleDrinks: drinkCount * 2,
+            drinker: wasSuccessful ? toPlayerId : fromPlayerId
+          }
+        };
+        
+        // Update only the assignments first
+        await updateDoc(gameRef, {
+          drinkAssignments: freshAssignments
+        });
+        
+        console.log(`🍺 DRINK RESOLUTION: Assignment status updated successfully`);
       }
-    });
+    } catch (updateError) {
+      console.error("❌ CRITICAL: Error updating assignment status:", updateError);
+    }
     
     // Create a named key for properly tracking this challenge to ensure it's not processed multiple times
     const challengeKey = `resolved_${fromPlayerId}_${toPlayerId}_${Date.now()}`;
-    await updateDoc(gameRef, {
-      [`resolvedChallenges.${challengeKey}`]: {
-        timestamp: Date.now(),
-        result: wasSuccessful ? 'successful' : 'failed'
-      }
-    });
     
-    // Update drink summary for the round
+    // Now update all the game state in one go
     try {
-      let drinkSummary = gameData.drinkSummary || {};
+      await updateDoc(gameRef, {
+        [`resolvedChallenges.${challengeKey}`]: {
+          timestamp: Date.now(),
+          result: wasSuccessful ? 'successful' : 'failed'
+        },
+        // Add a unique resolution ID to trigger UI updates
+        challengeResultId: `resolution_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        lastAction: {
+          type: wasSuccessful ? 'successful_challenge' : 'failed_challenge',
+          fromPlayer: fromPlayerId,
+          toPlayer: toPlayerId,
+          fromPlayerName: fromPlayerName,
+          toPlayerName: toPlayerName,
+          cardRank: cardRank, 
+          timestamp: resolutionTime,
+          drinkCount: drinkCount * 2,
+          message: resultMessage,
+          assignedTo: wasSuccessful ? toPlayerId : fromPlayerId
+        },
+        lastResolution: new Date().toISOString()
+      });
+      
+      console.log(`🍺 DRINK RESOLUTION: Game state updated successfully`);
+    } catch (updateError) {
+      console.error("❌ CRITICAL: Error updating game state:", updateError);
+    }
+    
+    // Update drink summary
+    try {
+      // Get fresh data again to avoid conflicts
+      const summaryDoc = await getDocFromServer(gameRef);
+      const summaryData = summaryDoc.data();
+      let drinkSummary = summaryData.drinkSummary || {};
       const recipientId = wasSuccessful ? toPlayerId : fromPlayerId;
       
       drinkSummary[recipientId] = (drinkSummary[recipientId] || 0) + (drinkCount * 2);
@@ -398,16 +425,14 @@ export async function resolveDrinkChallenge(
         drinkSummary: drinkSummary
       });
       
-      console.log(`🔄 Updated drink summary for ${recipientId} with ${drinkCount * 2} additional drinks`);
+      console.log(`🍺 DRINK RESOLUTION: Updated drink summary for ${recipientId} with ${drinkCount * 2} additional drinks`);
     } catch (summaryError) {
       console.error("Error updating drink summary:", summaryError);
     }
     
     // Now clear challenge state for BOTH involved players
     try {
-      console.log("🧹 Clearing final challenge state");
-      
-      // Use batch updates to ensure atomicity
+      console.log("🍺 DRINK RESOLUTION: Clearing final challenge state");
       
       // Clear state for the player who assigned the drink
       const fromPlayerRef = doc(db, "games", gameId, "players", fromPlayerId);
@@ -431,24 +456,12 @@ export async function resolveDrinkChallenge(
         updatedAt: new Date().toISOString()
       });
       
-      // Final game update
-      await updateDoc(gameRef, {
-        lastResolution: new Date().toISOString(),
-        [`challengeResolutions.${assignmentIndex}`]: {
-          timestamp: Date.now(),
-          wasSuccessful: wasSuccessful,
-          fromPlayer: fromPlayerId,
-          toPlayer: toPlayerId,
-          cardRank: cardRank,
-          drinkCount: drinkCount * 2,
-          message: resultMessage
-        }
-      });
-      
-      console.log(`✅ Challenge resolved between ${fromPlayerName} and ${toPlayerName}`);
+      console.log(`🍺 DRINK RESOLUTION: Challenge state cleared for both players`);
     } catch (clearError) {
-      console.error("❌ Error in final challenge cleanup:", clearError);
+      console.error("❌ CRITICAL: Error in final challenge cleanup:", clearError);
     }
+    
+    console.log(`🍺 DRINK RESOLUTION: Challenge fully resolved between ${fromPlayerName} and ${toPlayerName}`);
     
     // Return the result to make it available to the calling function
     return {
@@ -458,7 +471,7 @@ export async function resolveDrinkChallenge(
       message: resultMessage
     };
   } catch (error) {
-    console.error("Error resolving drink challenge:", error);
+    console.error("❌ CRITICAL: Error resolving drink challenge:", error);
     throw error;
   }
 }
@@ -498,10 +511,7 @@ export async function clearPlayerChallengeState(gameId: string, playerId: string
   try {
     const playerRef = doc(db, "games", gameId, "players", playerId);
     
-    // SIMPLIFIED: Less logging to avoid console flood
-    
-    // Update minimal player state with challenge flags reset
-    // Don't read the player's cards first to avoid triggering listeners
+    // SIMPLIFIED: Update minimal player state with challenge flags reset
     await updateDoc(playerRef, {
       isInChallenge: false,
       inChallenge: false,
@@ -511,8 +521,13 @@ export async function clearPlayerChallengeState(gameId: string, playerId: string
       updatedAt: new Date().toISOString()
     });
     
-    // Don't do any more updates that might trigger listeners
-    // This previous approach was likely causing infinite loops
+    // Also clear any global challenge state for this player
+    const gameRef = doc(db, "games", gameId);
+    await updateDoc(gameRef, {
+      [`playerChallenges.${playerId}`]: deleteField()
+    });
+    
+    console.log(`Successfully cleared challenge state for player ${playerId}`);
   } catch (error) {
     console.error("Error clearing player challenge state:", error);
   }
@@ -559,6 +574,10 @@ export async function replacePlayerCard(gameId: string, playerId: string, cardIn
     // Keep track of the old card for reference
     const oldCard = playerCards[cardIndex];
     
+    // IMPORTANT: Preserve the old card's position for the new card
+    const oldPosition = oldCard.position || { x: 20 + cardIndex * (window.innerWidth < 768 ? 25 : 35), y: 10 };
+    const oldRotation = oldCard.rotation || 0;
+    
     // We need to check the deck format - in different parts of the codebase there seems
     // to be two different deck structures.
     let newDeck, newCard;
@@ -583,6 +602,9 @@ export async function replacePlayerCard(gameId: string, playerId: string, cardIn
           cards: playerCards,
           updatedAt: new Date().toISOString(),
           isInChallenge: false, // Clear challenge state
+          inChallenge: false,
+          challengeCardIndex: null,
+          selectingForChallenge: false
         });
         
         // Clear any pending challenge state
@@ -601,7 +623,15 @@ export async function replacePlayerCard(gameId: string, playerId: string, cardIn
         seen: false,
         newCard: true,  // Mark as new for the 15 second timer
         faceVisible: true,  // Show to player immediately
-        replacedAt: now // Add timestamp for timer
+        replacedAt: now, // Add timestamp for timer
+        owner: playerId, // CRITICAL: Set owner for drag functionality
+        position: oldPosition, // CRITICAL: Preserve position
+        rotation: oldRotation, // Preserve rotation too
+        // Determine suit and rank from the card index
+        suit: Math.floor(newCardIndex / 13) === 0 ? 'spades' : 
+              Math.floor(newCardIndex / 13) === 1 ? 'hearts' :
+              Math.floor(newCardIndex / 13) === 2 ? 'clubs' : 'diamonds',
+        rank: ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'][newCardIndex % 13]
       };
       
       // Update the deck in Firebase
@@ -629,6 +659,9 @@ export async function replacePlayerCard(gameId: string, playerId: string, cardIn
           cards: playerCards,
           updatedAt: new Date().toISOString(),
           isInChallenge: false, // Clear challenge state
+          inChallenge: false,
+          challengeCardIndex: null,
+          selectingForChallenge: false
         });
         
         // Clear any pending challenge state
@@ -642,11 +675,13 @@ export async function replacePlayerCard(gameId: string, playerId: string, cardIn
       
       // Set card properties for the new card
       const now = new Date().toISOString();
-      newCard.owner = playerId;
+      newCard.owner = playerId;  // CRITICAL: Set owner for drag functionality
       newCard.revealed = false; // Not revealed to others
       newCard.faceVisible = true; // But shown to the player
       newCard.newCard = true; // Mark as new
       newCard.replacedAt = now; // Add timestamp for timer
+      newCard.position = oldPosition; // CRITICAL: Preserve position
+      newCard.rotation = oldRotation; // Preserve rotation too
       
       // Update the deck in Firebase
       await updateDoc(gameRef, {
@@ -669,11 +704,12 @@ export async function replacePlayerCard(gameId: string, playerId: string, cardIn
       cards: playerCards,
       updatedAt: new Date().toISOString(),
       isInChallenge: false, // Clear challenge flag
+      inChallenge: false,
       challengeCardIndex: null, // Clear challenge card index
+      selectingForChallenge: false,
+      needsCardReplacement: false, // Clear replacement flag
+      cardToReplace: null // Clear card to replace
     });
-    
-    // Ensure challenge state is completely cleared
-    await clearPlayerChallengeState(gameId, playerId);
     
     console.log(`Successfully replaced card for player ${playerId} with new card:`, newCard);
     

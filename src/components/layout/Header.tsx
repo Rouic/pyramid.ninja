@@ -16,29 +16,31 @@ const Header: React.FC = () => {
   };
 
   return (
-    <nav className="bg-gray-900 bg-opacity-55 py-4 px-6">
+    <nav className="bg-game-card shadow-lg py-4 px-6 border-b border-game-neon-purple border-opacity-30">
       <div className="container mx-auto flex justify-between items-center">
         {/* Logo and title */}
         <Link href="/" className="flex items-center">
           <img
             src="/images/icon.png"
             alt="Pyramid.Ninja logo"
-            className="h-8 mr-2"
+            className="h-8 mr-3"
           />
-          <span className="text-white text-xl font-bold">Pyramid.Ninja</span>
+          <span className="text-white text-xl font-display tracking-wider animate-glow font-display-fallback">
+            PYRAMID.NINJA
+          </span>
         </Link>
 
         {/* Desktop navigation */}
-        <div className="hidden md:flex items-center space-x-1">
+        <div className="hidden md:flex items-center space-x-4">
           {!isGamePage && (
             <>
               <Link
                 href="/join"
-                className="px-4 py-2 text-white hover:bg-gray-700 hover:bg-opacity-70 rounded transition duration-200 flex items-center"
+                className="btn-neon px-6 py-3 text-white bg-game-neon-blue rounded-lg transition-all hover:shadow-neon-blue hover:scale-105 flex items-center font-game-fallback tracking-wide"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-1"
+                  className="h-5 w-5 mr-2"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -48,16 +50,16 @@ const Header: React.FC = () => {
                     clipRule="evenodd"
                   />
                 </svg>
-                Join Game
+                JOIN GAME
               </Link>
 
               <Link
                 href="/host"
-                className="px-4 py-2 text-white hover:bg-gray-700 hover:bg-opacity-70 rounded transition duration-200 flex items-center"
+                className="btn-neon px-6 py-3 text-white bg-game-neon-red rounded-lg transition-all hover:shadow-neon-red hover:scale-105 flex items-center font-game-fallback tracking-wide"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-1"
+                  className="h-5 w-5 mr-2"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -67,16 +69,16 @@ const Header: React.FC = () => {
                     clipRule="evenodd"
                   />
                 </svg>
-                Host Game
+                HOST GAME
               </Link>
 
               <Link
                 href="/about"
-                className="px-4 py-2 text-white hover:bg-gray-700 hover:bg-opacity-70 rounded transition duration-200 flex items-center"
+                className="btn-neon px-6 py-3 text-white bg-game-neon-purple rounded-lg transition-all hover:shadow-neon-purple hover:scale-105 flex items-center font-game-fallback tracking-wide"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-1"
+                  className="h-5 w-5 mr-2"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -86,7 +88,7 @@ const Header: React.FC = () => {
                     clipRule="evenodd"
                   />
                 </svg>
-                About
+                ABOUT
               </Link>
             </>
           )}
@@ -96,11 +98,12 @@ const Header: React.FC = () => {
         <div className="md:hidden">
           <button
             onClick={toggleMenu}
-            className="text-white hover:text-gray-300 focus:outline-none"
+            className="text-white hover:text-game-highlight focus:outline-none"
+            aria-label="Toggle menu"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
+              className="h-7 w-7"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -127,29 +130,29 @@ const Header: React.FC = () => {
 
       {/* Mobile menu */}
       {menuOpen && !isGamePage && (
-        <div className="md:hidden pt-2 pb-4 px-4">
+        <div className="md:hidden pt-4 pb-6 px-4 mt-3 bg-game-card rounded-lg shadow-lg border border-game-neon-purple border-opacity-20">
           <Link
             href="/join"
-            className="block px-4 py-2 text-white hover:bg-gray-700 hover:bg-opacity-70 rounded transition duration-200"
+            className="block px-5 py-3 mb-3 text-white bg-game-neon-blue rounded-lg transition-all font-game-fallback text-center touch-target"
             onClick={() => setMenuOpen(false)}
           >
-            Join Game
+            JOIN GAME
           </Link>
 
           <Link
             href="/host"
-            className="block px-4 py-2 text-white hover:bg-gray-700 hover:bg-opacity-70 rounded transition duration-200"
+            className="block px-5 py-3 mb-3 text-white bg-game-neon-red rounded-lg transition-all font-game-fallback text-center touch-target"
             onClick={() => setMenuOpen(false)}
           >
-            Host Game
+            HOST GAME
           </Link>
 
           <Link
             href="/about"
-            className="block px-4 py-2 text-white hover:bg-gray-700 hover:bg-opacity-70 rounded transition duration-200"
+            className="block px-5 py-3 text-white bg-game-neon-purple rounded-lg transition-all font-game-fallback text-center touch-target"
             onClick={() => setMenuOpen(false)}
           >
-            About
+            ABOUT
           </Link>
         </div>
       )}

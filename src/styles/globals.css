@@ -1,6 +1,18 @@
 @import "tailwindcss/preflight";
 @import "tailwindcss";
 
+/* Define custom classes for font-family fallbacks */
+.font-game-fallback {
+  font-family: 'Oswald', 'Arial Black', 'Impact', Arial, sans-serif !important;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.font-display-fallback {
+  font-family: 'Press Start 2P', monospace !important;
+  letter-spacing: 0.1em;
+}
 
 /* Base styles that don't use Tailwind utilities */
 html {
@@ -10,6 +22,8 @@ html {
 body {
   font-family: 'Roboto', -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  background-color: #1a0f26; /* Balatro-inspired dark background */
+  color: #ffffff;
 }
 
 /* Card styles */
@@ -18,10 +32,70 @@ body {
   backface-visibility: hidden;
 }
 
+/* Neon button styles */
+.btn-neon {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.btn-neon::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: 0.5s;
+}
+
+.btn-neon:hover::before {
+  left: 100%;
+}
+
+/* Balatro-style card table */
+.game-table {
+  background-color: #271847;
+  background-image: radial-gradient(
+    circle at center,
+    rgba(80, 40, 150, 0.3) 0%,
+    rgba(39, 24, 71, 1) 100%
+  );
+  box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5);
+}
+
+/* Card enhanced styling */
+.card-enhanced {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s ease;
+}
+
+.card-enhanced:hover {
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.6);
+}
+
 /* Fix for mobile card rotation */
 @media (max-width: 767px) {
   .card-container {
     perspective: 1000px;
+  }
+  
+  /* Mobile-optimized padding */
+  .mobile-padding {
+    padding: 0.75rem !important;
+  }
+  
+  /* Mobile-optimized buttons */
+  .mobile-btn {
+    padding: 0.5rem 1rem !important;
+    font-size: 0.875rem !important;
   }
 }
 
@@ -36,9 +110,28 @@ body {
   .player-hand .game-card {
     transform: scale(1.1);
   }
+  
+  /* Ensure touch targets are large enough */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
 }
 
 /* Host-specific styling */
 .host-view .pyramid-container {
   height: 500px;
+  padding: 1.5rem;
+}
+
+/* Landscape orientation fixes for mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+  .player-controls {
+    flex-direction: row !important;
+    justify-content: space-between;
+  }
+  
+  .player-hand {
+    height: 30vh !important;
+  }
 }

@@ -87,6 +87,12 @@ const ActivityLog: React.FC<ActivityLogProps> = ({
 
   const drinkSummary = getDrinkSummary();
 
+  // Determine if there are any resolved challenges to display
+  const hasResolvedChallenges = currentRoundAssignments.some(
+    (a) =>
+      a.status === "successful_challenge" || a.status === "failed_challenge"
+  );
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
       <div className="flex items-center justify-between mb-4">
@@ -99,6 +105,47 @@ const ActivityLog: React.FC<ActivityLogProps> = ({
           </div>
         )}
       </div>
+
+      {/* Resolved challenges section */}
+      {hasResolvedChallenges && (
+        <div className="mb-4 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+          <h3 className="text-sm font-medium text-orange-800 dark:text-orange-300 mb-2">
+            Challenge Results
+          </h3>
+          <div className="space-y-2">
+            {currentRoundAssignments
+              .filter(
+                (a) =>
+                  a.status === "successful_challenge" ||
+                  a.status === "failed_challenge"
+              )
+              .map((challenge, idx) => (
+                <div
+                  key={`challenge-${idx}`}
+                  className={`p-2 rounded-lg text-sm ${
+                    challenge.status === "successful_challenge"
+                      ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
+                      : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300"
+                  }`}
+                >
+                  {challenge.status === "successful_challenge"
+                    ? `${getPlayerName(challenge.from)} had the ${
+                        challenge.cardRank
+                      }! ${getPlayerName(challenge.to)} drinks ${
+                        challenge.count * 2
+                      }.`
+                    : `${getPlayerName(
+                        challenge.from
+                      )} bluffed about having the ${
+                        challenge.cardRank
+                      }! ${getPlayerName(challenge.from)} drinks ${
+                        challenge.count * 2
+                      }.`}
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
 
       {/* Drink summary section */}
       {Object.keys(drinkSummary).length > 0 && (
@@ -130,7 +177,15 @@ const ActivityLog: React.FC<ActivityLogProps> = ({
           currentRoundAssignments.map((assignment, index) => (
             <div
               key={`activity-${index}`}
-              className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-100 dark:border-gray-700"
+              className={`p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-100 dark:border-gray-700 ${
+                assignment.status === "successful_challenge" ||
+                assignment.status === "failed_challenge"
+                  ? "border-l-4 " +
+                    (assignment.status === "successful_challenge"
+                      ? "border-l-green-500"
+                      : "border-l-red-500")
+                  : ""
+              }`}
             >
               <div className="flex justify-between items-start">
                 <div className="flex items-center">
@@ -177,16 +232,17 @@ const ActivityLog: React.FC<ActivityLogProps> = ({
               {/* Challenge result explanation */}
               {(assignment.status === "successful_challenge" ||
                 assignment.status === "failed_challenge") && (
-                <div className={`mt-2 px-3 py-2 rounded-lg font-bold text-sm ${
-                  assignment.status === "successful_challenge" 
-                    ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" 
-                    : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
-                }`}>
-                  {/* Show custom message from resolution if available */}
-                  {assignment.resolution && assignment.resolution.message ? (
-                    assignment.resolution.message
-                  ) : (
+                <div
+                  className={`mt-2 px-3 py-2 rounded-lg font-bold text-sm ${
                     assignment.status === "successful_challenge"
+                      ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                      : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+                  }`}
+                >
+                  {/* Show custom message from resolution if available */}
+                  {assignment.resolution && assignment.resolution.message
+                    ? assignment.resolution.message
+                    : assignment.status === "successful_challenge"
                     ? `CHALLENGE SUCCESSFUL: ${getPlayerName(
                         assignment.from
                       )} showed the ${assignment.cardRank}! ${getPlayerName(
@@ -194,15 +250,15 @@ const ActivityLog: React.FC<ActivityLogProps> = ({
                       )} drinks double (${assignment.count * 2})`
                     : `CHALLENGE FAILED: ${getPlayerName(
                         assignment.from
-                      )} didn't have the ${assignment.cardRank} and drinks double (${
-                        assignment.count * 2
-                      })`
-                  )}
-                  
+                      )} didn't have the ${
+                        assignment.cardRank
+                      } and drinks double (${assignment.count * 2})`}
+
                   {/* Show timestamp for when the challenge was resolved */}
                   {assignment.resolvedAt && (
                     <div className="text-xs mt-1 opacity-80">
-                      Resolved at {new Date(assignment.resolvedAt).toLocaleTimeString()}
+                      Resolved at{" "}
+                      {new Date(assignment.resolvedAt).toLocaleTimeString()}
                     </div>
                   )}
                 </div>
