@@ -1,0 +1,70 @@
+// src/components/NewCardTimer.tsx
+import React, { useState, useEffect } from "react";
+
+interface NewCardTimerProps {
+  replacedAt?: string | Date;
+  onTimeEnd?: () => void;
+}
+
+const NewCardTimer: React.FC<NewCardTimerProps> = ({
+  replacedAt,
+  onTimeEnd,
+}) => {
+  const [timeLeft, setTimeLeft] = useState<number>(15);
+  const [isActive, setIsActive] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!replacedAt) {
+      setIsActive(false);
+      return;
+    }
+
+    // Calculate remaining time based on replacedAt timestamp
+    const startTime = new Date(replacedAt).getTime();
+    const now = Date.now();
+    const elapsed = now - startTime;
+    const totalDuration = 15000; // 15 seconds
+    const remaining = Math.max(0, Math.floor((totalDuration - elapsed) / 1000));
+
+    setTimeLeft(remaining);
+    setIsActive(remaining > 0);
+
+    if (remaining <= 0) {
+      if (onTimeEnd) onTimeEnd();
+      return;
+    }
+
+    // Set up the timer
+    const timer = setInterval(() => {
+      setTimeLeft((prevTime) => {
+        const newTime = prevTime - 1;
+        if (newTime <= 0) {
+          clearInterval(timer);
+          setIsActive(false);
+          if (onTimeEnd) onTimeEnd();
+        }
+        return newTime;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [replacedAt, onTimeEnd]);
+
+  if (!isActive) return null;
+
+  return (
+    <div className="fixed z-50 bottom-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white p-4 rounded-lg shadow-lg max-w-xs w-full text-center">
+      <h4 className="font-bold text-lg mb-1">Memorize Your New Card!</h4>
+      <p className="mb-2">This card will be hidden again in:</p>
+      <div className="text-3xl font-bold mb-2">{timeLeft} seconds</div>
+      <div className="w-full bg-green-500 h-2 rounded-full overflow-hidden">
+        <div
+          className="bg-white h-full transition-all duration-1000"
+          style={{ width: `${(timeLeft / 15) * 100}%` }}
+        ></div>
+      </div>
+    </div>
+  );
+};
+
+export default NewCardTimer;

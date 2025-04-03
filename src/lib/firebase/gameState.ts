@@ -372,7 +372,8 @@ export async function replacePlayerCard(gameId: string, playerId: string, cardIn
         i: newCardIndex,
         seen: false,
         newCard: true,  // Mark as new for the 15 second timer
-        faceVisible: true  // Show to player immediately
+        faceVisible: true,  // Show to player immediately
+        replacedAt: new Date().toISOString() // Add timestamp for timer
       };
       
       // Update the deck in Firebase
@@ -412,7 +413,7 @@ export async function replacePlayerCard(gameId: string, playerId: string, cardIn
       newCard.revealed = false; // Not revealed to others
       newCard.faceVisible = true; // But shown to the player
       newCard.newCard = true; // Mark as new
-      newCard.replacedAt = new Date().toISOString();
+      newCard.replacedAt = new Date().toISOString(); // Add timestamp for timer
       
       // Update the deck in Firebase
       await updateDoc(gameRef, {
@@ -438,10 +439,13 @@ export async function replacePlayerCard(gameId: string, playerId: string, cardIn
     // Store the timestamp when the card should be hidden
     const hideCardTime = new Date(Date.now() + 15000).toISOString();
     
-    await updateDoc(gameRef, {
-      [`newCardTimers.${playerId}.${newCard.i}`]: hideCardTime,
-      [`newCardTimers.timeLeft`]: 15
-    });
+    // Only add timer if newCard is valid and has an i property
+    if (newCard && newCard.i !== undefined) {
+      await updateDoc(gameRef, {
+        [`newCardTimers.${playerId}.${newCard.i}`]: hideCardTime,
+        [`newCardTimers.timeLeft`]: 15
+      });
+    }
     
     // Remove from pending replacements if it exists
     await updateDoc(gameRef, {

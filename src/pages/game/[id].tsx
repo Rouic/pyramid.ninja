@@ -54,6 +54,10 @@ const GamePage = () => {
   const [isPersonallyMemorizing, setIsPersonallyMemorizing] = useState(false);
   const [memorizeTimeLeft, setMemorizeTimeLeft] = useState<number | null>(null);
 
+  const [hasShownGameStartNotification, setHasShownGameStartNotification] =
+    useState(false);
+
+
   // New state to track which card is being challenged (for flipping)
   const [challengedCardIndex, setChallengedCardIndex] = useState<number>(-1);
   const [isDeckEmpty, setIsDeckEmpty] = useState(false);
@@ -62,6 +66,7 @@ const GamePage = () => {
 
     useEffect(() => {
       if (
+        !hasShownGameStartNotification && // Only show if we haven't shown it before
         gameData &&
         gameData.lastAction &&
         gameData.lastAction.type === "host_started_game" &&
@@ -70,8 +75,15 @@ const GamePage = () => {
       ) {
         // Show notification that host started the game
         setShowGameStartNotification(true);
+        // Mark that we've shown it
+        setHasShownGameStartNotification(true);
       }
-    }, [gameData, gameState, isHost]);
+    }, [gameData, gameState, isHost, hasShownGameStartNotification]);
+
+    const handleCloseGameStartNotification = () => {
+      setShowGameStartNotification(false);
+      // We don't reset hasShownGameStartNotification here
+    };
 
   useEffect(() => {
     if (gameData && gameData.deck && gameData.deck.cards) {
@@ -362,12 +374,19 @@ const GamePage = () => {
                 const playerData = playerDoc.data();
                 const cards = playerData.cards || [];
 
-                // Find the card by ID and update it
-                const updatedCards = cards.map((card) =>
-                  card.i.toString() === cardId
-                    ? { ...card, newCard: false, faceVisible: false }
-                    : card
-                );
+                // Find the card by ID and update it - Add proper null checks
+                const updatedCards = cards.map((card) => {
+                  // Make sure card and card.i exist before calling toString()
+                  if (
+                    card &&
+                    card.i !== undefined &&
+                    card.i !== null &&
+                    card.i.toString() === cardId
+                  ) {
+                    return { ...card, newCard: false, faceVisible: false };
+                  }
+                  return card;
+                });
 
                 // Update the cards in Firebase
                 await updateDoc(playerRef, {
@@ -760,7 +779,7 @@ const GamePage = () => {
               {showGameStartNotification && (
                 <GameStartNotification
                   isVisible={showGameStartNotification}
-                  onClose={() => setShowGameStartNotification(false)}
+                  onClose={() => handleCloseGameStartNotification}
                 />
               )}
 

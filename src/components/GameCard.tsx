@@ -1,3 +1,4 @@
+// src/components/GameCard.tsx
 import React, { useState, useEffect } from "react";
 import { Card as CardType } from "../lib/deck";
 import { motion } from "framer-motion";
@@ -42,8 +43,11 @@ const GameCard: React.FC<GameCardProps> = ({
   }, [card.revealed, showFace, userFlipped, card.newCard]);
 
   const handleReveal = () => {
+    // Only allow card flips for certain conditions
+    if (!canInteract) return;
+
     // For pyramid cards: standard reveal logic
-    if (onReveal && canInteract && !isFlipped) {
+    if (onReveal && !isFlipped) {
       onReveal(card);
       return;
     }
@@ -210,7 +214,7 @@ const GameCard: React.FC<GameCardProps> = ({
           </div>
         );
       case 7:
-        // 2x3 grid plus 1 center symbol
+        // 2x3 grid plus 1 center symbol (4+1+2 layout)
         return (
           <div className="h-full flex flex-col justify-center">
             <div className="grid grid-cols-2 gap-y-1 mb-1">
@@ -291,6 +295,11 @@ const GameCard: React.FC<GameCardProps> = ({
         return null;
     }
   };
+
+  // Determine if we should show the "click to reveal" hint
+  // We only want to show this on the card being challenged
+  const shouldShowRevealHint =
+    allowFlip && !userFlipped && !isPeeking && !isFlipped;
 
   return (
     <motion.div
@@ -391,8 +400,8 @@ const GameCard: React.FC<GameCardProps> = ({
                 </div>
               )}
 
-              {/* Flip hint - only show when card can be flipped */}
-              {allowFlip && !userFlipped && (
+              {/* Flip hint - only show when card can be flipped and is relevant for challenge */}
+              {shouldShowRevealHint && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 rounded-lg">
                   <div className="text-white text-center px-3 py-1 bg-blue-600 rounded-lg animate-pulse">
                     Click to reveal

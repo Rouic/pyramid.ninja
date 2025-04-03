@@ -18,7 +18,7 @@ export interface Card {
   owner?: string;
   newCard?: boolean;
   faceVisible?: boolean; // Track if the face is visible in the UI
-  replacedAt?: Date;
+  replacedAt?: string; // Timestamp when the card was replaced
 }
 
 export class Deck {

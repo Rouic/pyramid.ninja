@@ -1,5 +1,5 @@
 // src/components/DrinkAssignmentPanel.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   DrinkAssignment,
   assignDrinks,
@@ -48,6 +48,14 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
     to: string;
   } | null>(null);
 
+  // Keep track of handled challenges to avoid reprocessing them
+  const [handledChallenges, setHandledChallenges] = useState<Set<number>>(
+    new Set()
+  );
+
+  // Use a ref to store the timestamp of when the current challenge was resolved
+  const challengeResolvedTimeRef = useRef<number | null>(null);
+
   // Filter assignments to show only the relevant ones
   // First, get all pending or challenged assignments
   const allActiveAssignments = assignments.filter(
@@ -61,29 +69,86 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
 
   // Assignments that need the current player to resolve a challenge
   const challengesToResolve = assignments.filter(
-    (a) => a.status === "challenged" && a.from === currentPlayerId
+    (a) =>
+      a.status === "challenged" &&
+      a.from === currentPlayerId &&
+      !handledChallenges.has(assignments.indexOf(a))
   );
 
-  // Automatically enter selection mode when there are challenges to resolve
+  // Reset challenge state if we go to a new round (assignments array changes completely)
   useEffect(() => {
+    // If assignments array length changes drastically, we likely moved to a new round
+    // This is a basic heuristic, might need adjustment
+    if (assignments.length === 0) {
+      setHandledChallenges(new Set());
+      setActiveChallenge(null);
+      setChallengeResult(null);
+      setProcessingChallenge(false);
+      setSelectedCardIndex(null);
+      challengeResolvedTimeRef.current = null;
+
+      if (setIsSelectingForChallenge) {
+        setIsSelectingForChallenge(false);
+      }
+
+      if (onChallengeCard) {
+        onChallengeCard(-1);
+      }
+    }
+  }, [assignments, setIsSelectingForChallenge, onChallengeCard]);
+
+  // Automatically enter selection mode when there are new challenges to resolve
+  useEffect(() => {
+    // Check if we need to exit challenge mode due to time elapsed since resolution
+    const now = Date.now();
+    if (
+      challengeResolvedTimeRef.current &&
+      now - challengeResolvedTimeRef.current > 5000 &&
+      processingChallenge
+    ) {
+      // Reset challenge state after 5 seconds
+      setProcessingChallenge(false);
+      setChallengeResult(null);
+      challengeResolvedTimeRef.current = null;
+
+      if (setIsSelectingForChallenge) {
+        setIsSelectingForChallenge(false);
+      }
+
+      if (onChallengeCard) {
+        onChallengeCard(-1);
+      }
+
+      return;
+    }
+
+    // Don't start a new challenge if we're still processing one
     if (challengesToResolve.length > 0 && !processingChallenge) {
+      console.log("New challenge to resolve found, entering selection mode");
+
       // Only auto-enter selection mode if it's a new challenge
       if (setIsSelectingForChallenge) {
         setIsSelectingForChallenge(true);
       }
 
-      setActiveChallenge(
-        assignments.findIndex(
-          (a) => a.status === "challenged" && a.from === currentPlayerId
-        )
+      const challengeIndex = assignments.findIndex(
+        (a) =>
+          a.status === "challenged" &&
+          a.from === currentPlayerId &&
+          !handledChallenges.has(assignments.indexOf(a))
       );
 
+      setActiveChallenge(challengeIndex);
       setProcessingChallenge(true);
-    } else if (challengesToResolve.length === 0) {
+    } else if (
+      challengesToResolve.length === 0 &&
+      processingChallenge &&
+      !challengeResult
+    ) {
+      // If there are no more challenges and we're not showing a result, exit challenge mode
       setProcessingChallenge(false);
 
-      // Clean up selection mode when there are no active challenges
-      if (setIsSelectingForChallenge && !challengeResult) {
+      if (setIsSelectingForChallenge) {
         setIsSelectingForChallenge(false);
       }
     }
@@ -94,6 +159,7 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
     setIsSelectingForChallenge,
     processingChallenge,
     challengeResult,
+    onChallengeCard,
   ]);
 
   // Clean up selection mode when component unmounts
@@ -166,7 +232,7 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
   // Used by the person who is being challenged (the assigner of the drink)
   const handleResolveChallenge = async (assignmentIndex: number) => {
     try {
-      if (selectedCardIndex === null) {
+      if (selectedCardIndex === null || assignmentIndex === null) {
         // Require card selection before submission
         return;
       }
@@ -199,6 +265,12 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
       const selectedCard = playerCards[selectedCardIndex];
 
       // Get the card rank (we need to convert from the numeric index to the actual rank)
+      if (selectedCard.i === undefined) {
+        console.error("Selected card has no index property");
+        setIsSubmitting(false);
+        return;
+      }
+
       const suit = Math.floor(selectedCard.i / 13);
       const rankValue = selectedCard.i % 13;
 
@@ -241,10 +313,15 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
         to: challenge.to,
       });
 
-      // Reset local state
-      setActiveChallenge(null);
-      setSelectedCardIndex(null);
-      setProcessingChallenge(false);
+      // Add this challenge to the set of handled challenges
+      setHandledChallenges((prev) => {
+        const newSet = new Set(prev);
+        newSet.add(assignmentIndex);
+        return newSet;
+      });
+
+      // Store the timestamp when we resolved this challenge
+      challengeResolvedTimeRef.current = Date.now();
 
       // Reset the card view after a delay to show the result
       setTimeout(() => {
@@ -254,10 +331,27 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
 
         // Also reset challenge result
         setChallengeResult(null);
+        setSelectedCardIndex(null);
 
-        // Exit card selection mode
-        if (setIsSelectingForChallenge) {
-          setIsSelectingForChallenge(false);
+        // Check if there are more challenges to resolve
+        const remainingChallenges = assignments.filter(
+          (a) =>
+            a.status === "challenged" &&
+            a.from === currentPlayerId &&
+            !handledChallenges.has(assignments.indexOf(a))
+        );
+
+        if (remainingChallenges.length === 0) {
+          // If no more challenges, exit selection mode
+          setProcessingChallenge(false);
+          challengeResolvedTimeRef.current = null;
+
+          if (setIsSelectingForChallenge) {
+            setIsSelectingForChallenge(false);
+          }
+        } else {
+          // If more challenges exist, reset to enter selection mode for the next one
+          setProcessingChallenge(false);
         }
       }, 5000); // Show result for 5 seconds
 
@@ -301,14 +395,14 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
           >
             {challengeResult.result
               ? `You showed a ${
-                  assignments[challengeResult.index].cardRank
+                  assignments[challengeResult.index]?.cardRank || "card"
                 }! ${getPlayerName(challengeResult.to)} drinks double (${
-                  assignments[challengeResult.index].count * 2
+                  (assignments[challengeResult.index]?.count || 0) * 2
                 }).`
               : `You didn't have the ${
-                  assignments[challengeResult.index].cardRank
+                  assignments[challengeResult.index]?.cardRank || "card"
                 }! You drink double (${
-                  assignments[challengeResult.index].count * 2
+                  (assignments[challengeResult.index]?.count || 0) * 2
                 }).`}
           </p>
           <p className="text-sm mt-2 text-gray-500 dark:text-gray-400">
@@ -383,60 +477,68 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
       )}
 
       {/* Card selection notification for the person being challenged (drink assigner) */}
-      {challengesToResolve.length > 0 && (
-        <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg border border-yellow-200 dark:border-yellow-800">
-          <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-2">
-            You've been challenged!
-          </h4>
-          <p className="text-sm text-yellow-700 dark:text-yellow-300 mb-3">
-            {getPlayerName(challengesToResolve[0].to)} is challenging your claim
-            about having a {challengesToResolve[0].cardRank}. Please select the
-            card to reveal.
-          </p>
+      {challengesToResolve.length > 0 &&
+        processingChallenge &&
+        !challengeResult && (
+          <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg border border-yellow-200 dark:border-yellow-800">
+            <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+              You've been challenged!
+            </h4>
+            <p className="text-sm text-yellow-700 dark:text-yellow-300 mb-3">
+              {activeChallenge !== null && assignments[activeChallenge]
+                ? `${getPlayerName(
+                    assignments[activeChallenge].to
+                  )} is challenging your claim
+               about having a ${
+                 assignments[activeChallenge].cardRank
+               }. Please select the
+               card to reveal.`
+                : "You're being challenged. Please select a card to reveal."}
+            </p>
 
-          {selectedCardIndex !== null && (
-            <div className="mt-4 flex gap-2">
-              <button
-                onClick={() => handleResolveChallenge(activeChallenge)}
-                disabled={isSubmitting}
-                className={`px-4 py-2 rounded-lg ${
-                  isSubmitting
-                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    : "bg-green-500 hover:bg-green-600 text-white"
-                }`}
-              >
-                {isSubmitting ? (
-                  <span className="flex items-center">
-                    <svg
-                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    Processing...
-                  </span>
-                ) : (
-                  `Confirm & Show Card #${selectedCardIndex + 1}`
-                )}
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+            {selectedCardIndex !== null && activeChallenge !== null && (
+              <div className="mt-4 flex gap-2">
+                <button
+                  onClick={() => handleResolveChallenge(activeChallenge)}
+                  disabled={isSubmitting}
+                  className={`px-4 py-2 rounded-lg ${
+                    isSubmitting
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : "bg-green-500 hover:bg-green-600 text-white"
+                  }`}
+                >
+                  {isSubmitting ? (
+                    <span className="flex items-center">
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Processing...
+                    </span>
+                  ) : (
+                    `Confirm & Show Card #${selectedCardIndex + 1}`
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
       {/* List of active drink assignments */}
       {relevantAssignments.length > 0 ? (

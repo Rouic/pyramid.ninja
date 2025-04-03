@@ -8,6 +8,7 @@ import {
 } from "../lib/firebase/gameCards";
 import { usePlayerContext } from "../context/PlayerContext";
 import { replacePlayerCard } from "../lib/firebase/gameState";
+import NewCardTimer from "./NewCardTimer"; // Import the new timer component
 
 interface PlayerHandProps {
   gameId: string;
@@ -45,6 +46,8 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
     null
   );
   const [shownCards, setShownCards] = useState<number[]>([]);
+  const [newCardIndex, setNewCardIndex] = useState<number | null>(null);
+  const [newCardTimestamp, setNewCardTimestamp] = useState<string | null>(null);
 
   // Subscribe to player's cards
   useEffect(() => {
@@ -57,6 +60,20 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
 
     const unsubscribe = subscribeToPlayerCards(gameId, playerId, (cards) => {
       console.log(`Received ${cards.length} cards for player ${playerId}`);
+
+      // Find any new card and record its index and timestamp
+      const newCard = cards.findIndex((card) => card.newCard === true);
+      if (newCard !== -1) {
+        setNewCardIndex(newCard);
+        // Use replacedAt if available, otherwise use current time
+        setNewCardTimestamp(
+          cards[newCard].replacedAt || new Date().toISOString()
+        );
+      } else {
+        setNewCardIndex(null);
+        setNewCardTimestamp(null);
+      }
+
       setPlayerCards(cards);
       setIsLoading(false);
     });
@@ -66,60 +83,6 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
       unsubscribe();
     };
   }, [gameId, playerId]);
-
-  // Set up auto-hide timer for new cards
-  useEffect(() => {
-    // Find any new cards
-    const newCards = playerCards.filter((card) => card.newCard);
-
-    // Clear any existing timer
-    if (flippedCardTimer) {
-      clearTimeout(flippedCardTimer);
-      setFlippedCardTimer(null);
-    }
-
-    // Set up new timer if there's a new card
-    if (newCards.length > 0) {
-      console.log(
-        `Setting up 15-second auto-hide timer for ${newCards.length} new card(s)`
-      );
-
-      const timer = setTimeout(() => {
-        console.log(`Auto-hiding ${newCards.length} cards after 15 seconds`);
-
-        // Update cards in state
-        const updatedCards = playerCards.map((card) =>
-          card.newCard ? { ...card, newCard: false, faceVisible: false } : card
-        );
-
-        setPlayerCards(updatedCards);
-
-        // Also update in Firebase
-        if (gameId && playerId) {
-          console.log(`Updating cards in Firebase to hide them`);
-
-          // Update each new card
-          newCards.forEach((card) => {
-            updatePlayerCard(gameId, playerId, card.id, {
-              newCard: false,
-              faceVisible: false,
-            }).catch((error) => {
-              console.error(
-                `Error updating card ${card.id} visibility:`,
-                error
-              );
-            });
-          });
-        }
-      }, 15000);
-
-      setFlippedCardTimer(timer);
-    }
-
-    return () => {
-      if (flippedCardTimer) clearTimeout(flippedCardTimer);
-    };
-  }, [playerCards, gameId, playerId]);
 
   // Reset selected card when challenge mode is exited
   useEffect(() => {
@@ -187,6 +150,29 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
         setSelectedCardForChallenge(index);
         onCardSelect(index);
       }
+    }
+  };
+
+  // Handler for when a new card timer ends
+  const handleNewCardTimerEnd = async () => {
+    if (newCardIndex === null || !gameId || !playerId) return;
+
+    try {
+      // Find the card that needs to be hidden
+      const cardToHide = playerCards[newCardIndex];
+      if (!cardToHide || !cardToHide.id) return;
+
+      // Update the card to hide it
+      await updatePlayerCard(gameId, playerId, cardToHide.id, {
+        newCard: false,
+        faceVisible: false,
+      });
+
+      // Reset state
+      setNewCardIndex(null);
+      setNewCardTimestamp(null);
+    } catch (error) {
+      console.error("Error handling new card timer end:", error);
     }
   };
 
@@ -343,6 +329,14 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
           </div>
         )}
       </div>
+
+      {/* Add the new card timer */}
+      {newCardIndex !== null && newCardTimestamp && (
+        <NewCardTimer
+          replacedAt={newCardTimestamp}
+          onTimeEnd={handleNewCardTimerEnd}
+        />
+      )}
     </div>
   );
 };
