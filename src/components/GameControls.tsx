@@ -126,69 +126,6 @@ export function GameControls({
       {/* Host controls - Completely redesigned in Balatro style */}
       {isHost && (currentPhase === "memorizing" || currentPhase === "ready") && (
         <div className="relative mt-6 overflow-hidden">
-          {/* Big Balatro-style Start Game button when everyone is ready */}
-          {currentPhase === "memorizing" && allPlayersReady && (
-            <div className="relative w-full py-8 mb-4 rounded-xl overflow-hidden group">
-              {/* Pulsing background */}
-              <div className="absolute inset-0 bg-black bg-opacity-30"
-                style={{
-                  backgroundImage: "linear-gradient(45deg, rgba(50, 252, 88, 0.05) 25%, transparent 25%, transparent 50%, rgba(50, 252, 88, 0.05) 50%, rgba(50, 252, 88, 0.05) 75%, transparent 75%, transparent)",
-                  backgroundSize: "10px 10px"
-                }}>
-              </div>
-              
-              {/* Glow effect */}
-              <div className="absolute inset-x-0 top-1/2 transform -translate-y-1/2 h-32 w-full"
-                style={{
-                  background: "radial-gradient(ellipse at center, rgba(50, 252, 88, 0.3), transparent 70%)",
-                  filter: "blur(20px)"
-                }}>
-              </div>
-              
-              <button
-                onClick={onStartPlaying}
-                className="relative w-5/6 mx-auto flex items-center justify-center px-8 py-6 bg-game-neon-green text-black rounded-xl font-game-fallback tracking-wide text-2xl border-4 border-game-neon-green border-opacity-50 transition-all duration-300 hover:scale-105 shadow-neon-green hover:shadow-neon-green-lg transform group-hover:scale-105 z-10 animate-pulse-slow"
-              >
-                {/* Button shine effect */}
-                <div className="absolute inset-0 overflow-hidden rounded-lg">
-                  <div className="absolute inset-0 opacity-30"
-                    style={{
-                      background: "linear-gradient(to bottom, rgba(255,255,255,0.4), transparent 70%)"
-                    }}>
-                  </div>
-                </div>
-                
-                {/* Icon */}
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mr-4 group-hover:animate-bounce" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                </svg>
-                
-                <span>START GAME</span>
-              </button>
-              
-              {/* Card decorations */}
-              <div className="absolute -left-6 top-1/2 transform -translate-y-1/2 rotate-[-15deg] h-20 w-14 bg-white rounded-lg border-2 border-game-neon-green shadow-neon-green z-0">
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-lg font-bold text-black mb-1">A</span>
-                  <span className="text-2xl text-game-neon-green">♣</span>
-                </div>
-              </div>
-              
-              <div className="absolute -right-6 top-1/2 transform -translate-y-1/2 rotate-[15deg] h-20 w-14 bg-white rounded-lg border-2 border-game-neon-green shadow-neon-green z-0">
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-lg font-bold text-black mb-1">K</span>
-                  <span className="text-2xl text-game-neon-green">♠</span>
-                </div>
-              </div>
-              
-              {/* Ready text */}
-              <div className="absolute bottom-2 inset-x-0 text-center">
-                <span className="inline-block px-4 py-1 bg-black bg-opacity-50 rounded-lg text-game-neon-green text-sm font-game-fallback animate-pulse-fast">
-                  ALL PLAYERS READY!
-                </span>
-              </div>
-            </div>
-          )}
           
           {/* Host info panel - Balatro style */}
           <div className="bg-game-card rounded-xl shadow-xl border-4 border-game-neon-blue border-opacity-30 overflow-hidden">
@@ -370,60 +307,6 @@ export function GameControls({
         </div>
       )}
 
-      {/* Big prominent memorize button for ready phase - Similar to above but with yellow color */}
-      {currentPhase === "ready" && !isReady && (
-        <div className="relative">
-          <div className="w-full py-8 flex flex-col items-center justify-center relative">
-            {/* Background pattern */}
-            <div className="absolute inset-0 bg-black bg-opacity-10 rounded-xl"
-              style={{
-                backgroundImage: "linear-gradient(45deg, rgba(255, 204, 0, 0.05) 25%, transparent 25%, transparent 50%, rgba(255, 204, 0, 0.05) 50%, rgba(255, 204, 0, 0.05) 75%, transparent 75%, transparent)",
-                backgroundSize: "10px 10px"
-              }}>
-            </div>
-            
-            {/* Glow effect */}
-            <div className="absolute inset-x-0 top-1/2 transform -translate-y-1/2 h-32 w-full"
-              style={{
-                background: "radial-gradient(ellipse at center, rgba(255, 204, 0, 0.3), transparent 70%)",
-                filter: "blur(20px)",
-                animation: "pulse 3s ease-in-out infinite alternate"
-              }}>
-            </div>
-            
-            <button
-              onClick={startPersonalMemorization}
-              className="relative w-5/6 mx-auto flex items-center justify-center px-8 py-6 bg-game-neon-yellow text-black rounded-xl font-game-fallback tracking-wide text-2xl border-4 border-game-neon-yellow border-opacity-50 transition-all duration-300 hover:scale-105 shadow-neon-yellow hover:shadow-neon-yellow-lg animate-pulse-slow"
-            >
-              {/* Button shine effect */}
-              <div className="absolute inset-0 overflow-hidden rounded-lg">
-                <div className="absolute inset-0 opacity-30"
-                  style={{
-                    background: "linear-gradient(to bottom, rgba(255,255,255,0.4), transparent 70%)"
-                  }}>
-                </div>
-              </div>
-              
-              {/* Icon */}
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mr-4" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-              </svg>
-              
-              <span>START MEMORIZING</span>
-            </button>
-            
-            {/* Instruction text */}
-            <div className="mt-4 bg-black bg-opacity-30 rounded-lg px-4 py-2 max-w-lg mx-auto text-center flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-game-neon-yellow mr-2" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-              </svg>
-              <span className="text-gray-300">You'll have 10 seconds to memorize your cards</span>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Player readiness status - Enhanced Balatro style */}
       {(currentPhase === "memorizing" || (isHost && currentPhase === "ready")) && (
         <div className="mt-5 bg-game-card rounded-xl shadow-xl border-4 border-game-neon-purple border-opacity-30 overflow-hidden">
@@ -436,7 +319,7 @@ export function GameControls({
                 </svg>
               </div>
               <h3 className="font-game-fallback text-xl tracking-wide text-game-neon-purple">
-                PLAYER STATUS
+                {allPlayersReady && currentPhase === "memorizing" ? "GAME READY" : "PLAYER STATUS"}
               </h3>
             </div>
             
@@ -520,14 +403,24 @@ export function GameControls({
               )}
             </div>
 
-            {/* Start game button for host when all ready */}
+            {/* Start game button for host when all ready - Now with additional explanation */}
             {isHost && allPlayersReady && currentPhase === "memorizing" && (
-              <button
-                onClick={onStartPlaying}
-                className="w-full mt-5 px-6 py-4 bg-game-neon-green text-black rounded-lg font-game-fallback tracking-wide transition-all hover:scale-105 text-lg btn-neon border-4 border-game-neon-green border-opacity-50 hover:shadow-neon-green shadow-neon-green"
-              >
-                START GAME NOW
-              </button>
+              <div className="mt-6">
+                <div className="bg-black bg-opacity-30 border border-white border-opacity-5 rounded-lg p-3 mb-4">
+                  <p className="text-game-neon-green text-center font-bold">
+                    All players have memorized their cards! You can start the game now.
+                  </p>
+                </div>
+                <button
+                  onClick={onStartPlaying}
+                  className="w-full px-6 py-4 bg-game-neon-green text-black rounded-lg font-game-fallback tracking-wide transition-all hover:scale-105 text-lg btn-neon border-4 border-game-neon-green border-opacity-50 hover:shadow-neon-green shadow-neon-green flex items-center justify-center"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                  </svg>
+                  START GAME
+                </button>
+              </div>
             )}
           </div>
         </div>

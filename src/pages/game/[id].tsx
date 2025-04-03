@@ -56,7 +56,7 @@ const GamePage = () => {
   const [currentPyramidCard, setCurrentPyramidCard] = useState<any>(null);
   const [currentRowNumber, setCurrentRowNumber] = useState(0);
   const [allCardsDealt, setAllCardsDealt] = useState(false);
-  const [currentRound, setCurrentRound] = useState(1);
+  const [currentRound, setCurrentRound] = useState(0);
   const [isSelectingForChallenge, setIsSelectingForChallenge] = useState(false);
   const [playerCards, setPlayerCards] = useState<Card[]>([]);
 
@@ -1098,19 +1098,22 @@ const GamePage = () => {
                 )}
               </div>
 
-              {/* Activity Log - Only for host during gameplay */}
-              {(gameState === "playing" || gameState === "ended") && (
-                <ActivityLog
-                  assignments={drinkAssignments}
-                  players={gameData?.players || []}
-                  roundNumber={currentRound}
-                  currentCardRank={currentPyramidCard?.rank}
-                />
-              )}
             </div>
 
             {/* Right column - Game controls, player list */}
             <div className="lg:col-span-1">
+              {/* Activity Log - Only for host during gameplay - Moved above game controls */}
+              {(gameState === "playing" || gameState === "ended") && (
+                <div className="mb-6">
+                  <ActivityLog
+                    assignments={drinkAssignments}
+                    players={gameData?.players || []}
+                    roundNumber={currentRound}
+                    currentCardRank={currentPyramidCard?.rank}
+                  />
+                </div>
+              )}
+            
               {/* Game Controls */}
               <div className="bg-black/70 backdrop-blur-md rounded-xl border-2 border-game-neon-blue/40 shadow-neon-blue-sm p-6 mb-6 relative transform -rotate-0.5 overflow-hidden">
                 {/* Glow effect */}
