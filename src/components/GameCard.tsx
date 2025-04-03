@@ -297,9 +297,13 @@ const GameCard: React.FC<GameCardProps> = ({
   };
 
   // Determine if we should show the "click to reveal" hint
-  // We only want to show this on the card being challenged
+  // We only want to show this on cards being explicitly challenged
   const shouldShowRevealHint =
-    allowFlip && !userFlipped && !isPeeking && !isFlipped;
+    allowFlip && // Card flipping must be explicitly enabled
+    !userFlipped && // Card hasn't already been flipped by the user
+    !isPeeking && // Not currently peeking
+    !isFlipped && // Not already flipped
+    !card.newCard; // Not a new card that's already being shown
 
   return (
     <motion.div

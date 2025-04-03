@@ -8,7 +8,7 @@ import {
 } from "../lib/firebase/gameCards";
 import { usePlayerContext } from "../context/PlayerContext";
 import { replacePlayerCard } from "../lib/firebase/gameState";
-import NewCardTimer from "./NewCardTimer"; // Import the new timer component
+import NewCardTimer from "./NewCardTimer"; // Import the timer component
 
 interface PlayerHandProps {
   gameId: string;
@@ -36,8 +36,6 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
   const { playerId } = usePlayerContext();
   const [playerCards, setPlayerCards] = useState<Card[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [flippedCardTimer, setFlippedCardTimer] =
-    useState<NodeJS.Timeout | null>(null);
   const [selectedCardForChallenge, setSelectedCardForChallenge] = useState<
     number | null
   >(null);
@@ -124,21 +122,6 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
     }
   };
 
-  const handleCardMove = async (
-    card: Card,
-    position: { x: number; y: number }
-  ) => {
-    if (!isGameStarted) return;
-
-    try {
-      await updatePlayerCard(gameId, playerId, card.id, {
-        position,
-      });
-    } catch (error) {
-      console.error("Error updating card position:", error);
-    }
-  };
-
   // Handler for card selection during challenge
   const handleCardSelect = (card: Card, index: number) => {
     if (isSelectingForChallenge && onCardSelect) {
@@ -167,6 +150,9 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
         newCard: false,
         faceVisible: false,
       });
+
+      // Log the change
+      console.log(`Card ${cardToHide.id} auto-hidden after timer`);
 
       // Reset state
       setNewCardIndex(null);

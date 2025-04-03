@@ -255,6 +255,10 @@ export async function resolveDrinkChallenge(
       throw new Error('Assignment not found');
     }
     
+    // Get the involved players
+    const fromPlayerId = assignments[assignmentIndex].from;
+    const toPlayerId = assignments[assignmentIndex].to;
+    
     // Update assignment status based on whether the card matched
     assignments[assignmentIndex].status = wasSuccessful ? 'successful_challenge' : 'failed_challenge';
     
@@ -266,6 +270,10 @@ export async function resolveDrinkChallenge(
       drinkAssignments: assignments,
       lastActivity: new Date().toISOString(),
     });
+    
+    // Clear challenge states for both players to prevent getting stuck
+    await clearPlayerChallengeState(gameId, fromPlayerId);
+    await clearPlayerChallengeState(gameId, toPlayerId);
     
     console.log(`Challenge resolved as ${wasSuccessful ? 'successful' : 'failed'}`);
   } catch (error) {
@@ -292,6 +300,38 @@ export async function markCardForReplacement(gameId: string, playerId: string, c
     console.log(`Card at index ${cardIndex} for player ${playerId} marked for replacement`);
   } catch (error) {
     console.error("Error marking card for replacement:", error);
+  }
+}
+
+/**
+ * Clear any pending challenge states for a player
+ * This helps when a player gets stuck in challenge mode
+ */
+export async function clearPlayerChallengeState(gameId: string, playerId: string): Promise<void> {
+  if (!gameId || !playerId) {
+    console.error("Missing gameId or playerId in clearPlayerChallengeState");
+    return;
+  }
+
+  try {
+    const gameRef = doc(db, "games", gameId);
+    const playerRef = doc(db, "games", gameId, "players", playerId);
+    
+    // Update the player document to clear any challenge flags
+    await updateDoc(playerRef, {
+      isInChallenge: false,
+      challengeCardIndex: null,
+      updatedAt: new Date().toISOString(),
+    });
+    
+    // Also clear any challenge timers in the game document
+    await updateDoc(gameRef, {
+      [`challengeTimers.${playerId}`]: deleteField()
+    });
+    
+    console.log(`Cleared challenge state for player ${playerId}`);
+  } catch (error) {
+    console.error("Error clearing player challenge state:", error);
   }
 }
 
@@ -359,7 +399,11 @@ export async function replacePlayerCard(gameId: string, playerId: string, cardIn
         await updateDoc(playerRef, {
           cards: playerCards,
           updatedAt: new Date().toISOString(),
+          isInChallenge: false, // Clear challenge state
         });
+        
+        // Clear any pending challenge state
+        await clearPlayerChallengeState(gameId, playerId);
         
         return null;
       }
@@ -367,13 +411,14 @@ export async function replacePlayerCard(gameId: string, playerId: string, cardIn
       // Get new card from deck (take the first card)
       const newCardIndex = newDeck.shift();
       
-      // Create new card object
+      // Create new card object with clear timestamps
+      const now = new Date().toISOString();
       newCard = {
         i: newCardIndex,
         seen: false,
         newCard: true,  // Mark as new for the 15 second timer
         faceVisible: true,  // Show to player immediately
-        replacedAt: new Date().toISOString() // Add timestamp for timer
+        replacedAt: now // Add timestamp for timer
       };
       
       // Update the deck in Firebase
@@ -400,7 +445,11 @@ export async function replacePlayerCard(gameId: string, playerId: string, cardIn
         await updateDoc(playerRef, {
           cards: playerCards,
           updatedAt: new Date().toISOString(),
+          isInChallenge: false, // Clear challenge state
         });
+        
+        // Clear any pending challenge state
+        await clearPlayerChallengeState(gameId, playerId);
         
         return null;
       }
@@ -409,11 +458,12 @@ export async function replacePlayerCard(gameId: string, playerId: string, cardIn
       newCard = deck.cards.pop();
       
       // Set card properties for the new card
+      const now = new Date().toISOString();
       newCard.owner = playerId;
       newCard.revealed = false; // Not revealed to others
       newCard.faceVisible = true; // But shown to the player
       newCard.newCard = true; // Mark as new
-      newCard.replacedAt = new Date().toISOString(); // Add timestamp for timer
+      newCard.replacedAt = now; // Add timestamp for timer
       
       // Update the deck in Firebase
       await updateDoc(gameRef, {
@@ -421,16 +471,22 @@ export async function replacePlayerCard(gameId: string, playerId: string, cardIn
       });
     } else {
       console.error("Cannot find a valid deck in game data");
+      
+      // Clear any pending challenge state anyway
+      await clearPlayerChallengeState(gameId, playerId);
+      
       return null;
     }
     
     // Replace the card at the specified index
     playerCards[cardIndex] = newCard;
     
-    // Update player cards
+    // Update player cards and clear challenge state
     await updateDoc(playerRef, {
       cards: playerCards,
       updatedAt: new Date().toISOString(),
+      isInChallenge: false, // Clear challenge flag
+      challengeCardIndex: null, // Clear challenge card index
     });
     
     console.log(`Successfully replaced card for player ${playerId} with new card:`, newCard);
@@ -449,7 +505,8 @@ export async function replacePlayerCard(gameId: string, playerId: string, cardIn
     
     // Remove from pending replacements if it exists
     await updateDoc(gameRef, {
-      [`pendingCardReplacements.${playerId}`]: deleteField()
+      [`pendingCardReplacements.${playerId}`]: deleteField(),
+      [`challengeTimers.${playerId}`]: deleteField() // Clear any challenge timers
     });
     
     return newCard;

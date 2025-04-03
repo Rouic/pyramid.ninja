@@ -1,5 +1,5 @@
 // src/components/NewCardTimer.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 interface NewCardTimerProps {
   replacedAt?: string | Date;
@@ -12,11 +12,18 @@ const NewCardTimer: React.FC<NewCardTimerProps> = ({
 }) => {
   const [timeLeft, setTimeLeft] = useState<number>(15);
   const [isActive, setIsActive] = useState<boolean>(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!replacedAt) {
       setIsActive(false);
       return;
+    }
+
+    // Clean up any existing timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
     }
 
     // Calculate remaining time based on replacedAt timestamp
@@ -25,6 +32,8 @@ const NewCardTimer: React.FC<NewCardTimerProps> = ({
     const elapsed = now - startTime;
     const totalDuration = 15000; // 15 seconds
     const remaining = Math.max(0, Math.floor((totalDuration - elapsed) / 1000));
+
+    console.log(`New card timer: ${remaining} seconds remaining`);
 
     setTimeLeft(remaining);
     setIsActive(remaining > 0);
@@ -35,21 +44,39 @@ const NewCardTimer: React.FC<NewCardTimerProps> = ({
     }
 
     // Set up the timer
-    const timer = setInterval(() => {
+    timerRef.current = setInterval(() => {
       setTimeLeft((prevTime) => {
         const newTime = prevTime - 1;
         if (newTime <= 0) {
-          clearInterval(timer);
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
           setIsActive(false);
-          if (onTimeEnd) onTimeEnd();
+
+          // Log and ensure the callback is called
+          console.log("New card timer ended, calling onTimeEnd callback");
+          if (onTimeEnd) {
+            // Use setTimeout to ensure the callback runs even if there's an error in the component
+            setTimeout(() => {
+              onTimeEnd();
+            }, 0);
+          }
         }
         return newTime;
       });
     }, 1000);
 
-    return () => clearInterval(timer);
+    // Clean up on unmount
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
   }, [replacedAt, onTimeEnd]);
 
+  // If we're inactive, don't render anything
   if (!isActive) return null;
 
   return (

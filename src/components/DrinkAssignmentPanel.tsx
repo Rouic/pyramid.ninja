@@ -56,6 +56,9 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
   // Use a ref to store the timestamp of when the current challenge was resolved
   const challengeResolvedTimeRef = useRef<number | null>(null);
 
+  // Also store the challenge resolution timer
+  const challengeTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   // Filter assignments to show only the relevant ones
   // First, get all pending or challenged assignments
   const allActiveAssignments = assignments.filter(
@@ -78,7 +81,6 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
   // Reset challenge state if we go to a new round (assignments array changes completely)
   useEffect(() => {
     // If assignments array length changes drastically, we likely moved to a new round
-    // This is a basic heuristic, might need adjustment
     if (assignments.length === 0) {
       setHandledChallenges(new Set());
       setActiveChallenge(null);
@@ -86,6 +88,12 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
       setProcessingChallenge(false);
       setSelectedCardIndex(null);
       challengeResolvedTimeRef.current = null;
+
+      // Clear any existing timers
+      if (challengeTimerRef.current) {
+        clearTimeout(challengeTimerRef.current);
+        challengeTimerRef.current = null;
+      }
 
       if (setIsSelectingForChallenge) {
         setIsSelectingForChallenge(false);
@@ -167,6 +175,11 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
     return () => {
       if (setIsSelectingForChallenge) {
         setIsSelectingForChallenge(false);
+      }
+
+      // Clear any timers
+      if (challengeTimerRef.current) {
+        clearTimeout(challengeTimerRef.current);
       }
     };
   }, [setIsSelectingForChallenge]);
@@ -324,7 +337,12 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
       challengeResolvedTimeRef.current = Date.now();
 
       // Reset the card view after a delay to show the result
-      setTimeout(() => {
+      // Clear any existing timer first
+      if (challengeTimerRef.current) {
+        clearTimeout(challengeTimerRef.current);
+      }
+
+      challengeTimerRef.current = setTimeout(() => {
         if (onChallengeCard) {
           onChallengeCard(-1);
         }
@@ -332,6 +350,7 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
         // Also reset challenge result
         setChallengeResult(null);
         setSelectedCardIndex(null);
+        setProcessingChallenge(false); // Ensure we're fully exiting challenge mode
 
         // Check if there are more challenges to resolve
         const remainingChallenges = assignments.filter(
@@ -343,16 +362,14 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
 
         if (remainingChallenges.length === 0) {
           // If no more challenges, exit selection mode
-          setProcessingChallenge(false);
           challengeResolvedTimeRef.current = null;
 
           if (setIsSelectingForChallenge) {
             setIsSelectingForChallenge(false);
           }
-        } else {
-          // If more challenges exist, reset to enter selection mode for the next one
-          setProcessingChallenge(false);
         }
+
+        challengeTimerRef.current = null;
       }, 5000); // Show result for 5 seconds
 
       setIsSubmitting(false);
