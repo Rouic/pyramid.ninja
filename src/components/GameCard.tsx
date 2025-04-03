@@ -39,8 +39,8 @@ const GameCard: React.FC<GameCardProps> = ({
 
   // Update flip state when revealed status or showFace changes
   useEffect(() => {
-    setIsFlipped(card.revealed || showFace || userFlipped || card.newCard);
-  }, [card.revealed, showFace, userFlipped, card.newCard]);
+    setIsFlipped(card.revealed || showFace || userFlipped);
+  }, [card.revealed, showFace, userFlipped]);
 
   const handleReveal = () => {
     // Only allow card flips for certain conditions
@@ -298,6 +298,7 @@ const GameCard: React.FC<GameCardProps> = ({
 
   // Determine if we should show the "click to reveal" hint
   // We only want to show this on cards being explicitly challenged
+  // Fix: Only show this during challenge selection, not for new cards
   const shouldShowRevealHint =
     allowFlip && // Card flipping must be explicitly enabled
     !userFlipped && // Card hasn't already been flipped by the user
@@ -396,7 +397,7 @@ const GameCard: React.FC<GameCardProps> = ({
               )}
 
               {/* Peek hint */}
-              {allowPeek && (
+              {allowPeek && !card.newCard && (
                 <div className="absolute bottom-2 inset-x-0 text-center">
                   <div className="inline-block text-xs bg-white bg-opacity-30 text-white px-2 py-1 rounded-full animate-pulse">
                     Hold to peek

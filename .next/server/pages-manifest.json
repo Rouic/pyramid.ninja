@@ -2,8 +2,8 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/": "pages/index.js",
   "/game/[id]": "pages/game/[id].js",
+  "/": "pages/index.js",
   "/join": "pages/join.js",
   "/host": "pages/host.js"
 }

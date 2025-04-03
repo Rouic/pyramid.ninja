@@ -46,6 +46,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
   const [shownCards, setShownCards] = useState<number[]>([]);
   const [newCardIndex, setNewCardIndex] = useState<number | null>(null);
   const [newCardTimestamp, setNewCardTimestamp] = useState<string | null>(null);
+  const [hidingCard, setHidingCard] = useState<boolean>(false);
 
   // Subscribe to player's cards
   useEffect(() => {
@@ -141,24 +142,44 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
     if (newCardIndex === null || !gameId || !playerId) return;
 
     try {
+      setHidingCard(true);
       // Find the card that needs to be hidden
       const cardToHide = playerCards[newCardIndex];
-      if (!cardToHide || !cardToHide.id) return;
+      if (!cardToHide) {
+        console.error("Card to hide not found");
+        setHidingCard(false);
+        return;
+      }
+
+      // Important: Check for card.i instead of card.id
+      // The card structure might be using .i as the identifier
+      if (cardToHide.i === undefined && cardToHide.id === undefined) {
+        console.error("Card has no identifier (i or id)");
+        setHidingCard(false);
+        return;
+      }
+
+      // Get the card identifier (either .i or .id)
+      const cardId = cardToHide.id || cardToHide.i.toString();
+
+      console.log(`Auto-hiding card ${cardId} after timer`);
 
       // Update the card to hide it
-      await updatePlayerCard(gameId, playerId, cardToHide.id, {
+      await updatePlayerCard(gameId, playerId, cardId, {
         newCard: false,
         faceVisible: false,
       });
 
       // Log the change
-      console.log(`Card ${cardToHide.id} auto-hidden after timer`);
+      console.log(`Card ${cardId} auto-hidden after timer`);
 
       // Reset state
       setNewCardIndex(null);
       setNewCardTimestamp(null);
+      setHidingCard(false);
     } catch (error) {
       console.error("Error handling new card timer end:", error);
+      setHidingCard(false);
     }
   };
 
@@ -228,6 +249,16 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
               highlightCurrentRank &&
               card.rank === highlightCurrentRank;
 
+            // Fix for "click to reveal" issue - determine when to allow peeking
+            // A card should be peekable during memorization or if it's a new card, but not in challenge mode
+            const allowPeekForCard =
+              (!showFaceUp && shouldHighlight) ||
+              (card.newCard && !isSelectingForChallenge);
+
+            // Fix for card visibility - update logic for when to show card face
+            const showCardFace =
+              showFaceUp || isBeingChallenged || card.newCard;
+
             return (
               <div key={card.id || index} className="relative">
                 <GameCard
@@ -250,8 +281,8 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
                   onReveal={() =>
                     isSelectable ? handleCardSelect(card, index) : null
                   }
-                  allowPeek={!showFaceUp && (shouldHighlight || card.newCard)}
-                  showFace={showFaceUp || isBeingChallenged || card.newCard} // Show face up during memorization, challenges, or if it's a new card
+                  allowPeek={allowPeekForCard}
+                  showFace={showCardFace}
                   allowFlip={
                     allowCardFlip && (isBeingChallenged || isSelectable)
                   }
@@ -312,6 +343,17 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
         {isLoading && isGameStarted && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
+          </div>
+        )}
+
+        {hidingCard && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 z-40 rounded-lg">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-3 shadow-lg">
+              <div className="flex items-center">
+                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500 mr-2"></div>
+                <span className="text-sm font-medium">Hiding card...</span>
+              </div>
+            </div>
           </div>
         )}
       </div>

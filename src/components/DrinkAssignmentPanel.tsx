@@ -7,6 +7,7 @@ import {
   challengeDrinkAssignment,
   resolveDrinkChallenge,
   markCardForReplacement,
+  clearPlayerChallengeState,
 } from "../lib/firebase/gameState";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../lib/firebase/firebase";
@@ -127,6 +128,11 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
         onChallengeCard(-1);
       }
 
+      // Explicitly clear any challenge state in Firebase as a backup
+      clearPlayerChallengeState(gameId, currentPlayerId).catch((err) =>
+        console.error("Error clearing challenge state:", err)
+      );
+
       return;
     }
 
@@ -159,6 +165,11 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
       if (setIsSelectingForChallenge) {
         setIsSelectingForChallenge(false);
       }
+
+      // Ensure we clear any challenge state in Firebase
+      clearPlayerChallengeState(gameId, currentPlayerId).catch((err) =>
+        console.error("Error clearing challenge state:", err)
+      );
     }
   }, [
     challengesToResolve,
@@ -168,6 +179,7 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
     processingChallenge,
     challengeResult,
     onChallengeCard,
+    gameId,
   ]);
 
   // Clean up selection mode when component unmounts
@@ -181,8 +193,15 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
       if (challengeTimerRef.current) {
         clearTimeout(challengeTimerRef.current);
       }
+
+      // Make sure we clear challenge state in Firebase when unmounting
+      if (gameId && currentPlayerId) {
+        clearPlayerChallengeState(gameId, currentPlayerId).catch((err) =>
+          console.error("Error clearing challenge state on unmount:", err)
+        );
+      }
     };
-  }, [setIsSelectingForChallenge]);
+  }, [setIsSelectingForChallenge, gameId, currentPlayerId]);
 
   const getPlayerName = (playerId: string) => {
     const player = players.find((p) => p.id === playerId);
@@ -367,6 +386,11 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
           if (setIsSelectingForChallenge) {
             setIsSelectingForChallenge(false);
           }
+
+          // Ensure we clear any challenge state in Firebase
+          clearPlayerChallengeState(gameId, currentPlayerId).catch((err) =>
+            console.error("Error clearing challenge state after timer:", err)
+          );
         }
 
         challengeTimerRef.current = null;
@@ -376,6 +400,16 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
     } catch (error) {
       console.error("Error resolving challenge:", error);
       setIsSubmitting(false);
+
+      // In case of error, try to exit challenge mode
+      setProcessingChallenge(false);
+      if (setIsSelectingForChallenge) {
+        setIsSelectingForChallenge(false);
+      }
+      // Try to clear Firebase state
+      clearPlayerChallengeState(gameId, currentPlayerId).catch((err) =>
+        console.error("Error clearing challenge state after error:", err)
+      );
     }
   };
 
