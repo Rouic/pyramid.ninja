@@ -20,7 +20,7 @@ interface DrinkAssignmentPanelProps {
   currentCardRank?: string;
   drinkCount: number;
   onChallengeCard?: (cardIndex: number) => void; // Callback for card challenges
-  setIsSelectingForChallenge?: (selecting: boolean) => void; // New callback to indicate card selection mode
+  setIsSelectingForChallenge?: (selecting: boolean) => void; // Callback to indicate card selection mode
 }
 
 const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
@@ -40,6 +40,7 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
     null
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [processingChallenge, setProcessingChallenge] = useState(false);
 
   // Filter assignments to show only the relevant ones
   // First, get all pending or challenged assignments
@@ -57,18 +58,45 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
     (a) => a.status === "challenged" && a.from === currentPlayerId
   );
 
-  // Clean up selection mode when component unmounts or when there are no active challenges
+  // Automatically enter selection mode when there are challenges to resolve
   useEffect(() => {
-    if (challengesToResolve.length === 0 && setIsSelectingForChallenge) {
-      setIsSelectingForChallenge(false);
-    }
+    if (challengesToResolve.length > 0 && !processingChallenge) {
+      // Only auto-enter selection mode if it's a new challenge
+      if (setIsSelectingForChallenge) {
+        setIsSelectingForChallenge(true);
+      }
 
+      setActiveChallenge(
+        assignments.findIndex(
+          (a) => a.status === "challenged" && a.from === currentPlayerId
+        )
+      );
+
+      setProcessingChallenge(true);
+    } else if (challengesToResolve.length === 0) {
+      setProcessingChallenge(false);
+
+      // Clean up selection mode when there are no active challenges
+      if (setIsSelectingForChallenge) {
+        setIsSelectingForChallenge(false);
+      }
+    }
+  }, [
+    challengesToResolve,
+    currentPlayerId,
+    assignments,
+    setIsSelectingForChallenge,
+    processingChallenge,
+  ]);
+
+  // Clean up selection mode when component unmounts
+  useEffect(() => {
     return () => {
       if (setIsSelectingForChallenge) {
         setIsSelectingForChallenge(false);
       }
     };
-  }, [challengesToResolve.length, setIsSelectingForChallenge]);
+  }, [setIsSelectingForChallenge]);
 
   const getPlayerName = (playerId: string) => {
     const player = players.find((p) => p.id === playerId);
@@ -205,6 +233,7 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
       // Reset local state
       setActiveChallenge(null);
       setSelectedCardIndex(null);
+      setProcessingChallenge(false);
 
       // Exit card selection mode
       if (setIsSelectingForChallenge) {
@@ -221,19 +250,6 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
       console.error("Error resolving challenge:", error);
       setIsSubmitting(false);
     }
-  };
-
-  // Start challenge card selection process
-  const startCardSelection = () => {
-    if (setIsSelectingForChallenge) {
-      setIsSelectingForChallenge(true);
-    }
-
-    setActiveChallenge(
-      assignments.findIndex(
-        (a) => a.status === "challenged" && a.from === currentPlayerId
-      )
-    );
   };
 
   return (
@@ -307,89 +323,58 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
       )}
 
       {/* Card selection notification for the person being challenged (drink assigner) */}
-      {challengesToResolve.length > 0 && activeChallenge === null && (
+      {challengesToResolve.length > 0 && (
         <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg border border-yellow-200 dark:border-yellow-800">
           <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-2">
             You've been challenged!
           </h4>
           <p className="text-sm text-yellow-700 dark:text-yellow-300 mb-3">
             {getPlayerName(challengesToResolve[0].to)} is challenging your claim
-            about having a {challengesToResolve[0].cardRank}. Select one of your
-            cards to reveal.
+            about having a {challengesToResolve[0].cardRank}. Please select the
+            card to reveal.
           </p>
 
-          <button
-            onClick={startCardSelection}
-            className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg"
-          >
-            Select My Card
-          </button>
-        </div>
-      )}
-
-      {/* Card selection interface once the challenged player has decided to respond */}
-      {activeChallenge !== null && selectedCardIndex !== null && (
-        <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg border border-yellow-200 dark:border-yellow-800">
-          <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-3">
-            Card selected - Confirm your choice
-          </h4>
-          <p className="text-sm text-yellow-700 dark:text-yellow-300 mb-3">
-            You've selected card #{selectedCardIndex + 1} to reveal. This card
-            will be shown to everyone and then replaced with a new card from the
-            deck.
-          </p>
-
-          <div className="mt-4 flex gap-2">
-            <button
-              onClick={() => handleResolveChallenge(activeChallenge)}
-              disabled={isSubmitting}
-              className={`px-4 py-2 rounded-lg ${
-                isSubmitting
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-green-500 hover:bg-green-600 text-white"
-              }`}
-            >
-              {isSubmitting ? (
-                <span className="flex items-center">
-                  <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Processing...
-                </span>
-              ) : (
-                `Confirm & Show Card`
-              )}
-            </button>
-
-            <button
-              onClick={() => {
-                setSelectedCardIndex(null);
-                if (setIsSelectingForChallenge) {
-                  setIsSelectingForChallenge(false);
-                }
-              }}
-              className="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors"
-            >
-              Cancel
-            </button>
-          </div>
+          {selectedCardIndex !== null && (
+            <div className="mt-4 flex gap-2">
+              <button
+                onClick={() => handleResolveChallenge(activeChallenge)}
+                disabled={isSubmitting}
+                className={`px-4 py-2 rounded-lg ${
+                  isSubmitting
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-green-500 hover:bg-green-600 text-white"
+                }`}
+              >
+                {isSubmitting ? (
+                  <span className="flex items-center">
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Processing...
+                  </span>
+                ) : (
+                  `Confirm & Show Card #${selectedCardIndex + 1}`
+                )}
+              </button>
+            </div>
+          )}
         </div>
       )}
 

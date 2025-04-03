@@ -15,8 +15,8 @@ interface PlayerHandProps {
   highlightCurrentRank?: string;
   allowCardFlip?: boolean; // Controls when cards can be flipped
   challengedCardIndex?: number; // Indicates which card is being challenged
-  onCardSelect?: (cardIndex: number) => void; // New prop for handling card selection
-  isSelectingForChallenge?: boolean; // New prop to indicate if we're in challenge select mode
+  onCardSelect?: (cardIndex: number) => void; // For handling card selection
+  isSelectingForChallenge?: boolean; // Indicates if we're in challenge select mode
 }
 
 const PlayerHand: React.FC<PlayerHandProps> = ({
@@ -34,6 +34,9 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [flippedCardTimer, setFlippedCardTimer] =
     useState<NodeJS.Timeout | null>(null);
+  const [selectedCardForChallenge, setSelectedCardForChallenge] = useState<
+    number | null
+  >(null);
 
   // Subscribe to player's cards
   useEffect(() => {
@@ -105,6 +108,13 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
     };
   }, [playerCards, gameId, playerId]);
 
+  // Reset selected card when challenge mode is exited
+  useEffect(() => {
+    if (!isSelectingForChallenge) {
+      setSelectedCardForChallenge(null);
+    }
+  }, [isSelectingForChallenge]);
+
   const handleCardMove = async (
     card: Card,
     position: { x: number; y: number }
@@ -120,10 +130,17 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
     }
   };
 
-  // New handler for card selection during challenge
+  // Handler for card selection during challenge
   const handleCardSelect = (card: Card, index: number) => {
     if (isSelectingForChallenge && onCardSelect) {
-      onCardSelect(index);
+      // Only allow selection if no card is already selected or this is the selected card
+      if (
+        selectedCardForChallenge === null ||
+        selectedCardForChallenge === index
+      ) {
+        setSelectedCardForChallenge(index);
+        onCardSelect(index);
+      }
     }
   };
 
@@ -153,7 +170,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
 
         {isSelectingForChallenge && (
           <span className="text-xs text-yellow-500 font-bold animate-pulse">
-            Select a card to reveal for the challenge
+            Select a card to show for the challenge
           </span>
         )}
       </h3>
@@ -171,15 +188,24 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
             const defaultX = 20 + index * (window.innerWidth < 768 ? 25 : 35);
             const position = card.position || { x: defaultX, y: 10 };
 
-            // Determine if this card should be highlighted
-            const shouldHighlight =
-              highlightCurrentRank && card.rank === highlightCurrentRank;
-
             // Determine if this specific card is being challenged
             const isBeingChallenged = challengedCardIndex === index;
 
+            // Determine if this card has been selected for challenge
+            const isSelected = selectedCardForChallenge === index;
+
             // Determine if this card is selectable for challenge
-            const isSelectable = isSelectingForChallenge;
+            const isSelectable =
+              isSelectingForChallenge &&
+              (selectedCardForChallenge === null ||
+                selectedCardForChallenge === index);
+
+            // Only highlight cards if they're face up AND match current rank
+            // This prevents giving clues about face-down cards
+            const shouldHighlight =
+              showFaceUp &&
+              highlightCurrentRank &&
+              card.rank === highlightCurrentRank;
 
             return (
               <div key={card.id} className="relative">
@@ -194,18 +220,20 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
                       ? "ring-4 ring-yellow-400 z-20"
                       : ""
                   } ${
-                    isSelectable
+                    isSelected
+                      ? "ring-4 ring-blue-600 z-30"
+                      : isSelectable
                       ? "hover:scale-110 hover:ring-2 hover:ring-blue-400"
                       : ""
                   }`}
                   onReveal={() =>
                     isSelectable ? handleCardSelect(card, index) : null
                   }
-                  allowPeek={!showFaceUp && card.rank === highlightCurrentRank} // Allow peeking when card matches current pyramid card
+                  allowPeek={!showFaceUp && (shouldHighlight || card.newCard)}
                   showFace={showFaceUp || isBeingChallenged || card.newCard} // Show face up during memorization, challenges, or if it's a new card
                   allowFlip={
                     allowCardFlip && (isBeingChallenged || isSelectable)
-                  } // Only allow flipping under specific circumstances
+                  }
                 />
 
                 {/* New card indicator */}
@@ -219,10 +247,23 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
                 {/* Selection indicator for challenge */}
                 {isSelectingForChallenge && (
                   <div
-                    className="absolute inset-0 flex items-center justify-center z-30 cursor-pointer"
-                    onClick={() => handleCardSelect(card, index)}
+                    className={`absolute inset-0 flex items-center justify-center z-30 cursor-pointer ${
+                      selectedCardForChallenge !== null &&
+                      selectedCardForChallenge !== index
+                        ? "opacity-50 pointer-events-none"
+                        : ""
+                    }`}
+                    onClick={() =>
+                      isSelectable ? handleCardSelect(card, index) : null
+                    }
                   >
-                    <div className="bg-blue-500 bg-opacity-70 hover:bg-opacity-90 rounded-full w-8 h-8 flex items-center justify-center text-white font-bold">
+                    <div
+                      className={`rounded-full w-8 h-8 flex items-center justify-center text-white font-bold ${
+                        isSelected
+                          ? "bg-blue-600"
+                          : "bg-blue-500 bg-opacity-70 hover:bg-opacity-90"
+                      }`}
+                    >
                       {index + 1}
                     </div>
                   </div>

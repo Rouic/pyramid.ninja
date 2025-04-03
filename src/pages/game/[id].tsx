@@ -44,7 +44,7 @@ const GamePage = () => {
   const [allCardsDealt, setAllCardsDealt] = useState(false);
   const [currentRound, setCurrentRound] = useState(1);
   const [isSelectingForChallenge, setIsSelectingForChallenge] = useState(false);
-
+  const [playerCards, setPlayerCards] = useState<Card[]>([]);
 
   // New state to track which card is being challenged (for flipping)
   const [challengedCardIndex, setChallengedCardIndex] = useState<number>(-1);
@@ -129,6 +129,11 @@ const GamePage = () => {
             );
           }
 
+          // Update player cards if available
+          if (data[playerId] && data[playerId].cards) {
+            setPlayerCards(data[playerId].cards);
+          }
+
           setIsLoading(false);
           setIsStartingGame(false);
         });
@@ -141,8 +146,6 @@ const GamePage = () => {
         setIsLoading(false);
       });
   }, [id, playerId, setIsHost]);
-
-  
 
   const handleStartGame = useCallback(async () => {
     if (
@@ -221,63 +224,154 @@ const GamePage = () => {
   // Handler for when a player is challenged and needs to show a card
   const handleChallengeCard = useCallback((cardIndex: number) => {
     setChallengedCardIndex(cardIndex);
+
+    // If cardIndex is -1, it means we're resetting the challenge state
+    if (cardIndex === -1) {
+      setIsSelectingForChallenge(false);
+    }
   }, []);
 
+  // Single useEffect for handling new cards with auto-hide timer
+  useEffect(() => {
+    if (!id || typeof id !== "string" || !playerId || !gameData) return;
 
+    // Check for newCardTimers in gameData
+    const newCardTimers = gameData.newCardTimers || {};
+    const playerTimers = newCardTimers[playerId];
 
- useEffect(() => {
-   // This effect will create a timer to hide each new card
-   if (!gameData || !id || typeof id !== "string") return;
+    // Process timers from Firebase if they exist
+    if (playerTimers) {
+      Object.entries(playerTimers).forEach(([cardId, hideTimeStr]) => {
+        if (!hideTimeStr) return; // Skip null entries
 
-   // Find all new cards in the player's hand
-   const playerData = gameData[playerId];
-   if (!playerData || !playerData.cards) return;
+        const hideTime = new Date(hideTimeStr as string).getTime();
+        const now = Date.now();
+        const timeRemaining = Math.max(0, hideTime - now);
 
-   // Look for any new cards
-   const newCards = playerData.cards.filter((card) => card.newCard === true);
+        if (timeRemaining > 0) {
+          // Set a timer to auto-hide this card
+          const timer = setTimeout(async () => {
+            console.log(`Auto-hiding card ${cardId} after 15 seconds`);
 
-   // Create timers for each new card
-   newCards.forEach((newCard) => {
-     const cardId = newCard.i;
+            try {
+              // Get current player cards
+              const playerRef = doc(db, "games", id, "players", playerId);
+              const playerDoc = await getDoc(playerRef);
 
-     // Set a timeout to hide the card after 15 seconds
-     console.log(`Setting timer to hide card ${cardId} in 15 seconds`);
-     setTimeout(() => {
-       console.log(`Hiding card ${cardId} after 15 seconds`);
-       if (id) {
-         // Update the card in Firebase
-         const playerRef = doc(db, "games", id, "players", playerId);
-         getDoc(playerRef)
-           .then((snapshot) => {
-             if (snapshot.exists()) {
-               const playerData = snapshot.data();
-               const updatedCards = playerData.cards.map((card) =>
-                 card.i === cardId
-                   ? { ...card, newCard: false, faceVisible: false }
-                   : card
-               );
+              if (playerDoc.exists()) {
+                const playerData = playerDoc.data();
+                const cards = playerData.cards || [];
 
-               updateDoc(playerRef, {
-                 cards: updatedCards,
-                 updatedAt: new Date().toISOString(),
-               }).catch((err) =>
-                 console.error("Error updating card visibility:", err)
-               );
-             }
-           })
-           .catch((err) => console.error("Error reading player data:", err));
-       }
-     }, 15000);
-   });
- }, [gameData, playerId, id]);
+                // Find the card by ID and update it
+                const updatedCards = cards.map((card) =>
+                  card.i.toString() === cardId
+                    ? { ...card, newCard: false, faceVisible: false }
+                    : card
+                );
 
+                // Update the cards in Firebase
+                await updateDoc(playerRef, {
+                  cards: updatedCards,
+                  updatedAt: new Date().toISOString(),
+                });
+
+                // Remove this timer from Firebase
+                const gameRef = doc(db, "games", id);
+                await updateDoc(gameRef, {
+                  [`newCardTimers.${playerId}.${cardId}`]: null,
+                });
+              }
+            } catch (error) {
+              console.error("Error auto-hiding card:", error);
+            }
+          }, timeRemaining);
+
+          return () => clearTimeout(timer);
+        }
+      });
+    }
+
+    // Also look for any direct newCard flags in player data
+    const playerData = gameData[playerId];
+    if (playerData && playerData.cards) {
+      const newCards = playerData.cards.filter((card) => card.newCard === true);
+
+      // For each new card that doesn't have a timer yet, set up a hide timer
+      newCards.forEach((newCard) => {
+        const cardId = newCard.i;
+        const hasExistingTimer = playerTimers && playerTimers[cardId];
+
+        if (!hasExistingTimer) {
+          console.log(`Setting timer to hide card ${cardId} in 15 seconds`);
+
+          // Create a manual timer for this session
+          const timer = setTimeout(() => {
+            console.log(`Hiding card ${cardId} after 15 seconds`);
+            if (id) {
+              // Update the card in Firebase
+              const playerRef = doc(db, "games", id, "players", playerId);
+              getDoc(playerRef)
+                .then((snapshot) => {
+                  if (snapshot.exists()) {
+                    const playerData = snapshot.data();
+                    const updatedCards = playerData.cards.map((card) =>
+                      card.i === cardId
+                        ? { ...card, newCard: false, faceVisible: false }
+                        : card
+                    );
+
+                    updateDoc(playerRef, {
+                      cards: updatedCards,
+                      updatedAt: new Date().toISOString(),
+                    }).catch((err) =>
+                      console.error("Error updating card visibility:", err)
+                    );
+                  }
+                })
+                .catch((err) =>
+                  console.error("Error reading player data:", err)
+                );
+            }
+          }, 15000);
+
+          return () => clearTimeout(timer);
+        }
+      });
+    }
+  }, [gameData, id, playerId]);
+
+  // Render new card alert notification
   const renderNewCardAlert = () => {
-    if (
-      !gameData ||
-      !gameData.newCardTimers ||
-      Object.keys(gameData.newCardTimers).length === 0
-    ) {
+    // Check if this player has a new card
+    const newCards = playerCards?.filter((card) => card.newCard) || [];
+
+    if (newCards.length === 0) {
       return null;
+    }
+
+    // Calculate remaining time based on the newest card's replacedAt timestamp
+    let timeLeftPercent = 100;
+    const newestCard = newCards.reduce((newest, card) => {
+      if (
+        !newest.replacedAt ||
+        (card.replacedAt &&
+          new Date(card.replacedAt) > new Date(newest.replacedAt))
+      ) {
+        return card;
+      }
+      return newest;
+    }, newCards[0]);
+
+    if (newestCard.replacedAt) {
+      const replacedTime = new Date(newestCard.replacedAt).getTime();
+      const now = Date.now();
+      const elapsed = now - replacedTime;
+      const totalDuration = 15000; // 15 seconds
+
+      timeLeftPercent = Math.max(
+        0,
+        Math.min(100, 100 - (elapsed / totalDuration) * 100)
+      );
     }
 
     return (
@@ -287,40 +381,12 @@ const GamePage = () => {
         <div className="mt-2 bg-green-500 h-2 rounded-full overflow-hidden">
           <div
             className="bg-white h-full transition-all duration-1000"
-            style={{
-              width: `${(gameData.newCardTimers.timeLeft / 15) * 100}%`,
-            }}
+            style={{ width: `${timeLeftPercent}%` }}
           ></div>
         </div>
       </div>
     );
   };
-
-  {
-    isDeckEmpty && (
-      <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-700">
-        <div className="flex items-center">
-          <svg
-            className="h-5 w-5 text-yellow-500 mr-2"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-            />
-          </svg>
-          <span className="text-sm font-medium text-yellow-700 dark:text-yellow-300">
-            Deck is empty! Any cards you reveal during challenges won't be
-            replaced.
-          </span>
-        </div>
-      </div>
-    );
-  }
 
   if (isLoading) {
     return (
@@ -453,6 +519,31 @@ const GamePage = () => {
             </div>
           </div>
 
+          {/* Display empty deck warning if needed */}
+          {isDeckEmpty && (
+            <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-700">
+              <div className="flex items-center">
+                <svg
+                  className="h-5 w-5 text-yellow-500 mr-2"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+                <span className="text-sm font-medium text-yellow-700 dark:text-yellow-300">
+                  Deck is empty! Any cards you reveal during challenges won't be
+                  replaced.
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Game content - two column layout */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left column - Pyramid */}
@@ -584,6 +675,31 @@ const GamePage = () => {
             </div>
           </div>
 
+          {/* Display empty deck warning if needed */}
+          {isDeckEmpty && (
+            <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-700">
+              <div className="flex items-center">
+                <svg
+                  className="h-5 w-5 text-yellow-500 mr-2"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+                <span className="text-sm font-medium text-yellow-700 dark:text-yellow-300">
+                  Deck is empty! Any cards you reveal during challenges won't be
+                  replaced.
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Player game area */}
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
             {gameState === "waiting" ? (
@@ -620,6 +736,9 @@ const GamePage = () => {
                 {/* Divider */}
                 <div className="border-t border-gray-200 dark:border-gray-700 my-6"></div>
 
+                {/* Render new card alert */}
+                {renderNewCardAlert()}
+
                 {/* Drink assignments panel */}
                 {gameState === "playing" && (
                   <DrinkAssignmentPanel
@@ -631,11 +750,9 @@ const GamePage = () => {
                     currentCardRank={currentPyramidCard?.rank}
                     drinkCount={drinksForCurrentRow}
                     onChallengeCard={handleChallengeCard}
-                    setIsSelectingForChallenge={setIsSelectingForChallenge} // Add this new prop
+                    setIsSelectingForChallenge={setIsSelectingForChallenge}
                   />
                 )}
-
-                {renderNewCardAlert()}
 
                 {/* Player's hand */}
                 <PlayerHand
@@ -695,8 +812,8 @@ const GamePage = () => {
                   </svg>
                 </span>
                 <span className="text-gray-700 dark:text-gray-300">
-                  Cards matching the current pyramid card will be highlighted in
-                  yellow
+                  Cards are only visible during memorization and after
+                  challenges
                 </span>
               </li>
               <li className="flex items-start">
@@ -714,7 +831,7 @@ const GamePage = () => {
                   </svg>
                 </span>
                 <span className="text-gray-700 dark:text-gray-300">
-                  Hold down on a matching card to peek at it during gameplay
+                  Hold down on a card to peek at it during challenges
                 </span>
               </li>
               <li className="flex items-start">

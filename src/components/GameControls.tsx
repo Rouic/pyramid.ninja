@@ -1,6 +1,6 @@
 // src/components/GameControls.tsx
-import React, { useState } from "react";
-import { doc, updateDoc } from "firebase/firestore";
+import React, { useState, useEffect } from "react";
+import { doc, updateDoc, getDoc } from "firebase/firestore";
 import { db } from "../lib/firebase/firebase";
 import { usePlayerReadiness } from "../hooks/usePlayerReadiness";
 import { useGamePlayers } from "../hooks/useGamePlayers";
@@ -25,12 +25,29 @@ export function GameControls({
   const { players } = useGamePlayers(gameId);
   const [isMemorizing, setIsMemorizing] = useState(false);
   const [memorizeTimeLeft, setMemorizeTimeLeft] = useState<number | null>(null);
+  const [personalMemorizationComplete, setPersonalMemorizationComplete] =
+    useState(false);
 
   // Get a player's name by ID
   const getPlayerName = (playerId: string) => {
     const player = Object.values(players).find((p) => p.id === playerId);
     return player?.name || "Unknown Player";
   };
+
+  // Check localStorage for memorization state when component mounts
+  useEffect(() => {
+    if (playerId && gameId) {
+      const memorizationKey = `${gameId}_${playerId}_memorized`;
+      const hasMemorized = localStorage.getItem(memorizationKey) === "true";
+      setPersonalMemorizationComplete(hasMemorized);
+
+      // If player has already memorized but game still shows as not ready,
+      // ensure they're marked as ready
+      if (hasMemorized && !isReady && currentPhase === "memorizing") {
+        markAsReady();
+      }
+    }
+  }, [playerId, gameId, isReady, currentPhase, markAsReady]);
 
   // Calculate ready percentage for progress indicator
   const readyCount = Object.values(playerReadiness).filter(
@@ -49,7 +66,7 @@ export function GameControls({
     let timeLeft = 10;
     setMemorizeTimeLeft(timeLeft);
 
-    // Update the player's memorizing status
+    // Update the player's memorizing status in Firebase
     await updateDoc(doc(db, "games", gameId), {
       [`playerMemorizing.${playerId}`]: true,
     });
@@ -63,6 +80,11 @@ export function GameControls({
         clearInterval(interval);
         setIsMemorizing(false);
         setMemorizeTimeLeft(null);
+        setPersonalMemorizationComplete(true);
+
+        // Store in localStorage that this player has completed memorization
+        const memorizationKey = `${gameId}_${playerId}_memorized`;
+        localStorage.setItem(memorizationKey, "true");
 
         // Mark player as ready when time is up
         markAsReady();
@@ -92,25 +114,27 @@ export function GameControls({
                 ></div>
               </div>
             </div>
+          ) : personalMemorizationComplete || isReady ? (
+            <div className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 p-4 rounded-lg">
+              <div className="font-medium">You've memorized your cards!</div>
+              <div className="text-sm mt-1">
+                Waiting for other players to finish memorizing...
+              </div>
+            </div>
           ) : (
             <button
               onClick={startPersonalMemorization}
-              disabled={isReady}
-              className={`px-6 py-3 rounded-lg font-medium text-white transition-colors ${
-                isReady
-                  ? "bg-green-500 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700"
-              }`}
+              className="px-6 py-3 rounded-lg font-medium text-white transition-colors bg-blue-600 hover:bg-blue-700"
             >
-              {isReady ? "You're Ready!" : "Start Memorizing My Cards"}
+              Start Memorizing My Cards
             </button>
           )}
 
-          <div className="mt-2 text-sm text-gray-600 dark:text-gray-400 text-center">
-            {isReady
-              ? "Waiting for other players..."
-              : "Click to start your 10-second memorization period"}
-          </div>
+          {!isMemorizing && !personalMemorizationComplete && !isReady && (
+            <div className="mt-2 text-sm text-gray-600 dark:text-gray-400 text-center">
+              Click to start your 10-second memorization period
+            </div>
+          )}
         </div>
       )}
 
