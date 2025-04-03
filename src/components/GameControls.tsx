@@ -1,7 +1,10 @@
 // src/components/GameControls.tsx
-import React from "react";
+import React, { useState } from "react";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "../lib/firebase/firebase";
 import { usePlayerReadiness } from "../hooks/usePlayerReadiness";
 import { useGamePlayers } from "../hooks/useGamePlayers";
+import { usePlayerContext } from "../context/PlayerContext";
 
 interface GameControlsProps {
   gameId: string;
@@ -16,10 +19,12 @@ export function GameControls({
   isHost,
   onStartMemorization,
 }: GameControlsProps) {
+  const { playerId } = usePlayerContext();
   const { isReady, markAsReady, allPlayersReady, playerReadiness, loading } =
     usePlayerReadiness(gameId);
-
   const { players } = useGamePlayers(gameId);
+  const [isMemorizing, setIsMemorizing] = useState(false);
+  const [memorizeTimeLeft, setMemorizeTimeLeft] = useState<number | null>(null);
 
   // Get a player's name by ID
   const getPlayerName = (playerId: string) => {
@@ -34,26 +39,77 @@ export function GameControls({
   const totalPlayers = Object.keys(playerReadiness).length || 1;
   const readyPercentage = Math.round((readyCount / totalPlayers) * 100);
 
+  // Start personal memorization phase for this player
+  const startPersonalMemorization = async () => {
+    if (!gameId || !playerId) return;
+
+    setIsMemorizing(true);
+
+    // Show player's cards for 10 seconds
+    let timeLeft = 10;
+    setMemorizeTimeLeft(timeLeft);
+
+    // Update the player's memorizing status
+    await updateDoc(doc(db, "games", gameId), {
+      [`playerMemorizing.${playerId}`]: true,
+    });
+
+    // Start countdown
+    const interval = setInterval(() => {
+      timeLeft -= 1;
+      setMemorizeTimeLeft(timeLeft);
+
+      if (timeLeft <= 0) {
+        clearInterval(interval);
+        setIsMemorizing(false);
+        setMemorizeTimeLeft(null);
+
+        // Mark player as ready when time is up
+        markAsReady();
+
+        // Update the player's memorizing status
+        updateDoc(doc(db, "games", gameId), {
+          [`playerMemorizing.${playerId}`]: false,
+        });
+      }
+    }, 1000);
+  };
+
   return (
     <div className="flex flex-col space-y-4">
       {currentPhase === "memorizing" && (
         <div className="flex flex-col space-y-2">
-          <button
-            onClick={markAsReady}
-            disabled={isReady}
-            className={`px-6 py-3 rounded-lg font-medium text-white transition-colors ${
-              isReady
-                ? "bg-green-500 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700"
-            }`}
-          >
-            {isReady ? "You're Ready!" : "I've Memorized My Cards"}
-          </button>
+          {isMemorizing ? (
+            <div className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 p-4 rounded-lg">
+              <div className="font-medium">Memorizing your cards!</div>
+              <div className="text-xl font-bold mt-1">
+                {memorizeTimeLeft} seconds left
+              </div>
+              <div className="w-full bg-yellow-200 dark:bg-yellow-800 h-2 rounded-full mt-2 overflow-hidden">
+                <div
+                  className="bg-yellow-500 h-full transition-all duration-1000"
+                  style={{ width: `${(memorizeTimeLeft / 10) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={startPersonalMemorization}
+              disabled={isReady}
+              className={`px-6 py-3 rounded-lg font-medium text-white transition-colors ${
+                isReady
+                  ? "bg-green-500 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
+            >
+              {isReady ? "You're Ready!" : "Start Memorizing My Cards"}
+            </button>
+          )}
 
           <div className="mt-2 text-sm text-gray-600 dark:text-gray-400 text-center">
             {isReady
               ? "Waiting for other players..."
-              : "Click when you've memorized your cards"}
+              : "Click to start your 10-second memorization period"}
           </div>
         </div>
       )}

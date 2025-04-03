@@ -15,6 +15,8 @@ interface PlayerHandProps {
   highlightCurrentRank?: string;
   allowCardFlip?: boolean; // Controls when cards can be flipped
   challengedCardIndex?: number; // Indicates which card is being challenged
+  onCardSelect?: (cardIndex: number) => void; // New prop for handling card selection
+  isSelectingForChallenge?: boolean; // New prop to indicate if we're in challenge select mode
 }
 
 const PlayerHand: React.FC<PlayerHandProps> = ({
@@ -24,11 +26,14 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
   highlightCurrentRank,
   allowCardFlip = false,
   challengedCardIndex = -1,
+  onCardSelect,
+  isSelectingForChallenge = false,
 }) => {
   const { playerId } = usePlayerContext();
   const [playerCards, setPlayerCards] = useState<Card[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  // We won't automatically hide new cards, so we removed the newCardTimers state
+  const [flippedCardTimer, setFlippedCardTimer] =
+    useState<NodeJS.Timeout | null>(null);
 
   // Subscribe to player's cards
   useEffect(() => {
@@ -51,6 +56,55 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
     };
   }, [gameId, playerId]);
 
+  // Set up auto-hide timer for new cards
+  useEffect(() => {
+    // Find any new cards
+    const newCard = playerCards.find((card) => card.newCard);
+
+    // Clear any existing timer
+    if (flippedCardTimer) {
+      clearTimeout(flippedCardTimer);
+      setFlippedCardTimer(null);
+    }
+
+    // Set up new timer if there's a new card
+    if (newCard) {
+      console.log(
+        `Setting up 15-second auto-hide timer for new card ${newCard.id}`
+      );
+
+      const timer = setTimeout(() => {
+        console.log(`Auto-hiding card ${newCard.id} after 15 seconds`);
+
+        // Update cards in state
+        const updatedCards = playerCards.map((card) =>
+          card.id === newCard.id
+            ? { ...card, newCard: false, faceVisible: false }
+            : card
+        );
+
+        setPlayerCards(updatedCards);
+
+        // Also update in Firebase
+        if (gameId && playerId) {
+          console.log(`Updating card ${newCard.id} in Firebase to hide it`);
+          updatePlayerCard(gameId, playerId, newCard.id, {
+            newCard: false,
+            faceVisible: false,
+          }).catch((error) => {
+            console.error("Error updating card visibility:", error);
+          });
+        }
+      }, 15000);
+
+      setFlippedCardTimer(timer);
+    }
+
+    return () => {
+      if (flippedCardTimer) clearTimeout(flippedCardTimer);
+    };
+  }, [playerCards, gameId, playerId]);
+
   const handleCardMove = async (
     card: Card,
     position: { x: number; y: number }
@@ -63,6 +117,13 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
       });
     } catch (error) {
       console.error("Error updating card position:", error);
+    }
+  };
+
+  // New handler for card selection during challenge
+  const handleCardSelect = (card: Card, index: number) => {
+    if (isSelectingForChallenge && onCardSelect) {
+      onCardSelect(index);
     }
   };
 
@@ -89,6 +150,12 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
             Cards hidden - remember what you have!
           </span>
         )}
+
+        {isSelectingForChallenge && (
+          <span className="text-xs text-yellow-500 font-bold animate-pulse">
+            Select a card to reveal for the challenge
+          </span>
+        )}
       </h3>
 
       <div className="relative h-36 md:h-44 w-full px-4">
@@ -111,6 +178,9 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
             // Determine if this specific card is being challenged
             const isBeingChallenged = challengedCardIndex === index;
 
+            // Determine if this card is selectable for challenge
+            const isSelectable = isSelectingForChallenge;
+
             return (
               <div key={card.id} className="relative">
                 <GameCard
@@ -123,11 +193,19 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
                     shouldHighlight || isBeingChallenged
                       ? "ring-4 ring-yellow-400 z-20"
                       : ""
+                  } ${
+                    isSelectable
+                      ? "hover:scale-110 hover:ring-2 hover:ring-blue-400"
+                      : ""
                   }`}
-                  onReveal={() => {}} // No reveal needed for player's own cards
+                  onReveal={() =>
+                    isSelectable ? handleCardSelect(card, index) : null
+                  }
                   allowPeek={!showFaceUp && card.rank === highlightCurrentRank} // Allow peeking when card matches current pyramid card
                   showFace={showFaceUp || isBeingChallenged || card.newCard} // Show face up during memorization, challenges, or if it's a new card
-                  allowFlip={allowCardFlip && isBeingChallenged} // Only allow flipping under specific circumstances
+                  allowFlip={
+                    allowCardFlip && (isBeingChallenged || isSelectable)
+                  } // Only allow flipping under specific circumstances
                 />
 
                 {/* New card indicator */}
@@ -135,6 +213,18 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
                   <div className="absolute top-0 left-0 right-0 bg-green-600 bg-opacity-80 text-white text-center py-1 z-30 rounded-t-lg">
                     <div className="text-xs font-bold">NEW CARD</div>
                     <div className="text-sm">Memorize this card!</div>
+                  </div>
+                )}
+
+                {/* Selection indicator for challenge */}
+                {isSelectingForChallenge && (
+                  <div
+                    className="absolute inset-0 flex items-center justify-center z-30 cursor-pointer"
+                    onClick={() => handleCardSelect(card, index)}
+                  >
+                    <div className="bg-blue-500 bg-opacity-70 hover:bg-opacity-90 rounded-full w-8 h-8 flex items-center justify-center text-white font-bold">
+                      {index + 1}
+                    </div>
                   </div>
                 )}
               </div>

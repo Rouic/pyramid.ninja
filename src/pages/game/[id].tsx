@@ -7,7 +7,9 @@ import {
   dealCardsToPlayer,
   initializeGameDeck,
   revealPyramidCard,
+  updatePlayerCard,
 } from "../../lib/firebase/gameCards";
+import { Card } from "../../lib/deck";
 import {
   DrinkAssignment,
   subscribeToGameStateDetails,
@@ -41,6 +43,8 @@ const GamePage = () => {
   const [currentRowNumber, setCurrentRowNumber] = useState(0);
   const [allCardsDealt, setAllCardsDealt] = useState(false);
   const [currentRound, setCurrentRound] = useState(1);
+  const [isSelectingForChallenge, setIsSelectingForChallenge] = useState(false);
+
 
   // New state to track which card is being challenged (for flipping)
   const [challengedCardIndex, setChallengedCardIndex] = useState<number>(-1);
@@ -138,6 +142,8 @@ const GamePage = () => {
       });
   }, [id, playerId, setIsHost]);
 
+  
+
   const handleStartGame = useCallback(async () => {
     if (
       !id ||
@@ -216,6 +222,54 @@ const GamePage = () => {
   const handleChallengeCard = useCallback((cardIndex: number) => {
     setChallengedCardIndex(cardIndex);
   }, []);
+
+
+
+ useEffect(() => {
+   // This effect will create a timer to hide each new card
+   if (!gameData || !id || typeof id !== "string") return;
+
+   // Find all new cards in the player's hand
+   const playerData = gameData[playerId];
+   if (!playerData || !playerData.cards) return;
+
+   // Look for any new cards
+   const newCards = playerData.cards.filter((card) => card.newCard === true);
+
+   // Create timers for each new card
+   newCards.forEach((newCard) => {
+     const cardId = newCard.i;
+
+     // Set a timeout to hide the card after 15 seconds
+     console.log(`Setting timer to hide card ${cardId} in 15 seconds`);
+     setTimeout(() => {
+       console.log(`Hiding card ${cardId} after 15 seconds`);
+       if (id) {
+         // Update the card in Firebase
+         const playerRef = doc(db, "games", id, "players", playerId);
+         getDoc(playerRef)
+           .then((snapshot) => {
+             if (snapshot.exists()) {
+               const playerData = snapshot.data();
+               const updatedCards = playerData.cards.map((card) =>
+                 card.i === cardId
+                   ? { ...card, newCard: false, faceVisible: false }
+                   : card
+               );
+
+               updateDoc(playerRef, {
+                 cards: updatedCards,
+                 updatedAt: new Date().toISOString(),
+               }).catch((err) =>
+                 console.error("Error updating card visibility:", err)
+               );
+             }
+           })
+           .catch((err) => console.error("Error reading player data:", err));
+       }
+     }, 15000);
+   });
+ }, [gameData, playerId, id]);
 
   const renderNewCardAlert = () => {
     if (
@@ -577,6 +631,7 @@ const GamePage = () => {
                     currentCardRank={currentPyramidCard?.rank}
                     drinkCount={drinksForCurrentRow}
                     onChallengeCard={handleChallengeCard}
+                    setIsSelectingForChallenge={setIsSelectingForChallenge} // Add this new prop
                   />
                 )}
 
@@ -591,7 +646,9 @@ const GamePage = () => {
                   }
                   highlightCurrentRank={currentPyramidCard?.rank}
                   allowCardFlip={gameState === "playing"} // Only allow flipping during gameplay
-                  challengedCardIndex={challengedCardIndex} // Pass the challenged card index
+                  challengedCardIndex={challengedCardIndex}
+                  onCardSelect={handleChallengeCard} // Add this new prop
+                  isSelectingForChallenge={isSelectingForChallenge} // Add this new prop
                 />
               </>
             )}

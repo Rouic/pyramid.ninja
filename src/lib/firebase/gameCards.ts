@@ -84,6 +84,45 @@ export function subscribeToPlayerCards(gameId: string, playerId: string, callbac
   });
 }
 
+export async function hideNewCard(gameId: string, playerId: string, cardId: string) {
+  if (!gameId || !playerId || !cardId) {
+    console.error("Missing required parameters in hideNewCard");
+    return;
+  }
+
+  try {
+    const playerRef = doc(db, 'games', gameId, 'players', playerId);
+    const playerDoc = await getDoc(playerRef);
+    
+    if (!playerDoc.exists()) {
+      console.error("Player document not found");
+      return;
+    }
+    
+    const playerData = playerDoc.data();
+    
+    if (!playerData.cards || !Array.isArray(playerData.cards)) {
+      console.error("Invalid cards data structure");
+      return;
+    }
+    
+    // Find and update the card
+    const updatedCards = playerData.cards.map(card => 
+      card.id === cardId ? { ...card, newCard: false, faceVisible: false } : card
+    );
+    
+    // Update the player document
+    await updateDoc(playerRef, {
+      cards: updatedCards,
+      updatedAt: new Date().toISOString()
+    });
+    
+    console.log(`Successfully hid new card ${cardId} for player ${playerId}`);
+  } catch (error) {
+    console.error("Error hiding new card:", error);
+  }
+}
+
 /**
  * Listen for changes to the pyramid cards
  */

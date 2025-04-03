@@ -14,6 +14,7 @@ export interface DrinkAssignment {
   cardRank: string;
   timestamp: number;
   status: 'pending' | 'accepted' | 'challenged' | 'successful_challenge' | 'failed_challenge';
+  resolvedAt?: number; // Add this optional property
 }
 
 // Update game state
@@ -181,51 +182,114 @@ export async function resolveDrinkChallenge(
   assignmentIndex: number, 
   wasSuccessful: boolean
 ) {
-  const gameRef = doc(db, 'games', gameId);
-  const assignments = await getCurrentDrinkAssignments(gameId);
-  
-  if (!assignments[assignmentIndex]) {
-    throw new Error('Assignment not found');
+  if (!gameId) {
+    console.error("Missing gameId in resolveDrinkChallenge");
+    return;
   }
-  
-  // If wasSuccessful is true, it means the drink assigner (from) actually had the card
-  // If wasSuccessful is false, it means they were bluffing
-  assignments[assignmentIndex].status = wasSuccessful 
-    ? 'successful_challenge' 
-    : 'failed_challenge';
-  
-  await updateDoc(gameRef, {
-    drinkAssignments: assignments,
-    lastActivity: new Date().toISOString(),
-  });
+
+  try {
+    const gameRef = doc(db, 'games', gameId);
+    const assignments = await getCurrentDrinkAssignments(gameId);
+    
+    if (!assignments[assignmentIndex]) {
+      throw new Error('Assignment not found');
+    }
+    
+    // Update assignment status based on whether the card matched
+    assignments[assignmentIndex].status = wasSuccessful ? 'successful_challenge' : 'failed_challenge';
+    
+    // Also record the timestamp when the challenge was resolved
+    assignments[assignmentIndex].resolvedAt = Date.now();
+    
+    // Update the assignments in Firebase
+    await updateDoc(gameRef, {
+      drinkAssignments: assignments,
+      lastActivity: new Date().toISOString(),
+    });
+    
+    console.log(`Challenge resolved as ${wasSuccessful ? 'successful' : 'failed'}`);
+  } catch (error) {
+    console.error("Error resolving drink challenge:", error);
+    throw error;
+  }
 }
 
 // Replace a player's card after it was revealed in a challenge
 export async function replacePlayerCard(gameId: string, playerId: string, cardIndex: number) {
-  const gameRef = doc(db, 'games', gameId);
-  const playerRef = doc(db, 'games', gameId, 'players', playerId);
-  
-  // Get current player cards
-  const playerDoc = await getDoc(playerRef);
-  if (!playerDoc.exists()) {
-    throw new Error('Player not found');
+  if (!gameId || !playerId) {
+    console.error("Missing gameId or playerId in replacePlayerCard");
+    return null;
   }
-  
-  // Get deck
-  const gameDoc = await getDoc(gameRef);
-  if (!gameDoc.exists()) {
-    throw new Error('Game not found');
-  }
-  
-  const gameData = gameDoc.data();
-  const deck = gameData.deck;
-  
-  // Check if there are cards left in the deck
-  if (!deck.cards || deck.cards.length === 0) {
-    console.log('No more cards in deck, removing the challenged card without replacement');
-    // Just remove the card without replacement
+
+  try {
+    console.log(`Replacing card at index ${cardIndex} for player ${playerId} in game ${gameId}`);
+    
+    const gameRef = doc(db, 'games', gameId);
+    const playerRef = doc(db, 'games', gameId, 'players', playerId);
+    
+    // Get current player cards
+    const playerDoc = await getDoc(playerRef);
+    if (!playerDoc.exists()) {
+      throw new Error('Player not found');
+    }
+    
+    // Get deck
+    const gameDoc = await getDoc(gameRef);
+    if (!gameDoc.exists()) {
+      throw new Error('Game not found');
+    }
+    
+    const gameData = gameDoc.data();
+    
+    // Make sure we have a deck with cards
+    if (!gameData || !gameData.deck || !gameData.deck.cards || !Array.isArray(gameData.deck.cards)) {
+      console.error("Invalid deck structure in game data");
+      return null;
+    }
+    
+    const deck = {...gameData.deck};
+    
+    // Get player's current cards
     const playerCards = [...playerDoc.data().cards];
-    playerCards.splice(cardIndex, 1);
+    
+    // Check if cardIndex is valid
+    if (cardIndex < 0 || cardIndex >= playerCards.length) {
+      console.error(`Invalid card index: ${cardIndex}, player has ${playerCards.length} cards`);
+      return null;
+    }
+    
+    // Check if there are cards left in the deck
+    if (deck.cards.length === 0) {
+      console.log('No more cards in deck, removing the challenged card without replacement');
+      
+      // Mark the card as revealed but don't replace it
+      playerCards[cardIndex] = {
+        ...playerCards[cardIndex],
+        revealed: true,
+        revealedAt: new Date().toISOString()
+      };
+      
+      // Update player cards
+      await updateDoc(playerRef, {
+        cards: playerCards,
+        updatedAt: new Date().toISOString(),
+      });
+      
+      return null;
+    }
+    
+    // Get new card from deck
+    const newCard = deck.cards.pop();
+    
+    // Set card properties for the new card
+    newCard.owner = playerId;
+    newCard.revealed = false; // Not revealed to others
+    newCard.faceVisible = true; // But shown to the player
+    newCard.newCard = true; // Mark as new
+    newCard.replacedAt = new Date().toISOString();
+    
+    // Replace the card at the specified index
+    playerCards[cardIndex] = newCard;
     
     // Update player cards
     await updateDoc(playerRef, {
@@ -233,56 +297,17 @@ export async function replacePlayerCard(gameId: string, playerId: string, cardIn
       updatedAt: new Date().toISOString(),
     });
     
+    // Update deck in the game data
+    await updateDoc(gameRef, {
+      deck,
+    });
+    
+    console.log(`Successfully replaced card for player ${playerId} with new card`);
+    return newCard;
+  } catch (error) {
+    console.error("Error replacing player card:", error);
     return null;
   }
-  
-  // Get new card from deck
-  const newCard = deck.cards.pop();
-  newCard.owner = playerId;
-  newCard.revealed = true;
-  newCard.faceVisible = true; // Show the card
-  newCard.newCard = true; // Mark as new for special visibility
-  newCard.replacedAt = new Date().toISOString();
-  
-  // Replace player's card
-  const playerCards = [...playerDoc.data().cards];
-  playerCards[cardIndex] = newCard;
-  
-  // Update player cards
-  await updateDoc(playerRef, {
-    cards: playerCards,
-    updatedAt: new Date().toISOString(),
-  });
-  
-  // Update deck
-  await updateDoc(gameRef, {
-    deck: {
-      ...deck,
-      cards: deck.cards
-    },
-  });
-  
-  // Schedule automatic hiding of the new card after 15 seconds
-  setTimeout(async () => {
-    const currentPlayerDoc = await getDoc(playerRef);
-    if (!currentPlayerDoc.exists()) return;
-    
-    const currentCards = currentPlayerDoc.data().cards;
-    const cardToHide = currentCards.find(c => c.id === newCard.id);
-    
-    if (cardToHide && cardToHide.newCard) {
-      const updatedCards = currentCards.map(c => 
-        c.id === newCard.id ? { ...c, newCard: false, faceVisible: false } : c
-      );
-      
-      await updateDoc(playerRef, {
-        cards: updatedCards,
-        updatedAt: new Date().toISOString(),
-      });
-    }
-  }, 15000);
-  
-  return newCard;
 }
 
 // Listen for game state changes

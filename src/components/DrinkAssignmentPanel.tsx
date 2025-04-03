@@ -8,6 +8,8 @@ import {
   resolveDrinkChallenge,
   replacePlayerCard,
 } from "../lib/firebase/gameState";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../lib/firebase/firebase";
 
 interface DrinkAssignmentPanelProps {
   gameId: string;
@@ -18,6 +20,7 @@ interface DrinkAssignmentPanelProps {
   currentCardRank?: string;
   drinkCount: number;
   onChallengeCard?: (cardIndex: number) => void; // Callback for card challenges
+  setIsSelectingForChallenge?: (selecting: boolean) => void; // New callback to indicate card selection mode
 }
 
 const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
@@ -29,13 +32,13 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
   currentCardRank,
   drinkCount,
   onChallengeCard,
+  setIsSelectingForChallenge,
 }) => {
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
-  const [showingCardSelection, setShowingCardSelection] = useState(false);
+  const [activeChallenge, setActiveChallenge] = useState<number | null>(null);
   const [selectedCardIndex, setSelectedCardIndex] = useState<number | null>(
     null
   );
-  const [activeChallenge, setActiveChallenge] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Filter assignments to show only the relevant ones
@@ -53,6 +56,19 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
   const challengesToResolve = assignments.filter(
     (a) => a.status === "challenged" && a.from === currentPlayerId
   );
+
+  // Clean up selection mode when component unmounts or when there are no active challenges
+  useEffect(() => {
+    if (challengesToResolve.length === 0 && setIsSelectingForChallenge) {
+      setIsSelectingForChallenge(false);
+    }
+
+    return () => {
+      if (setIsSelectingForChallenge) {
+        setIsSelectingForChallenge(false);
+      }
+    };
+  }, [challengesToResolve.length, setIsSelectingForChallenge]);
 
   const getPlayerName = (playerId: string) => {
     const player = players.find((p) => p.id === playerId);
@@ -113,10 +129,7 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
   };
 
   // Used by the person who is being challenged (the assigner of the drink)
-  const handleResolveChallenge = async (
-    assignmentIndex: number,
-    wasSuccessful: boolean
-  ) => {
+  const handleResolveChallenge = async (assignmentIndex: number) => {
     try {
       if (selectedCardIndex === null) {
         // Require card selection before submission
@@ -124,27 +137,103 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
       }
 
       setIsSubmitting(true);
+
+      // Find the current challenge
+      const challenge = assignments[assignmentIndex];
+
+      // Find the player's cards
+      const playerRef = doc(db, "games", gameId, "players", currentPlayerId);
+      const playerDoc = await getDoc(playerRef);
+
+      if (!playerDoc.exists()) {
+        console.error("Player document not found");
+        setIsSubmitting(false);
+        return;
+      }
+
+      const playerData = playerDoc.data();
+      const playerCards = playerData.cards || [];
+
+      if (!playerCards[selectedCardIndex]) {
+        console.error("Selected card not found");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Get the selected card details
+      const selectedCard = playerCards[selectedCardIndex];
+
+      // Get the card rank (we need to convert from the numeric index to the actual rank)
+      const suit = Math.floor(selectedCard.i / 13);
+      const rankValue = selectedCard.i % 13;
+
+      // Convert rank value to actual rank
+      const ranks = [
+        "A",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "J",
+        "Q",
+        "K",
+      ];
+      const actualRank = ranks[rankValue];
+
+      // Check if the card matches the claimed rank
+      const wasSuccessful = actualRank === challenge.cardRank;
+
+      console.log(
+        `Challenge check: Selected card rank is ${actualRank}, claimed ${challenge.cardRank}, match: ${wasSuccessful}`
+      );
+
+      // Resolve the challenge in Firebase
       await resolveDrinkChallenge(gameId, assignmentIndex, wasSuccessful);
 
       // Always replace the selected card - whether bluffing or had the card
       await replacePlayerCard(
         gameId,
-        assignments[assignmentIndex].from, // The player who assigned the drink
+        challenge.from, // The player who assigned the drink
         selectedCardIndex
       );
 
+      // Reset local state
       setActiveChallenge(null);
       setSelectedCardIndex(null);
-      setShowingCardSelection(false);
+
+      // Exit card selection mode
+      if (setIsSelectingForChallenge) {
+        setIsSelectingForChallenge(false);
+      }
+
       // Reset the card view
       if (onChallengeCard) {
         onChallengeCard(-1);
       }
+
       setIsSubmitting(false);
     } catch (error) {
       console.error("Error resolving challenge:", error);
       setIsSubmitting(false);
     }
+  };
+
+  // Start challenge card selection process
+  const startCardSelection = () => {
+    if (setIsSelectingForChallenge) {
+      setIsSelectingForChallenge(true);
+    }
+
+    setActiveChallenge(
+      assignments.findIndex(
+        (a) => a.status === "challenged" && a.from === currentPlayerId
+      )
+    );
   };
 
   return (
@@ -217,7 +306,7 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
         </div>
       )}
 
-      {/* Card selection interface for the person being challenged (drink assigner) */}
+      {/* Card selection notification for the person being challenged (drink assigner) */}
       {challengesToResolve.length > 0 && activeChallenge === null && (
         <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg border border-yellow-200 dark:border-yellow-800">
           <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-2">
@@ -226,17 +315,11 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
           <p className="text-sm text-yellow-700 dark:text-yellow-300 mb-3">
             {getPlayerName(challengesToResolve[0].to)} is challenging your claim
             about having a {challengesToResolve[0].cardRank}. Select one of your
-            cards to show them.
+            cards to reveal.
           </p>
 
           <button
-            onClick={() =>
-              setActiveChallenge(
-                assignments.findIndex(
-                  (a) => a.status === "challenged" && a.from === currentPlayerId
-                )
-              )
-            }
+            onClick={startCardSelection}
             className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg"
           >
             Select My Card
@@ -245,80 +328,67 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
       )}
 
       {/* Card selection interface once the challenged player has decided to respond */}
-      {activeChallenge !== null && (
+      {activeChallenge !== null && selectedCardIndex !== null && (
         <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg border border-yellow-200 dark:border-yellow-800">
           <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-3">
-            Select which of your cards to reveal
+            Card selected - Confirm your choice
           </h4>
-          <div className="mt-2">
-            <div className="grid grid-cols-5 gap-2">
-              {[0, 1, 2, 3, 4].map((index) => (
-                <button
-                  key={index}
-                  onClick={() => handleSelectCardForChallenge(index)}
-                  className={`w-12 h-12 rounded-lg flex items-center justify-center text-sm font-bold ${
-                    selectedCardIndex === index
-                      ? "bg-yellow-500 text-white"
-                      : "bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-600"
-                  }`}
-                  disabled={isSubmitting}
-                >
-                  {index + 1}
-                </button>
-              ))}
-            </div>
+          <p className="text-sm text-yellow-700 dark:text-yellow-300 mb-3">
+            You've selected card #{selectedCardIndex + 1} to reveal. This card
+            will be shown to everyone and then replaced with a new card from the
+            deck.
+          </p>
 
-            <div className="mt-4 flex gap-2">
-              <button
-                onClick={() => handleResolveChallenge(activeChallenge, true)}
-                disabled={selectedCardIndex === null || isSubmitting}
-                className={`px-4 py-2 rounded-lg ${
-                  selectedCardIndex === null || isSubmitting
-                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    : "bg-green-500 hover:bg-green-600 text-white"
-                }`}
-              >
-                {isSubmitting ? (
-                  <span className="flex items-center">
-                    <svg
-                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    Processing...
-                  </span>
-                ) : (
-                  `I have the card`
-                )}
-              </button>
+          <div className="mt-4 flex gap-2">
+            <button
+              onClick={() => handleResolveChallenge(activeChallenge)}
+              disabled={isSubmitting}
+              className={`px-4 py-2 rounded-lg ${
+                isSubmitting
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-green-500 hover:bg-green-600 text-white"
+              }`}
+            >
+              {isSubmitting ? (
+                <span className="flex items-center">
+                  <svg
+                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Processing...
+                </span>
+              ) : (
+                `Confirm & Show Card`
+              )}
+            </button>
 
-              <button
-                onClick={() => handleResolveChallenge(activeChallenge, false)}
-                disabled={selectedCardIndex === null || isSubmitting}
-                className={`px-4 py-2 text-white rounded-lg ${
-                  selectedCardIndex === null || isSubmitting
-                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    : "bg-red-500 hover:bg-red-600"
-                }`}
-              >
-                {isSubmitting ? "Processing..." : "I was bluffing"}
-              </button>
-            </div>
+            <button
+              onClick={() => {
+                setSelectedCardIndex(null);
+                if (setIsSelectingForChallenge) {
+                  setIsSelectingForChallenge(false);
+                }
+              }}
+              className="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       )}
