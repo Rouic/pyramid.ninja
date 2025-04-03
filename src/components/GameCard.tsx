@@ -16,6 +16,7 @@ interface GameCardProps {
   isHighlighted?: boolean;
   showFace?: boolean;
   allowFlip?: boolean;
+  isSelectingForChallenge?: boolean;
 }
 
 const GameCard: React.FC<GameCardProps> = ({
@@ -30,6 +31,7 @@ const GameCard: React.FC<GameCardProps> = ({
   isHighlighted = false,
   showFace = false,
   allowFlip = false,
+  isSelectingForChallenge = false,
 }) => {
   const { playerId } = usePlayerContext();
   const [isFlipped, setIsFlipped] = useState(card.revealed || showFace);
@@ -297,14 +299,15 @@ const GameCard: React.FC<GameCardProps> = ({
   };
 
   // Determine if we should show the "click to reveal" hint
-  // We only want to show this on cards being explicitly challenged
-  // Fix: Only show this during challenge selection, not for new cards
-  const shouldShowRevealHint =
-    allowFlip && // Card flipping must be explicitly enabled
-    !userFlipped && // Card hasn't already been flipped by the user
-    !isPeeking && // Not currently peeking
-    !isFlipped && // Not already flipped
-    !card.newCard; // Not a new card that's already being shown
+  // We only want to show this on cards that are being explicitly selected for a challenge
+  // And NEVER for cards that are new or already seen
+  const shouldShowRevealHint = 
+    canInteract && 
+    allowFlip && 
+    isSelectingForChallenge && 
+    !isFlipped && 
+    !card.newCard && 
+    !card.seen
 
   return (
     <motion.div
@@ -409,7 +412,7 @@ const GameCard: React.FC<GameCardProps> = ({
               {shouldShowRevealHint && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 rounded-lg">
                   <div className="text-white text-center px-3 py-1 bg-blue-600 rounded-lg animate-pulse">
-                    Click to reveal
+                    Click to show card
                   </div>
                 </div>
               )}

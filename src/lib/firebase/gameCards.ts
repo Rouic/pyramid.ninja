@@ -204,6 +204,18 @@ export async function updatePlayerCard(gameId: string, playerId: string, cardId:
     ...updates,
   };
   
+  // If we're hiding a card after the reveal/challenge is over, make sure to clear all visibility states
+  if (updates.faceVisible === false || updates.newCard === false) {
+    playerCards[cardIndex].revealed = false;
+    playerCards[cardIndex].isInChallenge = false;
+    playerCards[cardIndex].challengeCardIndex = null;
+    
+    // If this is a new card being hidden, make sure it's fully reset
+    if (updates.newCard === false) {
+      playerCards[cardIndex].faceVisible = false;
+    }
+  }
+  
   // Update Firebase
   await updateDoc(playerRef, {
     cards: playerCards,

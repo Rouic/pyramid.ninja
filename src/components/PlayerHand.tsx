@@ -7,8 +7,10 @@ import {
   updatePlayerCard,
 } from "../lib/firebase/gameCards";
 import { usePlayerContext } from "../context/PlayerContext";
-import { replacePlayerCard } from "../lib/firebase/gameState";
+import { replacePlayerCard, clearPlayerChallengeState } from "../lib/firebase/gameState";
 import NewCardTimer from "./NewCardTimer"; // Import the timer component
+import { doc, updateDoc, getDoc, onSnapshot } from "firebase/firestore";
+import { db } from "../lib/firebase/firebase";
 
 interface PlayerHandProps {
   gameId: string;
@@ -77,9 +79,30 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
       setIsLoading(false);
     });
 
+    // Subscribe to player document to watch for needsCardReplacement flag
+    const playerRef = doc(db, "games", gameId, "players", playerId);
+    const playerUnsubscribe = onSnapshot(playerRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const playerData = snapshot.data();
+        if (playerData.needsCardReplacement && playerData.cardToReplace !== undefined) {
+          console.log(`🃏 AUTO-REPLACE: Detected card replacement needed for index ${playerData.cardToReplace}`);
+          
+          // Automatically replace the card
+          handleReplaceCard(playerData.cardToReplace);
+          
+          // Clear the flag to prevent multiple replacements
+          updateDoc(playerRef, {
+            needsCardReplacement: false,
+            cardToReplace: null
+          }).catch(err => console.error("Error clearing replacement flags:", err));
+        }
+      }
+    });
+
     return () => {
       console.log(`Unsubscribing from player cards for ${playerId}`);
       unsubscribe();
+      playerUnsubscribe();
     };
   }, [gameId, playerId]);
 
@@ -125,12 +148,15 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
 
   // Handler for card selection during challenge
   const handleCardSelect = (card: Card, index: number) => {
+    console.log("🎮 Card selected:", index, "isSelectingForChallenge:", isSelectingForChallenge);
+    
     if (isSelectingForChallenge && onCardSelect) {
       // Only allow selection if no card is already selected or this is the selected card
       if (
         selectedCardForChallenge === null ||
         selectedCardForChallenge === index
       ) {
+        console.log("🎮 CHALLENGE FLOW: Selected card for challenge", index);
         setSelectedCardForChallenge(index);
         onCardSelect(index);
       }
@@ -143,6 +169,8 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
 
     try {
       setHidingCard(true);
+      console.log(`🃏 AUTO-HIDE: Hiding card at index ${newCardIndex} after timer ended`);
+      
       // Find the card that needs to be hidden
       const cardToHide = playerCards[newCardIndex];
       if (!cardToHide) {
@@ -162,23 +190,85 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
       // Get the card identifier (either .i or .id)
       const cardId = cardToHide.id || cardToHide.i.toString();
 
-      console.log(`Auto-hiding card ${cardId} after timer`);
+      console.log(`🃏 AUTO-HIDE: Processing card ${cardId} after memorization timer`);
 
-      // Update the card to hide it
-      await updatePlayerCard(gameId, playerId, cardId, {
-        newCard: false,
-        faceVisible: false,
-      });
+      // SIMPLIFIED: Don't call clearPlayerChallengeState directly to avoid infinite loops
+      // Instead, directly update our card state
+      
+      // COMPLETELY REPLACE the card object with a fresh version that has ONLY the necessary properties
+      // This prevents any lingering state that might cause the card to show "click to reveal"
+      try {
+        const playerRef = doc(db, "games", gameId, "players", playerId);
+        
+        // Get all player cards
+        const snapshot = await getDoc(playerRef);
+        if (snapshot.exists()) {
+          const playerData = snapshot.data();
+          const cards = [...(playerData.cards || [])];
+          
+          // Create a completely fresh card object with only the needed properties
+          if (cards[newCardIndex]) {
+            // Keep only the essential properties (like suit, value, id) and reset all state flags
+            // Extract the card's core properties
+            const i = cards[newCardIndex].i;
+            const suit = cards[newCardIndex].suit;
+            const rank = cards[newCardIndex].rank;
+            const value = cards[newCardIndex].value;
+            
+            // Create a completely fresh card with clean state
+            cards[newCardIndex] = {
+              i, // Index in the deck (0-51)
+              suit, // Keep the suit
+              rank, // Keep the rank
+              value, // Keep the value if exists
+              faceVisible: false, // NOT visible to player
+              newCard: false, // NOT new anymore
+              revealed: false, // NOT revealed
+              seen: true, // Player has seen it
+              // Explicitly remove all challenge-related properties
+              isInChallenge: false,
+              challengeCardIndex: null,
+              userFlipped: false
+            };
+            
+            // Aggressive update of the player document
+            await updateDoc(playerRef, {
+              cards,
+              isInChallenge: false, // Ensure player is not in challenge mode
+              challengeCardIndex: null, // Clear any selected card index
+              updatedAt: new Date().toISOString()
+            });
+            
+            // SIMPLIFIED: Just clear the specific timer for this card
+            const gameRef = doc(db, "games", gameId);
+            await updateDoc(gameRef, {
+              [`newCardTimers.${playerId}.${cardId}`]: null
+            });
+          } else {
+            // Just update player state if we can't find the card
+            await updateDoc(playerRef, {
+              isInChallenge: false,
+              challengeCardIndex: null
+            });
+          }
+        }
+        console.log("✅ Successfully reset card state after memorization");
+      } catch (err) {
+        console.error("❌ Error clearing player challenge state:", err);
+      }
 
       // Log the change
-      console.log(`Card ${cardId} auto-hidden after timer`);
+      console.log(`🃏 AUTO-HIDE: Card ${cardId} successfully hidden after memorization`);
 
-      // Reset state
+      // Reset state including challenge state
       setNewCardIndex(null);
       setNewCardTimestamp(null);
       setHidingCard(false);
+      
+      // Remove card from shown cards to ensure UI reflects new state
+      setShownCards((prev) => prev.filter((idx) => idx !== newCardIndex));
     } catch (error) {
-      console.error("Error handling new card timer end:", error);
+      console.error("❌ Error handling new card timer end:", error);
       setHidingCard(false);
     }
   };
@@ -236,18 +326,26 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
             // Check if card has been shown in a challenge
             const hasBeenShown = shownCards.includes(index);
 
+            // Clear shown state for new cards (important to prevent issues after replacement)
+            if (card.newCard && hasBeenShown) {
+              setShownCards(prev => prev.filter(idx => idx !== index));
+            }
+
             // Determine if this card is selectable for challenge
             const isSelectable =
               isSelectingForChallenge &&
               (selectedCardForChallenge === null ||
                 selectedCardForChallenge === index);
 
-            // Only highlight cards if they're face up AND match current rank
+            // Only highlight cards if they're face up AND match current rank,
+            // OR if they're specifically selected for challenge
             // This prevents giving clues about face-down cards
             const shouldHighlight =
-              showFaceUp &&
-              highlightCurrentRank &&
-              card.rank === highlightCurrentRank;
+              (showFaceUp &&
+                highlightCurrentRank &&
+                card.rank === highlightCurrentRank) ||
+              isSelected ||
+              isBeingChallenged;
 
             // Fix for "click to reveal" issue - determine when to allow peeking
             // A card should be peekable during memorization or if it's a new card, but not in challenge mode
@@ -256,8 +354,12 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
               (card.newCard && !isSelectingForChallenge);
 
             // Fix for card visibility - update logic for when to show card face
+            // Include a check for specific cases where we want to show the card
             const showCardFace =
-              showFaceUp || isBeingChallenged || card.newCard;
+              showFaceUp || 
+              isBeingChallenged || 
+              card.newCard || 
+              (card.faceVisible === true);
 
             return (
               <div key={card.id || index} className="relative">
@@ -278,14 +380,19 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
                       ? "hover:scale-110 hover:ring-2 hover:ring-blue-400"
                       : ""
                   }`}
-                  onReveal={() =>
-                    isSelectable ? handleCardSelect(card, index) : null
-                  }
+                  onReveal={() => {
+                    if (isSelectable) {
+                      // Simply handle card selection - nothing more
+                      handleCardSelect(card, index);
+                    }
+                  }}
                   allowPeek={allowPeekForCard}
                   showFace={showCardFace}
                   allowFlip={
                     allowCardFlip && (isBeingChallenged || isSelectable)
                   }
+                  isHighlighted={isSelectable}
+                  isSelectingForChallenge={isSelectingForChallenge}
                 />
 
                 {/* New card indicator */}
@@ -296,45 +403,9 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
                   </div>
                 )}
 
-                {/* Card needs replacement indicator */}
-                {hasBeenShown && !card.newCard && (
-                  <div className="absolute bottom-0 left-0 right-0 bg-red-600 bg-opacity-80 text-white text-center py-1 z-30 rounded-b-lg">
-                    <button
-                      onClick={() => handleReplaceCard(index)}
-                      disabled={replacingCardIndex === index}
-                      className="text-xs font-bold"
-                    >
-                      {replacingCardIndex === index
-                        ? "Replacing..."
-                        : "Replace Card"}
-                    </button>
-                  </div>
-                )}
+                {/* Card needs replacement indicator (removed - now automatically handled by the challenge flow) */}
 
-                {/* Selection indicator for challenge */}
-                {isSelectingForChallenge && (
-                  <div
-                    className={`absolute inset-0 flex items-center justify-center z-30 cursor-pointer ${
-                      selectedCardForChallenge !== null &&
-                      selectedCardForChallenge !== index
-                        ? "opacity-50 pointer-events-none"
-                        : ""
-                    }`}
-                    onClick={() =>
-                      isSelectable ? handleCardSelect(card, index) : null
-                    }
-                  >
-                    <div
-                      className={`rounded-full w-8 h-8 flex items-center justify-center text-white font-bold ${
-                        isSelected
-                          ? "bg-blue-600"
-                          : "bg-blue-500 bg-opacity-70 hover:bg-opacity-90"
-                      }`}
-                    >
-                      {index + 1}
-                    </div>
-                  </div>
-                )}
+                
               </div>
             );
           })

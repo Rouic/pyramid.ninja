@@ -36,9 +36,9 @@ const ActivityLog: React.FC<ActivityLogProps> = ({
       case "challenged":
         return "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300";
       case "successful_challenge":
-        return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
+        return "bg-green-600 text-white dark:bg-green-700 dark:text-white font-bold";
       case "failed_challenge":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
+        return "bg-red-600 text-white dark:bg-red-700 dark:text-white font-bold";
       default:
         return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300";
     }
@@ -54,9 +54,9 @@ const ActivityLog: React.FC<ActivityLogProps> = ({
       case "challenged":
         return "Challenged";
       case "successful_challenge":
-        return "Card Shown";
+        return "SUCCESS";
       case "failed_challenge":
-        return "Bluff Called";
+        return "FAILED";
       default:
         return status;
     }
@@ -177,18 +177,34 @@ const ActivityLog: React.FC<ActivityLogProps> = ({
               {/* Challenge result explanation */}
               {(assignment.status === "successful_challenge" ||
                 assignment.status === "failed_challenge") && (
-                <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 italic">
-                  {assignment.status === "successful_challenge"
-                    ? `${getPlayerName(
+                <div className={`mt-2 px-3 py-2 rounded-lg font-bold text-sm ${
+                  assignment.status === "successful_challenge" 
+                    ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" 
+                    : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+                }`}>
+                  {/* Show custom message from resolution if available */}
+                  {assignment.resolution && assignment.resolution.message ? (
+                    assignment.resolution.message
+                  ) : (
+                    assignment.status === "successful_challenge"
+                    ? `CHALLENGE SUCCESSFUL: ${getPlayerName(
                         assignment.from
-                      )} showed the card. ${getPlayerName(
+                      )} showed the ${assignment.cardRank}! ${getPlayerName(
                         assignment.to
                       )} drinks double (${assignment.count * 2})`
-                    : `${getPlayerName(
+                    : `CHALLENGE FAILED: ${getPlayerName(
                         assignment.from
-                      )} was bluffing and drinks double (${
+                      )} didn't have the ${assignment.cardRank} and drinks double (${
                         assignment.count * 2
-                      })`}
+                      })`
+                  )}
+                  
+                  {/* Show timestamp for when the challenge was resolved */}
+                  {assignment.resolvedAt && (
+                    <div className="text-xs mt-1 opacity-80">
+                      Resolved at {new Date(assignment.resolvedAt).toLocaleTimeString()}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

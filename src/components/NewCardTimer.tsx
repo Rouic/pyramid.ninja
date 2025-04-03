@@ -33,12 +33,13 @@ const NewCardTimer: React.FC<NewCardTimerProps> = ({
     const totalDuration = 15000; // 15 seconds
     const remaining = Math.max(0, Math.floor((totalDuration - elapsed) / 1000));
 
-    console.log(`New card timer: ${remaining} seconds remaining`);
+    console.log(`New card timer: ${remaining} seconds remaining from ${replacedAt}`);
 
     setTimeLeft(remaining);
     setIsActive(remaining > 0);
 
     if (remaining <= 0) {
+      console.log("Timer already expired, calling onTimeEnd immediately");
       if (onTimeEnd) onTimeEnd();
       return;
     }
@@ -55,11 +56,16 @@ const NewCardTimer: React.FC<NewCardTimerProps> = ({
           setIsActive(false);
 
           // Log and ensure the callback is called
-          console.log("New card timer ended, calling onTimeEnd callback");
+          console.log("⏰ New card timer ended, calling onTimeEnd callback");
           if (onTimeEnd) {
             // Use setTimeout to ensure the callback runs even if there's an error in the component
             setTimeout(() => {
-              onTimeEnd();
+              try {
+                onTimeEnd();
+                console.log("⏰ Successfully processed end of timer");
+              } catch (error) {
+                console.error("❌ Error in onTimeEnd callback:", error);
+              }
             }, 0);
           }
         }

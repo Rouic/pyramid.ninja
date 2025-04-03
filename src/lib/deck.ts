@@ -20,6 +20,13 @@ export interface Card {
   newCard?: boolean;
   faceVisible?: boolean; // Track if the face is visible in the UI
   replacedAt?: string; // Timestamp when the card was replaced
+  
+  // Challenge-related properties
+  isInChallenge?: boolean;
+  challengeCardIndex?: number | null;
+  userFlipped?: boolean;
+  revealedAt?: string;
+  seen?: boolean;
 }
 
 export class Deck {

@@ -1,7 +1,14 @@
 // src/pages/game/[id].tsx
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
-import { doc, getDoc, onSnapshot, updateDoc } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  onSnapshot,
+  updateDoc,
+  collection,
+  getDocs
+} from "firebase/firestore";
 import { db } from "../../lib/firebase/firebase";
 import {
   dealCardsToPlayer,
@@ -16,6 +23,7 @@ import {
   startMemorizationPhase,
   startPlayingPhase,
   replacePlayerCard,
+  clearPlayerChallengeState,
 } from "../../lib/firebase/gameState";
 import GamePyramid from "../../components/GamePyramid";
 import PlayerHand from "../../components/PlayerHand";
@@ -89,7 +97,16 @@ const GamePage = () => {
     if (gameData && gameData.deck && gameData.deck.cards) {
       setIsDeckEmpty(gameData.deck.cards.length === 0);
     }
-  }, [gameData]);
+    
+    // If the game state changes from challenged to not challenged, make sure to clear any leftover state
+    if (gameData && 
+        challengedCardIndex !== -1 && 
+        !isSelectingForChallenge) {
+      // Reset challenge card index when we've finished a challenge
+      console.log("Clearing challenge card index");
+      setChallengedCardIndex(-1);
+    }
+  }, [gameData, challengedCardIndex, isSelectingForChallenge]);
 
   // Load game data
   useEffect(() => {
@@ -204,12 +221,15 @@ const GamePage = () => {
   const handleStartGame = useCallback(async () => {
     if (
       !id ||
-      typeof id !== "string" ||
       !isHost ||
       isStartingGame ||
       gameState !== "waiting"
     )
       return;
+    
+    // Convert id to string if it's an array
+    const gameId = typeof id === 'string' ? id : id[0];
+    if (!gameId) return;
 
     setIsStartingGame(true);
 
@@ -218,7 +238,7 @@ const GamePage = () => {
 
       // Initialize deck and pyramid
       const rowCount = 5; // 5 rows in the pyramid
-      await initializeGameDeck(id, rowCount);
+      await initializeGameDeck(gameId, rowCount);
       console.log("Game initialized with deck and pyramid");
 
       // Deal cards to all players (skip host)
@@ -227,12 +247,12 @@ const GamePage = () => {
         // Skip dealing cards to the host
         if (player.id !== gameData.hostId) {
           console.log(`Dealing cards to player ${player.id}`);
-          await dealCardsToPlayer(id, player.id, 5);
+          await dealCardsToPlayer(gameId, player.id, 5);
         }
       }
 
       // Mark all cards as dealt
-      await updateDoc(doc(db, "games", id), {
+      await updateDoc(doc(db, "games", gameId), {
         allCardsDealt: true,
         gameState: "ready", // Change to 'ready' state
       });
@@ -250,23 +270,31 @@ const GamePage = () => {
   }, [id, isHost, gameData, gameState, isStartingGame]);
 
   const handleStartMemorizing = useCallback(async () => {
-    if (!id || typeof id !== "string") return;
+    if (!id) return;
+    
+    // Convert id to string if it's an array
+    const gameId = typeof id === 'string' ? id : id[0];
+    if (!gameId) return;
 
     try {
       // Start memorization phase
-      await startMemorizationPhase(id as string);
+      await startMemorizationPhase(gameId);
     } catch (error) {
       console.error("Error starting memorization phase:", error);
     }
   }, [id]);
 
   const handleStartPlaying = useCallback(async () => {
-    if (!id || typeof id !== "string" || !isHost) return;
+    if (!id || !isHost) return;
+    
+    // Convert id to string if it's an array
+    const gameId = typeof id === 'string' ? id : id[0];
+    if (!gameId) return;
 
     console.log("Starting playing phase...");
     try {
       // Transition from memorization to playing phase
-      await startPlayingPhase(id as string);
+      await startPlayingPhase(gameId);
 
       // Immediately update the local game state to ensure UI updates promptly
       // This ensures the GamePyramid becomes clickable right away
@@ -286,10 +314,14 @@ const GamePage = () => {
 
   const handleCardReplacement = useCallback(
     async (cardIndex: number) => {
-      if (!id || typeof id !== "string" || !playerId) return;
+      if (!id || !playerId) return;
+      
+      // Convert id to string if it's an array
+      const gameId = typeof id === 'string' ? id : id[0];
+      if (!gameId) return;
 
       try {
-        await replacePlayerCard(id as string, playerId, cardIndex);
+        await replacePlayerCard(gameId, playerId, cardIndex);
 
         // Reset challenge state after replacing a card
         setChallengedCardIndex(-1);
@@ -304,7 +336,11 @@ const GamePage = () => {
 
   const handleRevealCard = useCallback(
     async (cardIndex: number) => {
-      if (!id || typeof id !== "string" || !isHost) return;
+      if (!id || !isHost) return;
+      
+      // Convert id to string if it's an array
+      const gameId = typeof id === 'string' ? id : id[0];
+      if (!gameId) return;
 
       try {
         // If the game is in memorizing or ready state, automatically
@@ -318,11 +354,11 @@ const GamePage = () => {
           setGameState("playing");
 
           // Then update the server
-          await startPlayingPhase(id as string);
+          await startPlayingPhase(gameId);
         }
 
         // Now reveal the card
-        await revealPyramidCard(id, cardIndex);
+        await revealPyramidCard(gameId, cardIndex);
 
         // Update round number
         setCurrentRound((prev) => prev + 1);
@@ -335,17 +371,62 @@ const GamePage = () => {
 
   // Handler for when a player is challenged and needs to show a card
   const handleChallengeCard = useCallback((cardIndex: number) => {
+    console.log(`Challenge card index set to ${cardIndex}`);
     setChallengedCardIndex(cardIndex);
 
     // If cardIndex is -1, it means we're resetting the challenge state
     if (cardIndex === -1) {
+      console.log("Challenge selection mode disabled");
       setIsSelectingForChallenge(false);
+      
+      // Also explicitly clear any challenge state in Firebase
+      if (id && playerId) {
+        // Handle case where id might be a string or array
+        const gameId = typeof id === 'string' ? id : id[0];
+        if (gameId) {
+          clearPlayerChallengeState(gameId, playerId).catch(err => 
+            console.error("Error clearing challenge state:", err)
+          );
+        }
+      }
+    } else {
+      // If selecting a card for challenge, make sure we're in selection mode
+      console.log("Challenge card selected, ensuring selection mode is enabled");
+      setIsSelectingForChallenge(true);
+      
+      // Listen for the auto-submit event from the card component
+      const autoSubmitListener = (event: Event) => {
+        const customEvent = event as CustomEvent;
+        console.log("🎮 CHALLENGE FLOW: Received auto-submit event", customEvent.detail);
+        
+        // Get the drink assignment panel component
+        const drinkPanels = document.querySelectorAll('[data-component="drink-assignment-panel"]');
+        if (drinkPanels.length > 0) {
+          // Find the submit button in the panel
+          const submitButton = drinkPanels[0].querySelector('[data-action="confirm-challenge"]');
+          if (submitButton) {
+            console.log("🎮 CHALLENGE FLOW: Found and clicking submit button");
+            (submitButton as HTMLButtonElement).click();
+          }
+        }
+      };
+      
+      // Add the event listener
+      document.addEventListener('challenge:autoSubmit', autoSubmitListener, { once: true });
+      
+      // Clean up after 5 seconds (in case it never fires)
+      setTimeout(() => {
+        document.removeEventListener('challenge:autoSubmit', autoSubmitListener);
+      }, 5000);
     }
-  }, []);
+  }, [id, playerId]);
 
   // Single useEffect for handling new cards with auto-hide timer
   useEffect(() => {
-    if (!id || typeof id !== "string" || !playerId || !gameData) return;
+    // Make sure we have a valid string ID
+    if (!id || !playerId || !gameData) return;
+    const gameId = typeof id === 'string' ? id : id[0];
+    if (!gameId) return;
 
     // Check for newCardTimers in gameData
     const newCardTimers = gameData.newCardTimers || {};
@@ -367,7 +448,9 @@ const GamePage = () => {
 
             try {
               // Get current player cards
-              const playerRef = doc(db, "games", id, "players", playerId);
+              const gameId = typeof id === 'string' ? id : id[0];
+              if (!gameId) return;
+              const playerRef = doc(db, "games", gameId, "players", playerId);
               const playerDoc = await getDoc(playerRef);
 
               if (playerDoc.exists()) {
@@ -395,10 +478,13 @@ const GamePage = () => {
                 });
 
                 // Remove this timer from Firebase
-                const gameRef = doc(db, "games", id);
-                await updateDoc(gameRef, {
-                  [`newCardTimers.${playerId}.${cardId}`]: null,
-                });
+                const gameId = typeof id === 'string' ? id : id[0];
+                if (gameId) {
+                  const gameRef = doc(db, "games", gameId);
+                  await updateDoc(gameRef, {
+                    [`newCardTimers.${playerId}.${cardId}`]: null,
+                  });
+                }
               }
             } catch (error) {
               console.error("Error auto-hiding card:", error);
@@ -427,8 +513,12 @@ const GamePage = () => {
           const timer = setTimeout(() => {
             console.log(`Hiding card ${cardId} after 15 seconds`);
             if (id) {
+              // Convert id to string if it's an array
+              const gameId = typeof id === 'string' ? id : id[0];
+              if (!gameId) return;
+              
               // Update the card in Firebase
-              const playerRef = doc(db, "games", id, "players", playerId);
+              const playerRef = doc(db, "games", gameId, "players", playerId);
               getDoc(playerRef)
                 .then((snapshot) => {
                   if (snapshot.exists()) {
@@ -729,6 +819,7 @@ const GamePage = () => {
                   onStartMemorization={handleStartMemorizing}
                   onStartPlaying={handleStartPlaying} // Add this new prop
                 />
+                
               </div>
 
               {/* Player list */}
@@ -866,6 +957,105 @@ const GamePage = () => {
 
                 {/* Divider */}
                 <div className="border-t border-gray-200 dark:border-gray-700 my-6"></div>
+                
+                {/* Player Emergency Controls */}
+                <div className="mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
+                  <h3 className="text-sm font-medium text-red-600 dark:text-red-400 mb-2">
+                    💥 Emergency Controls
+                  </h3>
+                  
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={async () => {
+                        if (!id || !playerId) return;
+                        const gameId = typeof id === 'string' ? id : id[0];
+                        if (!gameId) return;
+                        
+                        try {
+                          // Reset player's challenge state
+                          await clearPlayerChallengeState(gameId, playerId);
+                          
+                          // Reset UI state
+                          setChallengedCardIndex(-1);
+                          setIsSelectingForChallenge(false);
+                          
+                          alert('Your challenge state has been reset!');
+                        } catch (error) {
+                          console.error('Error in emergency reset:', error);
+                          alert('Error resetting your state. Try asking the host to reset all players.');
+                        }
+                      }}
+                      className="w-full px-3 py-2 text-xs bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg"
+                    >
+                      🚨 Reset My Challenge State (If Stuck)
+                    </button>
+                    
+                    <button
+                      onClick={async () => {
+                        if (!id || !playerId) return;
+                        const gameId = typeof id === 'string' ? id : id[0];
+                        if (!gameId) return;
+                        
+                        try {
+                          // Get the current game data
+                          const gameRef = doc(db, 'games', gameId);
+                          const gameDoc = await getDoc(gameRef);
+                          
+                          if (gameDoc.exists()) {
+                            const gameData = gameDoc.data();
+                            const assignments = gameData.drinkAssignments || [];
+                            
+                            // Find any challenged assignments involving this player
+                            const challengedAssignments = assignments.map((assignment, index) => ({
+                              assignment,
+                              index
+                            })).filter(item => 
+                              item.assignment.status === 'challenged' && 
+                              (item.assignment.from === playerId || item.assignment.to === playerId)
+                            );
+                            
+                            if (challengedAssignments.length > 0) {
+                              // Force them to resolve as failed challenges
+                              for (const item of challengedAssignments) {
+                                const wasFromMe = item.assignment.from === playerId;
+                                
+                                // Update the assignment status
+                                assignments[item.index] = {
+                                  ...assignments[item.index],
+                                  status: wasFromMe ? 'failed_challenge' : 'successful_challenge',
+                                  resolvedAt: Date.now(),
+                                  isResolved: true
+                                };
+                              }
+                              
+                              // Update all assignments at once
+                              await updateDoc(gameRef, {
+                                drinkAssignments: assignments
+                              });
+                              
+                              // Reset player state
+                              await clearPlayerChallengeState(gameId, playerId);
+                              
+                              // Reset UI state
+                              setChallengedCardIndex(-1);
+                              setIsSelectingForChallenge(false);
+                              
+                              alert(`Fixed ${challengedAssignments.length} stuck challenge(s)!`);
+                            } else {
+                              alert('No challenged assignments found to fix.');
+                            }
+                          }
+                        } catch (error) {
+                          console.error('Error forcing challenge resolution:', error);
+                          alert('Error resolving challenges. Try reloading the game.');
+                        }
+                      }}
+                      className="w-full px-3 py-2 text-xs bg-yellow-600 hover:bg-yellow-700 text-white font-bold rounded-lg"
+                    >
+                      🔧 Force Resolve Stuck Challenges
+                    </button>
+                  </div>
+                </div>
 
                 {/* Render new card alert */}
                 {renderNewCardAlert()}
