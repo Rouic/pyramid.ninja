@@ -66,10 +66,37 @@ const GamePyramid: React.FC<GamePyramidProps> = ({
     rowIndex: number,
     positionIndex: number
   ) => {
-    if (!isGameStarted || isRevealing || !canRevealCards || !onRevealCard)
+    // Add extra logging for debugging
+    console.log("Card click attempted:", {
+      isGameStarted,
+      canRevealCards,
+      isRevealing,
+      rowIndex,
+      positionIndex,
+    });
+
+    if (!isGameStarted) {
+      console.log("Game not started, ignoring click");
       return;
+    }
+
+    if (!canRevealCards) {
+      console.log("Cards not revealable yet, ignoring click");
+      return;
+    }
+
+    if (isRevealing) {
+      console.log("Already revealing a card, ignoring click");
+      return;
+    }
+
+    if (!onRevealCard) {
+      console.log("No reveal handler, ignoring click");
+      return;
+    }
 
     try {
+      console.log("Revealing card at index:", rowIndex, positionIndex);
       setIsRevealing(true);
       const cardIndex = getPyramidIndex(rowIndex, positionIndex);
       onRevealCard(cardIndex);
@@ -134,6 +161,11 @@ const GamePyramid: React.FC<GamePyramidProps> = ({
             isRevealing={isRevealing && !card.revealed}
             onReveal={() => handleReveal(card, rowIndex, positionIndex)}
             canInteract={isGameStarted && canRevealCards}
+            className={`${
+              isGameStarted && canRevealCards && !card.revealed
+                ? "cursor-pointer hover:scale-105 hover:shadow-lg transition-transform"
+                : ""
+            }`}
             isHighlighted={isHighlighted}
           />
         );

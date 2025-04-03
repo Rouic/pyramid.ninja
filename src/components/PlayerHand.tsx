@@ -7,6 +7,7 @@ import {
   updatePlayerCard,
 } from "../lib/firebase/gameCards";
 import { usePlayerContext } from "../context/PlayerContext";
+import { replacePlayerCard } from "../lib/firebase/gameState";
 
 interface PlayerHandProps {
   gameId: string;
@@ -17,6 +18,7 @@ interface PlayerHandProps {
   challengedCardIndex?: number; // Indicates which card is being challenged
   onCardSelect?: (cardIndex: number) => void; // For handling card selection
   isSelectingForChallenge?: boolean; // Indicates if we're in challenge select mode
+  onReplaceCard?: (cardIndex: number) => Promise<void>; // Added this prop for card replacement
 }
 
 const PlayerHand: React.FC<PlayerHandProps> = ({
@@ -28,6 +30,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
   challengedCardIndex = -1,
   onCardSelect,
   isSelectingForChallenge = false,
+  onReplaceCard, // New parameter
 }) => {
   const { playerId } = usePlayerContext();
   const [playerCards, setPlayerCards] = useState<Card[]>([]);
@@ -37,6 +40,11 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
   const [selectedCardForChallenge, setSelectedCardForChallenge] = useState<
     number | null
   >(null);
+  const [isDeckEmpty, setIsDeckEmpty] = useState(false);
+  const [replacingCardIndex, setReplacingCardIndex] = useState<number | null>(
+    null
+  );
+  const [shownCards, setShownCards] = useState<number[]>([]);
 
   // Subscribe to player's cards
   useEffect(() => {
@@ -62,7 +70,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
   // Set up auto-hide timer for new cards
   useEffect(() => {
     // Find any new cards
-    const newCard = playerCards.find((card) => card.newCard);
+    const newCards = playerCards.filter((card) => card.newCard);
 
     // Clear any existing timer
     if (flippedCardTimer) {
@@ -71,31 +79,36 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
     }
 
     // Set up new timer if there's a new card
-    if (newCard) {
+    if (newCards.length > 0) {
       console.log(
-        `Setting up 15-second auto-hide timer for new card ${newCard.id}`
+        `Setting up 15-second auto-hide timer for ${newCards.length} new card(s)`
       );
 
       const timer = setTimeout(() => {
-        console.log(`Auto-hiding card ${newCard.id} after 15 seconds`);
+        console.log(`Auto-hiding ${newCards.length} cards after 15 seconds`);
 
         // Update cards in state
         const updatedCards = playerCards.map((card) =>
-          card.id === newCard.id
-            ? { ...card, newCard: false, faceVisible: false }
-            : card
+          card.newCard ? { ...card, newCard: false, faceVisible: false } : card
         );
 
         setPlayerCards(updatedCards);
 
         // Also update in Firebase
         if (gameId && playerId) {
-          console.log(`Updating card ${newCard.id} in Firebase to hide it`);
-          updatePlayerCard(gameId, playerId, newCard.id, {
-            newCard: false,
-            faceVisible: false,
-          }).catch((error) => {
-            console.error("Error updating card visibility:", error);
+          console.log(`Updating cards in Firebase to hide them`);
+
+          // Update each new card
+          newCards.forEach((card) => {
+            updatePlayerCard(gameId, playerId, card.id, {
+              newCard: false,
+              faceVisible: false,
+            }).catch((error) => {
+              console.error(
+                `Error updating card ${card.id} visibility:`,
+                error
+              );
+            });
           });
         }
       }, 15000);
@@ -114,6 +127,39 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
       setSelectedCardForChallenge(null);
     }
   }, [isSelectingForChallenge]);
+
+  // Track cards that have been shown in challenges
+  useEffect(() => {
+    if (
+      challengedCardIndex !== -1 &&
+      !shownCards.includes(challengedCardIndex)
+    ) {
+      setShownCards((prev) => [...prev, challengedCardIndex]);
+    }
+  }, [challengedCardIndex, shownCards]);
+
+  const handleReplaceCard = async (cardIndex: number) => {
+    if (!gameId || !playerId) return;
+
+    setReplacingCardIndex(cardIndex);
+
+    try {
+      // If external handler is provided, use it
+      if (onReplaceCard) {
+        await onReplaceCard(cardIndex);
+      } else {
+        // Otherwise use the default implementation
+        await replacePlayerCard(gameId, playerId, cardIndex);
+      }
+
+      // Remove card from shown cards after replacement
+      setShownCards((prev) => prev.filter((idx) => idx !== cardIndex));
+    } catch (error) {
+      console.error("Error replacing card:", error);
+    } finally {
+      setReplacingCardIndex(null);
+    }
+  };
 
   const handleCardMove = async (
     card: Card,
@@ -194,6 +240,9 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
             // Determine if this card has been selected for challenge
             const isSelected = selectedCardForChallenge === index;
 
+            // Check if card has been shown in a challenge
+            const hasBeenShown = shownCards.includes(index);
+
             // Determine if this card is selectable for challenge
             const isSelectable =
               isSelectingForChallenge &&
@@ -208,7 +257,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
               card.rank === highlightCurrentRank;
 
             return (
-              <div key={card.id} className="relative">
+              <div key={card.id || index} className="relative">
                 <GameCard
                   card={card}
                   index={index}
@@ -241,6 +290,21 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
                   <div className="absolute top-0 left-0 right-0 bg-green-600 bg-opacity-80 text-white text-center py-1 z-30 rounded-t-lg">
                     <div className="text-xs font-bold">NEW CARD</div>
                     <div className="text-sm">Memorize this card!</div>
+                  </div>
+                )}
+
+                {/* Card needs replacement indicator */}
+                {hasBeenShown && !card.newCard && (
+                  <div className="absolute bottom-0 left-0 right-0 bg-red-600 bg-opacity-80 text-white text-center py-1 z-30 rounded-b-lg">
+                    <button
+                      onClick={() => handleReplaceCard(index)}
+                      disabled={replacingCardIndex === index}
+                      className="text-xs font-bold"
+                    >
+                      {replacingCardIndex === index
+                        ? "Replacing..."
+                        : "Replace Card"}
+                    </button>
                   </div>
                 )}
 

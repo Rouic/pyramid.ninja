@@ -6,7 +6,7 @@ import {
   acceptDrinkAssignment,
   challengeDrinkAssignment,
   resolveDrinkChallenge,
-  replacePlayerCard,
+  markCardForReplacement,
 } from "../lib/firebase/gameState";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../lib/firebase/firebase";
@@ -41,6 +41,12 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [processingChallenge, setProcessingChallenge] = useState(false);
+  const [challengeResult, setChallengeResult] = useState<{
+    index: number;
+    result: boolean;
+    from: string;
+    to: string;
+  } | null>(null);
 
   // Filter assignments to show only the relevant ones
   // First, get all pending or challenged assignments
@@ -77,7 +83,7 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
       setProcessingChallenge(false);
 
       // Clean up selection mode when there are no active challenges
-      if (setIsSelectingForChallenge) {
+      if (setIsSelectingForChallenge && !challengeResult) {
         setIsSelectingForChallenge(false);
       }
     }
@@ -87,6 +93,7 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
     assignments,
     setIsSelectingForChallenge,
     processingChallenge,
+    challengeResult,
   ]);
 
   // Clean up selection mode when component unmounts
@@ -223,27 +230,36 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
       // Resolve the challenge in Firebase
       await resolveDrinkChallenge(gameId, assignmentIndex, wasSuccessful);
 
-      // Always replace the selected card - whether bluffing or had the card
-      await replacePlayerCard(
-        gameId,
-        challenge.from, // The player who assigned the drink
-        selectedCardIndex
-      );
+      // Mark the card for replacement
+      await markCardForReplacement(gameId, currentPlayerId, selectedCardIndex);
+
+      // Set challenge result to show appropriate message
+      setChallengeResult({
+        index: assignmentIndex,
+        result: wasSuccessful,
+        from: challenge.from,
+        to: challenge.to,
+      });
 
       // Reset local state
       setActiveChallenge(null);
       setSelectedCardIndex(null);
       setProcessingChallenge(false);
 
-      // Exit card selection mode
-      if (setIsSelectingForChallenge) {
-        setIsSelectingForChallenge(false);
-      }
+      // Reset the card view after a delay to show the result
+      setTimeout(() => {
+        if (onChallengeCard) {
+          onChallengeCard(-1);
+        }
 
-      // Reset the card view
-      if (onChallengeCard) {
-        onChallengeCard(-1);
-      }
+        // Also reset challenge result
+        setChallengeResult(null);
+
+        // Exit card selection mode
+        if (setIsSelectingForChallenge) {
+          setIsSelectingForChallenge(false);
+        }
+      }, 5000); // Show result for 5 seconds
 
       setIsSubmitting(false);
     } catch (error) {
@@ -257,6 +273,50 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
       <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-2">
         Drink Assignments
       </h3>
+
+      {/* Challenge result notification */}
+      {challengeResult && (
+        <div
+          className={`mb-4 p-4 rounded-lg border ${
+            challengeResult.result
+              ? "bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800"
+              : "bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800"
+          }`}
+        >
+          <h4
+            className={`font-medium ${
+              challengeResult.result
+                ? "text-green-800 dark:text-green-200"
+                : "text-red-800 dark:text-red-200"
+            } mb-2`}
+          >
+            Challenge Result
+          </h4>
+          <p
+            className={`text-sm ${
+              challengeResult.result
+                ? "text-green-700 dark:text-green-300"
+                : "text-red-700 dark:text-red-300"
+            }`}
+          >
+            {challengeResult.result
+              ? `You showed a ${
+                  assignments[challengeResult.index].cardRank
+                }! ${getPlayerName(challengeResult.to)} drinks double (${
+                  assignments[challengeResult.index].count * 2
+                }).`
+              : `You didn't have the ${
+                  assignments[challengeResult.index].cardRank
+                }! You drink double (${
+                  assignments[challengeResult.index].count * 2
+                }).`}
+          </p>
+          <p className="text-sm mt-2 text-gray-500 dark:text-gray-400">
+            Your card has been marked for replacement. Check your hand to get a
+            new card.
+          </p>
+        </div>
+      )}
 
       {/* Assign drinks control - only shown to players during gameplay with a current card */}
       {currentCardRank && !isHost && (

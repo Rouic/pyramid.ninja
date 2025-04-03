@@ -3,7 +3,6 @@
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
   "/game/[id]": "pages/game/[id].js",
-  "/": "pages/index.js",
   "/join": "pages/join.js",
-  "/host": "pages/host.js"
+  "/": "pages/index.js"
 }

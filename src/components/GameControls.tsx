@@ -11,6 +11,10 @@ interface GameControlsProps {
   currentPhase: string;
   isHost: boolean;
   onStartMemorization?: () => Promise<void>;
+  onStartPlaying?: () => Promise<void>;
+  onPersonalMemorizationStart?: (seconds: number) => void; // Update to include seconds
+  onPersonalMemorizationTick?: (seconds: number) => void; // Add this prop for time updates
+  onPersonalMemorizationEnd?: () => void;
 }
 
 export function GameControls({
@@ -18,6 +22,10 @@ export function GameControls({
   currentPhase,
   isHost,
   onStartMemorization,
+  onStartPlaying,
+  onPersonalMemorizationStart,
+  onPersonalMemorizationTick,
+  onPersonalMemorizationEnd,
 }: GameControlsProps) {
   const { playerId } = usePlayerContext();
   const { isReady, markAsReady, allPlayersReady, playerReadiness, loading } =
@@ -62,9 +70,14 @@ export function GameControls({
 
     setIsMemorizing(true);
 
-    // Show player's cards for 10 seconds
-    let timeLeft = 10;
-    setMemorizeTimeLeft(timeLeft);
+    // Initial time
+    const initialTime = 10;
+    setMemorizeTimeLeft(initialTime);
+
+    // Notify parent component that personal memorization has started
+    if (onPersonalMemorizationStart) {
+      onPersonalMemorizationStart(initialTime);
+    }
 
     // Update the player's memorizing status in Firebase
     await updateDoc(doc(db, "games", gameId), {
@@ -72,15 +85,26 @@ export function GameControls({
     });
 
     // Start countdown
+    let timeLeft = initialTime;
     const interval = setInterval(() => {
       timeLeft -= 1;
       setMemorizeTimeLeft(timeLeft);
+
+      // Send time updates to parent
+      if (onPersonalMemorizationTick) {
+        onPersonalMemorizationTick(timeLeft);
+      }
 
       if (timeLeft <= 0) {
         clearInterval(interval);
         setIsMemorizing(false);
         setMemorizeTimeLeft(null);
         setPersonalMemorizationComplete(true);
+
+        // Notify parent that personal memorization has ended
+        if (onPersonalMemorizationEnd) {
+          onPersonalMemorizationEnd();
+        }
 
         // Store in localStorage that this player has completed memorization
         const memorizationKey = `${gameId}_${playerId}_memorized`;
@@ -138,9 +162,9 @@ export function GameControls({
         </div>
       )}
 
-      {currentPhase === "ready" && !isReady && onStartMemorization && (
+      {currentPhase === "ready" && !isReady && (
         <button
-          onClick={onStartMemorization}
+          onClick={startPersonalMemorization}
           className="px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-medium transition-colors"
         >
           Start Memorizing My Cards
@@ -205,7 +229,7 @@ export function GameControls({
 
           {isHost && allPlayersReady && currentPhase === "memorizing" && (
             <button
-              onClick={onStartMemorization}
+              onClick={onStartPlaying}
               className="w-full mt-4 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
             >
               Everyone's Ready - Start Game

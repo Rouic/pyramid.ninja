@@ -1,5 +1,5 @@
 // src/lib/firebase/gameState.ts
-import { doc, updateDoc, onSnapshot, getDoc, setDoc, collection, getDocs } from 'firebase/firestore';
+import { doc, updateDoc, onSnapshot, getDoc, setDoc, collection, getDocs, arrayUnion, deleteField } from 'firebase/firestore';
 import { db } from './firebase';
 import { revealPyramidCard } from './gameCards';
 
@@ -14,7 +14,7 @@ export interface DrinkAssignment {
   cardRank: string;
   timestamp: number;
   status: 'pending' | 'accepted' | 'challenged' | 'successful_challenge' | 'failed_challenge';
-  resolvedAt?: number; // Add this optional property
+  resolvedAt?: number;
 }
 
 // Update game state
@@ -30,48 +30,52 @@ export async function updateGameState(gameId: string, state: GameState) {
 export async function startMemorizationPhase(gameId: string) {
   const gameRef = doc(db, 'games', gameId);
   
-  // Set memorization time to 10 seconds
-  const memorizeEndTime = new Date(Date.now() + 10000).toISOString();
-  
+  // Instead of setting a global timer, just update the game state
   await updateDoc(gameRef, {
     gameState: 'memorizing',
     memorizeStartTime: new Date().toISOString(),
-    memorizeEndTime,
   });
+}
 
-  // Schedule automatic transition to playing state after 10 seconds
-  setTimeout(async () => {
-    const gameSnapshot = await getDoc(gameRef);
-    const data = gameSnapshot.data();
-    if (data?.gameState === 'memorizing') {
-      // Update cards to hide them after memorization
-      const playersCollectionRef = collection(db, `games/${gameId}/players`);
-      const playerDocs = await getDocs(playersCollectionRef);
+// Start playing phase (after memorization)
+export async function startPlayingPhase(gameId: string) {
+  const gameRef = doc(db, 'games', gameId);
+  
+  try {
+    // Get all players
+    const playersCollectionRef = collection(db, `games/${gameId}/players`);
+    const playerDocs = await getDocs(playersCollectionRef);
+    
+    // For each player, hide their cards
+    const playerUpdates = playerDocs.docs.map(async (playerDoc) => {
+      const playerData = playerDoc.data();
+      const updatedCards = (playerData.cards || []).map(card => ({
+        ...card,
+        faceVisible: false,
+      }));
       
-      // For each player, hide their cards
-      const playerUpdates = playerDocs.docs.map(async (playerDoc) => {
-        const playerData = playerDoc.data();
-        const updatedCards = (playerData.cards || []).map(card => ({
-          ...card,
-          faceVisible: false,
-        }));
-        
-        return updateDoc(playerDoc.ref, {
-          cards: updatedCards,
-          updatedAt: new Date().toISOString(),
-        });
+      return updateDoc(playerDoc.ref, {
+        cards: updatedCards,
+        updatedAt: new Date().toISOString(),
       });
-      
-      // Wait for all player updates
-      await Promise.all(playerUpdates);
-      
-      // Update game state to playing
-      await updateDoc(gameRef, {
-        gameState: 'playing',
-        playingStartTime: new Date().toISOString(),
-      });
-    }
-  }, 10000);
+    });
+    
+    // Wait for all player updates
+    await Promise.all(playerUpdates);
+    
+    // Update game state to playing
+    await updateDoc(gameRef, {
+      gameState: 'playing',
+      playingStartTime: new Date().toISOString(),
+      // Clear any pending memorization timers
+      memorizeEndTime: deleteField(),
+    });
+    
+    console.log("Game state updated to playing successfully");
+  } catch (error) {
+    console.error("Error starting play phase:", error);
+    throw error;
+  }
 }
 
 // Reveal next pyramid card
@@ -96,7 +100,32 @@ export async function revealNextPyramidCard(gameId: string) {
     return null;
   }
   
-  // Reveal the next card
+  // Clear any pending challenges when a new card is revealed
+  const currentAssignments = gameData.drinkAssignments || [];
+  const updatedAssignments = currentAssignments.filter(
+    assignment => assignment.status !== 'pending' && assignment.status !== 'challenged'
+  );
+  
+  // Reveal the next card and clear challenges
+  await updateDoc(gameRef, {
+    drinkAssignments: updatedAssignments,
+    lastRoundAssignments: currentAssignments,
+    currentRound: (gameData.currentRound || 0) + 1
+  });
+  
+  // Automatically replace cards for players with pending replacements
+  if (gameData.pendingCardReplacements) {
+    for (const [playerId, indexToReplace] of Object.entries(gameData.pendingCardReplacements)) {
+      await replacePlayerCard(gameId, playerId, indexToReplace as number);
+    }
+    
+    // Clear pending replacements
+    await updateDoc(gameRef, {
+      pendingCardReplacements: deleteField()
+    });
+  }
+  
+  // Now reveal the next pyramid card
   await revealPyramidCard(gameId, nextCardIndex);
   
   return pyramidCards[nextCardIndex];
@@ -123,7 +152,7 @@ export async function assignDrinks(
   };
   
   await updateDoc(gameRef, {
-    drinkAssignments: [drinkAssignment, ...(await getCurrentDrinkAssignments(gameId))],
+    drinkAssignments: arrayUnion(drinkAssignment),
     lastActivity: new Date().toISOString(),
   });
   
@@ -211,6 +240,27 @@ export async function resolveDrinkChallenge(
   } catch (error) {
     console.error("Error resolving drink challenge:", error);
     throw error;
+  }
+}
+
+// Mark a card as needing replacement after a challenge
+export async function markCardForReplacement(gameId: string, playerId: string, cardIndex: number) {
+  if (!gameId || !playerId) {
+    console.error("Missing gameId or playerId in markCardForReplacement");
+    return;
+  }
+
+  try {
+    const gameRef = doc(db, "games", gameId);
+    
+    // Add to the pendingCardReplacements map
+    await updateDoc(gameRef, {
+      [`pendingCardReplacements.${playerId}`]: cardIndex
+    });
+    
+    console.log(`Card at index ${cardIndex} for player ${playerId} marked for replacement`);
+  } catch (error) {
+    console.error("Error marking card for replacement:", error);
   }
 }
 
@@ -358,6 +408,11 @@ export async function replacePlayerCard(gameId: string, playerId: string, cardIn
     await updateDoc(gameRef, {
       [`newCardTimers.${playerId}.${newCard.i}`]: hideCardTime,
       [`newCardTimers.timeLeft`]: 15
+    });
+    
+    // Remove from pending replacements if it exists
+    await updateDoc(gameRef, {
+      [`pendingCardReplacements.${playerId}`]: deleteField()
     });
     
     return newCard;

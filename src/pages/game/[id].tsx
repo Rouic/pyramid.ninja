@@ -14,6 +14,8 @@ import {
   DrinkAssignment,
   subscribeToGameStateDetails,
   startMemorizationPhase,
+  startPlayingPhase,
+  replacePlayerCard,
 } from "../../lib/firebase/gameState";
 import GamePyramid from "../../components/GamePyramid";
 import PlayerHand from "../../components/PlayerHand";
@@ -22,6 +24,8 @@ import DrinkAssignmentPanel from "../../components/DrinkAssignmentPanel";
 import { GameControls } from "../../components/GameControls";
 import ActivityLog from "../../components/ActivityLog";
 import { usePlayerContext } from "../../context/PlayerContext";
+import MemorizationOverlay from "../../components/MemorizationOverlay";
+
 
 const GamePage = () => {
   const router = useRouter();
@@ -45,6 +49,9 @@ const GamePage = () => {
   const [currentRound, setCurrentRound] = useState(1);
   const [isSelectingForChallenge, setIsSelectingForChallenge] = useState(false);
   const [playerCards, setPlayerCards] = useState<Card[]>([]);
+
+  const [isPersonallyMemorizing, setIsPersonallyMemorizing] = useState(false);
+  const [memorizeTimeLeft, setMemorizeTimeLeft] = useState<number | null>(null);
 
   // New state to track which card is being challenged (for flipping)
   const [challengedCardIndex, setChallengedCardIndex] = useState<number>(-1);
@@ -147,6 +154,25 @@ const GamePage = () => {
       });
   }, [id, playerId, setIsHost]);
 
+  // Update the handlers to track time information
+  const handlePersonalMemorizationStart = useCallback((seconds: number) => {
+    setIsPersonallyMemorizing(true);
+    setMemorizeTimeLeft(seconds);
+    console.log(
+      `Personal memorization started with ${seconds} seconds - cards should be visible now`
+    );
+  }, []);
+
+  const handlePersonalMemorizationTick = useCallback((seconds: number) => {
+    setMemorizeTimeLeft(seconds);
+  }, []);
+
+  const handlePersonalMemorizationEnd = useCallback(() => {
+    setIsPersonallyMemorizing(false);
+    setMemorizeTimeLeft(null);
+    console.log("Personal memorization ended - cards should be hidden now");
+  }, []);
+
   const handleStartGame = useCallback(async () => {
     if (
       !id ||
@@ -199,11 +225,54 @@ const GamePage = () => {
     if (!id || typeof id !== "string") return;
 
     try {
-      await startMemorizationPhase(id);
+      // Start memorization phase
+      await startMemorizationPhase(id as string);
     } catch (error) {
       console.error("Error starting memorization phase:", error);
     }
   }, [id]);
+
+  const handleStartPlaying = useCallback(async () => {
+    if (!id || typeof id !== "string" || !isHost) return;
+
+    console.log("Starting playing phase...");
+    try {
+      // Transition from memorization to playing phase
+      await startPlayingPhase(id as string);
+
+      // Immediately update the local game state to ensure UI updates promptly
+      // This ensures the GamePyramid becomes clickable right away
+      setGameState("playing");
+
+      console.log("Game state updated to 'playing'");
+    } catch (error) {
+      console.error("Error starting playing phase:", error);
+    }
+  }, [id, isHost]);
+
+  // Also add this debugging useEffect to help track state changes
+  useEffect(() => {
+    console.log("Game state changed:", gameState);
+    console.log("Pyramid clickable:", gameState === "playing");
+  }, [gameState]);
+
+  const handleCardReplacement = useCallback(
+    async (cardIndex: number) => {
+      if (!id || typeof id !== "string" || !playerId) return;
+
+      try {
+        await replacePlayerCard(id as string, playerId, cardIndex);
+
+        // Reset challenge state after replacing a card
+        setChallengedCardIndex(-1);
+
+        console.log(`Card at index ${cardIndex} successfully replaced`);
+      } catch (error) {
+        console.error("Error replacing card:", error);
+      }
+    },
+    [id, playerId]
+  );
 
   const handleRevealCard = useCallback(
     async (cardIndex: number) => {
@@ -608,6 +677,7 @@ const GamePage = () => {
                   currentPhase={gameState}
                   isHost={isHost}
                   onStartMemorization={handleStartMemorizing}
+                  onStartPlaying={handleStartPlaying} // Add this new prop
                 />
               </div>
 
@@ -730,6 +800,11 @@ const GamePage = () => {
                     currentPhase={gameState}
                     isHost={isHost}
                     onStartMemorization={handleStartMemorizing}
+                    onPersonalMemorizationStart={
+                      handlePersonalMemorizationStart
+                    }
+                    onPersonalMemorizationTick={handlePersonalMemorizationTick}
+                    onPersonalMemorizationEnd={handlePersonalMemorizationEnd}
                   />
                 </div>
 
@@ -759,102 +834,29 @@ const GamePage = () => {
                   gameId={id as string}
                   isGameStarted={gameState !== "waiting"}
                   showFaceUp={
-                    gameState === "memorizing" || gameState === "ended"
+                    gameState === "memorizing" ||
+                    gameState === "ended" ||
+                    isPersonallyMemorizing
                   }
                   highlightCurrentRank={currentPyramidCard?.rank}
-                  allowCardFlip={gameState === "playing"} // Only allow flipping during gameplay
+                  allowCardFlip={gameState === "playing"}
                   challengedCardIndex={challengedCardIndex}
-                  onCardSelect={handleChallengeCard} // Add this new prop
-                  isSelectingForChallenge={isSelectingForChallenge} // Add this new prop
+                  onCardSelect={handleChallengeCard}
+                  isSelectingForChallenge={isSelectingForChallenge}
+                  onReplaceCard={handleCardReplacement}
                 />
+
+                {isPersonallyMemorizing && memorizeTimeLeft !== null && (
+                  <MemorizationOverlay
+                    seconds={memorizeTimeLeft}
+                    isVisible={isPersonallyMemorizing}
+                  />
+                )}
               </>
             )}
           </div>
 
-          {/* Game tips */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-            <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-              Game Tips
-            </h2>
-
-            <ul className="space-y-3">
-              <li className="flex items-start">
-                <span className="flex-shrink-0 h-5 w-5 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-2">
-                  <svg
-                    className="h-3 w-3"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </span>
-                <span className="text-gray-700 dark:text-gray-300">
-                  Watch the host's screen to see which card is currently shown
-                  in the pyramid
-                </span>
-              </li>
-              <li className="flex items-start">
-                <span className="flex-shrink-0 h-5 w-5 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-2">
-                  <svg
-                    className="h-3 w-3"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </span>
-                <span className="text-gray-700 dark:text-gray-300">
-                  Cards are only visible during memorization and after
-                  challenges
-                </span>
-              </li>
-              <li className="flex items-start">
-                <span className="flex-shrink-0 h-5 w-5 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-2">
-                  <svg
-                    className="h-3 w-3"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </span>
-                <span className="text-gray-700 dark:text-gray-300">
-                  Hold down on a card to peek at it during challenges
-                </span>
-              </li>
-              <li className="flex items-start">
-                <span className="flex-shrink-0 h-5 w-5 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-2">
-                  <svg
-                    className="h-3 w-3"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </span>
-                <span className="text-gray-700 dark:text-gray-300">
-                  If you challenge someone successfully, they drink double. If
-                  you fail, you drink double!
-                </span>
-              </li>
-            </ul>
-          </div>
+         
         </div>
       </div>
     );
