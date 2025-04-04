@@ -169,7 +169,7 @@ const HostPage = () => {
 
 
       {/* Card host form with enhanced Balatro style */}
-      <div className="w-full max-w-xl bg-game-card rounded-2xl shadow-2xl p-4 sm:p-8 md:p-10 border-4 border-game-neon-red border-opacity-40 relative z-10 overflow-hidden mx-4">
+      <div className="w-full max-w-xl bg-game-card rounded-2xl shadow-2xl p-4 sm:p-8 md:p-10 border-4 border-game-neon-red border-opacity-40 relative z-10 overflow-hidden md:mx-4">
         {/* Card glow effect */}
         <div
           className="absolute -inset-px rounded-2xl overflow-hidden opacity-40"
