@@ -6,6 +6,7 @@ import { usePlayerContext } from "../context/PlayerContext";
 import { v4 as uuidv4 } from "uuid";
 import { InformationCircleIcon } from "@heroicons/react/16/solid";
 import Head from "next/head";
+import Link from "next/link";
 
 const HostPage = () => {
   const router = useRouter();
@@ -146,6 +147,26 @@ const HostPage = () => {
           animationDelay: "2s",
         }}
       ></div>
+
+
+      <div className="flex flex-col">
+        <div className="mx-auto mb-6">
+          <Link className="relative" href="/">
+            <div className="flex items-center justify-between gap-4 relative z-10">
+              <div className="flex items-center">
+                <img
+                  src="/icon.png"
+                  alt="Pyramid Ninja"
+                  className="h-12 w-12 mr-3"
+                />
+                <h1 className="text-lg font-display text-game-neon-yellow tracking-tight xs:tracking-normal sm:tracking-wider mb-0 animate-glow font-display-fallback w-full px-2">
+                  PYRAMID.NINJA
+                </h1>
+              </div>
+            </div>
+          </Link>
+        </div>
+
 
       {/* Card host form with enhanced Balatro style */}
       <div className="w-full max-w-xl bg-game-card rounded-2xl shadow-2xl p-4 sm:p-8 md:p-10 border-4 border-game-neon-red border-opacity-40 relative z-10 overflow-hidden mx-4">
@@ -357,6 +378,8 @@ const HostPage = () => {
             </div>
           </div>
         </div>
+      </div>
+
       </div>
 
       {/* Additional decorative elements - hide on mobile */}

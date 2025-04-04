@@ -133,33 +133,3 @@ export const getPlayerCardCoordinates = (index: number) => {
   
   return index >= 0 && index < coords.length ? coords[index] : { x: 0, y: 0 };
 };
-
-// Generate a taunt message for a round
-export const getRandomTaunt = (roundNumber: number, seed: string): string => {
-  const rng = seedrandom(`${seed}-${roundNumber}`);
-  
-  const taunts = [
-    ['Time to get wrecked!', 'Time to turn our livers to coral!', 'Drink Responsibly, yeah'],
-    ['I hear round 2 is spicy!', 'Enjoy the hangover!', 'Drinking may cause memory loss and... may also cause memory loss.'],
-    ['Your liver will thank you!', 'Q: Whats the difference between a dog and a fox? A: 2 drinks.'],
-    ['Sponsored by crippling depression.', 'Be kind to your friends!'],
-    ['You alcoholic!', 'So a dyslexic walks into a bra...', 'I wonder if this is how Scientology started?'],
-    ['Who lives in a pineapple under the sea?', 'Try to gang up on eachother.'],
-    ['Round 6 is going to get heated!', 'Beauty is in the eye of the beer holder.'],
-    ['Yay lockdown!', 'Two men walked into a bar. The third one ducked.'],
-    ['The youngest person should double their drinks...', 'Ever thought about a career in politics?'],
-    ['Ready to die?', 'The past, present, and future walk into a bar. It was tense.'],
-    ['Green is not a creative colour.', 'Not drunk enough? Time to call bullshit on everything!'],
-    ['Vote liver failure!', 'Ran out? Just drink hand sanitiser...'],
-    ['The drinks get serious now.', 'Alcohol is a perfect solvent: It dissolves marriages, families and careers.'],
-    ['Someone is going to be sick...', 'Nanananana Batman.'],
-    ['Nearly there!', 'Vodka isn\'t always the answer. But it\'s worth a shot.'],
-    ['Last one!', 'You\'ve climbed the alcoholic mountain!', 'You all look so pretty now!'],
-  ];
-  
-  const adjustedRound = Math.min(roundNumber, taunts.length - 1);
-  const tauntList = taunts[adjustedRound];
-  const randomIndex = Math.floor(rng() * tauntList.length);
-  
-  return tauntList[randomIndex];
-};
