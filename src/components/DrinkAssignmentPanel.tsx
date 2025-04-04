@@ -11,6 +11,7 @@ import {
 } from "../lib/firebase/gameState";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../lib/firebase/firebase";
+import { HandRaisedIcon } from "@heroicons/react/16/solid";
 
 interface DrinkAssignmentPanelProps {
   gameId: string;
@@ -745,14 +746,7 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center">
           <div className="w-10 h-10 rounded-lg bg-game-neon-purple bg-opacity-20 flex items-center justify-center mr-3 border-2 border-game-neon-purple border-opacity-30 shadow-neon-purple">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 text-game-neon-purple"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.616a1 1 0 01.894-1.79l1.599.8L9 4.323V3a1 1 0 011-1z" />
-            </svg>
+            <HandRaisedIcon className="h-6 w-6 text-black" />
           </div>
           <h3 className="text-xl font-game-fallback text-game-neon-purple tracking-wide">
             DRINK ASSIGNMENTS
@@ -887,7 +881,14 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
 
           {/* Header with card icon - Enhanced with suit symbol and color matching */}
           <div className="flex items-center mb-4">
-            <div className="w-10 h-14 bg-white rounded-lg overflow-hidden relative mr-3 border-2 border-game-neon-blue shadow-neon-blue transform -rotate-3">
+            <div
+              className={`w-10 h-14 bg-white rounded-lg overflow-hidden relative mr-3 border-2 border-game-neon-blue shadow-neon-blue transform -rotate-3 ${
+                // Determine if it's a red or black card (assuming simple pattern where even ranks are red)
+                ["A", "3", "5", "7", "9", "J", "K"].includes(currentCardRank)
+                  ? "text-gray-900"
+                  : "text-red-600"
+              }`}
+            >
               {/* Main rank display */}
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-xl font-bold">{currentCardRank}</span>
