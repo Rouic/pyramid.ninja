@@ -56,7 +56,7 @@ const HomePage = () => {
 
       {/* Main content - positioned in the center */}
       <div className="max-w-5xl w-full mx-auto text-center relative z-10 flex flex-col items-center py-4 sm:py-8">
-        <div className="flex flex-col items-center w-full max-w-xs sm:max-w-sm md:max-w-md px-1">
+        <div className="flex flex-col items-center w-full px-1">
           <div className="w-28 h-28 sm:w-40 sm:h-40 mb-2 sm:mb-4 animate-float-slow">
             <img
               src="/icon.png"
@@ -64,7 +64,7 @@ const HomePage = () => {
               className="w-full h-full object-contain"
             />
           </div>
-          <h1 className="text-3xl sm:text-5xl md:text-6xl font-display text-game-neon-yellow tracking-wider mb-0 animate-glow font-display-fallback overflow-hidden">
+          <h1 className="text-lg xxs:text-3xl xs:text-3xl sm:text-4xl md:text-5xl xl:text-7xl font-display text-game-neon-yellow tracking-tight xs:tracking-normal sm:tracking-wider mb-0 animate-glow font-display-fallback w-full px-2">
             PYRAMID.NINJA
           </h1>
         </div>

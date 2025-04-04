@@ -67,7 +67,7 @@ const AboutPage = () => {
       <div className="max-w-5xl w-full mx-auto relative z-10 flex flex-col items-center py-6 sm:py-16">
         {/* Header */}
         <div className="flex flex-col items-center mb-8 sm:mb-16 px-4">
-          <h1 className="text-3xl sm:text-5xl md:text-6xl font-display text-game-neon-red tracking-wider mb-4 sm:mb-8 animate-glow font-display-fallback text-center">
+          <h1 className="text-xl sm:text-5xl lg:text-6xl font-display text-game-neon-red tracking-wider mb-4 sm:mb-8 animate-glow font-display-fallback text-center">
             ABOUT PYRAMID.NINJA
           </h1>
           <div className="w-full max-w-3xl mx-auto h-1 bg-gradient-to-r from-transparent via-game-neon-red to-transparent mb-4 sm:mb-8"></div>

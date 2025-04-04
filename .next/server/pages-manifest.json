@@ -4,5 +4,7 @@
   "/_document": "pages/_document.js",
   "/": "pages/index.js",
   "/game/[id]": "pages/game/[id].js",
-  "/about": "pages/about.js"
+  "/about": "pages/about.js",
+  "/host": "pages/host.js",
+  "/join": "pages/join.js"
 }

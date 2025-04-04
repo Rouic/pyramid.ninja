@@ -6,6 +6,11 @@ module.exports = {
   ],
   theme: {
     extend: {
+      screens: {
+        'xs': '475px',
+        'xxs': '375px',
+        // your other breakpoints...
+      },
       fontFamily: {
         sans: [
           'Roboto',
