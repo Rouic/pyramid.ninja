@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import Head from "next/head";
+import Footer from "@/components/layout/Footer";
 
 const AboutPage = () => {
   return (
@@ -55,7 +56,7 @@ const AboutPage = () => {
             HOME
           </Link>
           <Link
-            href="#"
+            href="/privacy"
             className="px-2 sm:px-6 py-2 bg-black/30 backdrop-blur-sm rounded-full border border-game-neon-blue/30 text-game-neon-blue font-game-fallback text-xs sm:text-sm hover:bg-black/50 hover:scale-105 transition-all duration-300 shadow-neon-blue-sm"
           >
             PRIVACY
@@ -367,17 +368,7 @@ const AboutPage = () => {
       </div>
 
       {/* Footer */}
-      <div className="w-full text-center text-gray-400 text-xs sm:text-base pb-4 sm:pb-8">
-        <p>
-          &copy; 2025 Pyramid.Ninja -{" "}
-          <a
-            href="https://github.com/Aloogy/pyramid.ninja"
-            className="text-game-neon-purple hover:text-game-neon-yellow transition-colors"
-          >
-            Open Source on GitHub
-          </a>
-        </p>
-      </div>
+      <Footer />
 
       {/* Card decorations in corners like Balatro - hide on mobile */}
       <div className="absolute bottom-24 right-24 w-52 h-72 rounded-lg bg-game-card opacity-10 transform rotate-12 hidden sm:block"></div>

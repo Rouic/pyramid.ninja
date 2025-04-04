@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import Head from "next/head";
 import { usePlayerContext } from "../context/PlayerContext";
+import Footer from "@/components/layout/Footer";
 
 const HomePage = () => {
   const { playerName } = usePlayerContext();
@@ -71,7 +72,7 @@ const HomePage = () => {
       </Head>
 
       {/* Navigation */}
-      <div className="w-full flex justify-end px-3 sm:px-8 pt-4 sm:pt-8 relative z-20">
+      <div className="w-full flex justify-end px-3 sm:px-8 pt-4 sm:pt-0 relative z-20">
         <div className="flex space-x-2 sm:space-x-4">
           <Link
             href="/about"
@@ -80,7 +81,7 @@ const HomePage = () => {
             ABOUT
           </Link>
           <Link
-            href="#"
+            href="/privacy"
             className="px-3 sm:px-6 py-2 bg-black/30 backdrop-blur-sm rounded-full border border-game-neon-blue/30 text-game-neon-blue font-game-fallback text-xs sm:text-sm hover:bg-black/50 hover:scale-105 transition-all duration-300 shadow-neon-blue-sm"
           >
             PRIVACY
@@ -165,17 +166,7 @@ const HomePage = () => {
       </div>
 
       {/* Footer - at the bottom */}
-      <div className="w-full text-center text-gray-400 text-xs sm:text-base py-4">
-        <p>
-          &copy; 2025 Pyramid.Ninja -{" "}
-          <a
-            href="https://github.com/Aloogy/pyramid.ninja"
-            className="text-game-neon-purple hover:text-game-neon-yellow transition-colors"
-          >
-            Open Source on GitHub
-          </a>
-        </p>
-      </div>
+      <Footer />
 
       {/* Card decorations in corners like Balatro - hide some on mobile */}
       <div className="absolute bottom-24 right-24 w-40 h-56 rounded-lg bg-game-card opacity-10 transform rotate-12 hidden sm:block"></div>

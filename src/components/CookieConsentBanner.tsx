@@ -1,5 +1,6 @@
-import React from 'react';
-import { useConsent } from '../contexts/ConsentContext';
+import React from "react";
+import { useConsent } from "../contexts/ConsentContext";
+import Link from "next/link";
 
 const CookieConsentBanner: React.FC = () => {
   const { consent, setConsent, hasSetConsent, setHasSetConsent } = useConsent();
@@ -73,7 +74,14 @@ const CookieConsentBanner: React.FC = () => {
 
           <p className="text-white text-sm mt-2">
             By clicking &quot;Accept All&quot;, you consent to the use of ALL
-            cookies. Visit our privacy policy to learn more.
+            cookies. Visit our{" "}
+            <Link
+              href="/privacy"
+              className="text-game-neon-blue hover:text-game-neon-yellow underline"
+            >
+              privacy policy
+            </Link>{" "}
+            to learn more.
           </p>
         </div>
       </div>
