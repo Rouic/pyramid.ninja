@@ -4,6 +4,7 @@ import { doc, getDoc, updateDoc, arrayUnion } from "firebase/firestore";
 import { db } from "../lib/firebase/firebase";
 import { usePlayerContext } from "../context/PlayerContext";
 import { v4 as uuidv4 } from "uuid";
+import { CodeBracketIcon, FaceSmileIcon, NumberedListIcon } from "@heroicons/react/16/solid";
 
 const JoinPage = () => {
   const router = useRouter();
@@ -175,18 +176,7 @@ const JoinPage = () => {
                 className="block text-sm sm:text-base font-game-fallback text-white mb-2 sm:mb-3 tracking-wider flex items-center"
               >
                 <span className="bg-game-neon-blue bg-opacity-20 w-6 h-6 sm:w-8 sm:h-8 inline-flex items-center justify-center rounded-lg mr-2 shadow-inner">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4 sm:h-5 sm:w-5 text-game-neon-blue"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                  <FaceSmileIcon className="h-4 w-4 sm:h-5 sm:w-5 text-black" />
                 </span>
                 YOUR NAME
               </label>
@@ -216,16 +206,7 @@ const JoinPage = () => {
                 className="block text-sm sm:text-base font-game-fallback text-white mb-2 sm:mb-3 tracking-wider flex items-center"
               >
                 <span className="bg-game-neon-blue bg-opacity-20 w-6 h-6 sm:w-8 sm:h-8 inline-flex items-center justify-center rounded-lg mr-2 shadow-inner">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4 sm:h-5 sm:w-5 text-game-neon-blue"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path d="M3 12v3c0 1.657 3.134 3 7 3s7-1.343 7-3v-3c0 1.657-3.134 3-7 3s-7-1.343-7-3z" />
-                    <path d="M3 7v3c0 1.657 3.134 3 7 3s7-1.343 7-3V7c0 1.657-3.134 3-7 3S3 8.657 3 7z" />
-                    <path d="M17 5c0 1.657-3.134 3-7 3S3 6.657 3 5s3.134-3 7-3 7 1.343 7 3z" />
-                  </svg>
+                  <CodeBracketIcon className="h-4 w-4 sm:h-5 sm:w-5 text-black" />
                 </span>
                 GAME ID
               </label>

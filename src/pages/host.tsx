@@ -4,6 +4,7 @@ import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../lib/firebase/firebase";
 import { usePlayerContext } from "../context/PlayerContext";
 import { v4 as uuidv4 } from "uuid";
+import { InformationCircleIcon } from "@heroicons/react/16/solid";
 
 const HostPage = () => {
   const router = useRouter();
@@ -149,18 +150,7 @@ const HostPage = () => {
 
           <div className="mb-4 sm:mb-8 p-4 sm:p-6 bg-black bg-opacity-40 rounded-xl border-2 border-game-neon-red border-opacity-30 text-white shadow-[inset_0_0_15px_rgba(0,0,0,0.5)] flex flex-col sm:flex-row items-start sm:items-center">
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-game-neon-red bg-opacity-20 flex items-center justify-center flex-shrink-0 mr-3 sm:mr-5 mb-3 sm:mb-0 border-2 border-game-neon-red border-opacity-40 shadow-neon-red">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 sm:h-6 sm:w-6 text-game-neon-red"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              <InformationCircleIcon className="w-6 h-6 sm:w-8 sm:h-8 text-black animate-pulse-slow" />
             </div>
             <div>
               <h2 className="font-game-fallback text-lg sm:text-xl mb-1 sm:mb-2 text-game-neon-yellow">

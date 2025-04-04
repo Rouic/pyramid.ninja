@@ -10,27 +10,49 @@
   
   /* Neon colors */
   --color-neon-red: #ff2158;
+  --color-game-neon-red: #ff2158;
   --color-neon-red-shadow: rgba(255, 33, 88, 0.5);
   --color-neon-red-lg-shadow: rgba(255, 33, 88, 0.7);
   --color-neon-red-lg-shadow2: rgba(255, 33, 88, 0.4);
 
   --color-neon-blue: #3287fc;
+  --color-game-neon-blue: #3287fc;
   --color-neon-blue-shadow: rgba(50, 135, 252, 0.5);
   --color-neon-blue-lg-shadow: rgba(50, 135, 252, 0.7);
   --color-neon-blue-lg-shadow2: rgba(50, 135, 252, 0.4);
 
   --color-neon-green: #32fc58;
+  --color-game-neon-green: #32fc58;
   --color-neon-green-shadow: rgba(50, 252, 88, 0.5);
   --color-neon-green-lg-shadow: rgba(50, 252, 88, 0.7);
   --color-neon-green-lg-shadow2: rgba(50, 252, 88, 0.4);
 
   --color-neon-yellow: #fcde32;
+  --color-game-neon-yellow: #fcde32;
   --color-neon-yellow-shadow: rgba(252, 222, 50, 0.5);
+  --color-neon-yellow-lg-shadow: rgba(252, 222, 50, 0.7);
+  --color-neon-yellow-lg-shadow2: rgba(252, 222, 50, 0.4);
 
   --color-neon-purple: #9932fc;
+  --color-neon-purple-shadow: rgba(153, 50, 252, 0.5);
+  --color-neon-purple-lg-shadow: rgba(153, 50, 252, 0.7);
+  --color-neon-purple-lg-shadow2: rgba(153, 50, 252, 0.4);
+  --color-game-neon-purple: #9932fc;
+  --color-game-neon-purple-shadow: rgba(153, 50, 252, 0.5);
+  --color-game-neon-purple-lg-shadow: rgba(153, 50, 252, 0.7);
+  --color-game-neon-purple-lg-shadow2: rgba(153, 50, 252, 0.4);
 
   --color-neon-orange: #ff9933;
   --color-neon-orange-shadow: rgba(255, 153, 51, 0.5);
+  --color-neon-orange-lg-shadow: rgba(255, 153, 51, 0.7);
+  --color-neon-orange-lg-shadow2: rgba(255, 153, 51, 0.4);
+  --color-game-neon-orange: #ff9933;
+  --color-game-neon-orange-shadow: rgba(255, 153, 51, 0.5);
+  --color-game-neon-orange-lg-shadow: rgba(255, 153, 51, 0.7);
+  --color-game-neon-orange-lg-shadow2: rgba(255, 153, 51, 0.4);
+  
+
+
 }
 
 /* Custom font-family fallbacks */
@@ -154,98 +176,7 @@ body {
 
 /* Neon color classes */
 /* Text colors */
-.text-game-neon-red {
-  color: var(--color-neon-red);
-}
 
-.text-game-neon-blue {
-  color: var(--color-neon-blue);
-}
-
-.text-game-neon-green {
-  color: var(--color-neon-green);
-}
-
-.text-game-neon-yellow {
-  color: var(--color-neon-yellow);
-}
-
-.text-game-neon-purple {
-  color: var(--color-neon-purple);
-}
-
-/* Shadow utilities – small */
-.shadow-neon-red-sm {
-  box-shadow: 0 0 3px var(--color-neon-red), 0 0 5px var(--color-neon-red-shadow);
-}
-
-.shadow-neon-blue-sm {
-  box-shadow: 0 0 3px var(--color-neon-blue), 0 0 5px var(--color-neon-blue-shadow);
-}
-
-.shadow-neon-green-sm {
-  box-shadow: 0 0 3px var(--color-neon-green), 0 0 5px var(--color-neon-green-shadow);
-}
-
-.shadow-neon-yellow-sm {
-  box-shadow: 0 0 3px var(--color-neon-yellow), 0 0 5px var(--color-neon-yellow-shadow);
-}
-
-/* Shadow utilities – large */
-.shadow-neon-red-lg {
-  box-shadow: 0 0 10px var(--color-neon-red), 0 0 15px var(--color-neon-red-lg-shadow), 0 0 20px var(--color-neon-red-lg-shadow2);
-}
-
-.shadow-neon-blue-lg {
-  box-shadow: 0 0 10px var(--color-neon-blue), 0 0 15px var(--color-neon-blue-lg-shadow), 0 0 20px var(--color-neon-blue-lg-shadow2);
-}
-
-.shadow-neon-green-lg {
-  box-shadow: 0 0 10px var(--color-neon-green), 0 0 15px var(--color-neon-green-lg-shadow), 0 0 20px var(--color-neon-green-lg-shadow2);
-}
-
-/* Additional neon shadow */
-.shadow-neon-yellow {
-  box-shadow: 0 0 3px var(--color-neon-yellow), 0 0 5px var(--color-neon-yellow-shadow);
-}
-
-.shadow-neon-orange-sm {
-  box-shadow: 0 0 3px var(--color-neon-orange), 0 0 5px var(--color-neon-orange-shadow);
-}
-
-/* Background color utilities */
-.bg-game-neon-yellow {
-  background-color: var(--color-neon-yellow);
-}
-
-.bg-game-neon-green {
-  background-color: var(--color-neon-green);
-}
-
-.bg-game-neon-red {
-  background-color: var(--color-neon-red);
-}
-
-/* Border color utilities */
-.border-game-neon-red {
-  border-color: var(--color-neon-red);
-}
-
-.border-game-neon-purple {
-  border-color: var(--color-neon-purple);
-}
-
-.border-game-neon-green {
-  border-color: var(--color-neon-green);
-}
-
-.border-game-neon-blue {
-  border-color: var(--color-neon-blue);
-}
-
-.border-game-neon-yellow {
-  border-color: var(--color-neon-yellow);
-}
 
 /* Animations */
 @keyframes pulse {

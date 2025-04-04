@@ -3,6 +3,8 @@
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
   "/": "pages/index.js",
-  "/join": "pages/join.js",
-  "/game/[id]": "pages/game/[id].js"
+  "/host": "pages/host.js",
+  "/game/[id]": "pages/game/[id].js",
+  "/about": "pages/about.js",
+  "/join": "pages/join.js"
 }
