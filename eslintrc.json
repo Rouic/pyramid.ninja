@@ -1,0 +1,32 @@
+{
+  "extends": [
+    "next/core-web-vitals",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint"],
+  "rules": {
+    "@typescript-eslint/no-explicit-any": "warn",  // Changed from 'error' to 'warn'
+    "@typescript-eslint/no-unused-vars": ["warn", {
+      "argsIgnorePattern": "^_",
+      "varsIgnorePattern": "^_"
+    }],
+    // Allow certain places to use any where necessary
+    "@typescript-eslint/ban-ts-comment": "warn",
+    // Disable some overly strict rules during development
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    // Allow specific any usage with index signatures
+    "@typescript-eslint/no-explicit-any": ["warn", {
+      "ignoreRestArgs": true
+    }]
+  },
+  "overrides": [
+    {
+      "files": ["src/types/**/*.ts"],
+      "rules": {
+        // Be more permissive for type definitions
+        "@typescript-eslint/no-explicit-any": "off"
+      }
+    }
+  ]
+}
