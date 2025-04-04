@@ -1189,9 +1189,6 @@ const GamePage = () => {
                     {/* Game Controls - Only show when in ready or memorizing state when there are actual controls to show */}
                     {(gameState === "ready" || gameState === "memorizing") && (
                       <div className="bg-black/50 rounded-xl p-4 relative">
-                        <h3 className="text-lg font-game-fallback text-game-neon-blue mb-4 tracking-wide relative">
-                          GAME CONTROLS
-                        </h3>
                         <GameControls
                           gameId={id as string}
                           currentPhase={gameState}
