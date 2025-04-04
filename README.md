@@ -1,40 +1,196 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# 🎮 Pyramid.Ninja
 
-## Getting Started
+An engaging multiplayer card game leveraging realtime Firebase and Next.js for a fluid gaming experience.
 
-First, run the development server:
+## 🚀 Tech Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Frontend**: Next.js (React) with TypeScript
+- **Styling**: TailwindCSS with custom game-themed extensions
+- **Database**: Firebase Firestore (realtime)
+- **Authentication**: Firebase Auth
+- **Deployment**: Vercel
+
+## 🎯 Game Overview
+
+Pyramid.Ninja is a digital implementation of the classic drinking card game "Pyramid" (also known as "Ride the Bus"). It's designed for social gameplay where players gather around a virtual table and take turns.
+
+### 📋 Game Rules
+
+1. **Setup**: 
+   - The game builds a pyramid of cards (typically 5 rows)
+   - Each player receives 4 cards that only they can see
+   - Players memorize their cards before the game starts
+
+2. **Gameplay**:
+   - The host reveals cards from the pyramid one at a time
+   - If a player has a matching card in their hand, they can assign drinks
+   - Other players can challenge if they think someone is bluffing
+   - The number of drinks assigned depends on the row of the pyramid (higher rows = more drinks)
+
+3. **Challenges**:
+   - If a challenge is successful, the challenged player drinks
+   - If a challenge fails, the challenger drinks
+   - When challenged or after assigning drinks, players must replace the card they used
+
+## 🗂️ Project Structure
+
+```
+pyramid.ninja/
+├── public/          # Static assets, images, sounds
+├── src/
+│   ├── components/  # React components
+│   │   ├── layout/  # Layout components (Header, Footer, etc)
+│   │   └── ...      # Game-specific components
+│   ├── contexts/    # React context providers
+│   ├── hooks/       # Custom React hooks
+│   ├── lib/         # Utilities and Firebase interactions
+│   │   └── firebase/ # Firebase setup and database functions
+│   ├── pages/       # Next.js pages
+│   │   └── game/    # Game-related pages
+│   ├── styles/      # Global CSS and styling
+│   └── types/       # TypeScript type definitions
+├── legacy/          # Old codebase (reference only)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛣️ Common Code Paths
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+### Game Creation & Joining
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+1. `/src/pages/host.tsx` - Host creates a new game
+2. `/src/pages/join.tsx` - Players join with game code
+3. `/src/pages/game/[id].tsx` - Main game screen (dynamic route with game ID)
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+### Game Logic
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. `/src/lib/firebase/gameState.ts` - Game state management
+2. `/src/lib/firebase/gameCards.ts` - Card-related operations
+3. `/src/contexts/GameContext.tsx` - Game context provider for sharing state
 
-## Learn More
+### UI Components
 
-To learn more about Next.js, take a look at the following resources:
+1. `/src/components/GamePyramid.tsx` - Renders the pyramid of cards
+2. `/src/components/PlayerHand.tsx` - Manages player's hand of cards
+3. `/src/components/GameControls.tsx` - Game control buttons
+4. `/src/components/DrinkAssignmentPanel.tsx` - Handles assigning drinks
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+## 🚦 State Management
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The game uses a combination of:
 
-## Deploy on Vercel
+- **Firebase Firestore**: For persistent, realtime game state shared between players
+- **React Context**: For local state management and component communication
+- **React Hooks**: For component-level state and Firebase subscription management
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Key state includes:
+- Game phase (waiting, memorizing, playing, ended)
+- Player information and readiness status
+- Card positions and visibility
+- Drink assignments and challenges
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+## 🔄 Data Flow
+
+1. **Host Creates Game**: 
+   - Generates unique game ID
+   - Configures game settings
+   - Creates initial Firestore document
+
+2. **Player Joins Game**:
+   - Adds player to the game's player list
+   - Subscribes to realtime updates
+
+3. **Game Flow**:
+   - Host deals cards to players
+   - Players memorize their cards
+   - Host reveals pyramid cards
+   - Players assign/receive drinks and challenge
+   - Cards are replaced until pyramid is complete
+
+## 🔧 Development Commands
+
+```bash
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Run production server
+npm run start
+
+# Run ESLint
+npm run lint
+```
+
+## 📱 Responsive Design
+
+The game is designed for multiple devices:
+- **Desktop**: Full layout with card dragging and standard sizing
+- **Tablet**: Adjusted layout with optimized card positioning
+- **Mobile**: Compact view with 2x2 grid for cards in portrait mode
+
+Specific mobile optimizations include:
+- Reduced control panel sizes
+- Optimized spacing for smaller screens
+- Touch-friendly card interactions
+- Responsive typography with smaller sizes on mobile
+
+## 🧩 Key Components
+
+### GameCard
+
+The base card component with:
+- Flip animations
+- Drag functionality
+- Visual indicators for new/revealed cards
+- Challenge and selection states
+
+### GamePyramid
+
+Renders the pyramid structure with:
+- Row-based organization
+- Card reveal animations
+- Visual indicators for current row/card
+
+### PlayerHand
+
+Manages the player's cards with:
+- Draggable positioning
+- Responsive grid layout on mobile
+- Card memorization and reveal capabilities
+
+## 🔒 Security Model
+
+- Game access is controlled by game IDs
+- Player actions are validated server-side
+- Firebase security rules prevent unauthorized access
+- Client-side validation complements server-side rules
+
+## 🎨 Styling Approach
+
+- Custom TailwindCSS configuration with game-specific colors
+- Card-themed design system inspired by Balatro
+- CSS variables for consistent theming
+- Responsive design with Tailwind's responsive prefixes (xs:, sm:, md:, etc.)
+- Animation system for cards and UI elements
+
+## 🌐 Deployment
+
+The project is configured for deployment on Vercel with:
+- Automatic preview deployments for PRs
+- Production branch deployment
+- Environment variable configuration
+
+## 🚀 Future Enhancements
+
+- Additional game modes
+- Voice chat integration
+- More customization options
+- Enhanced mobile experience
+- Persistent user profiles
+
+---
+
+© 2024 Pyramid.Ninja
