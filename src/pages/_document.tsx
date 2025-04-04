@@ -19,7 +19,20 @@ export default function Document() {
         <link rel="icon" type="image/png" sizes="32x32" href="/favicons/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicons/favicon-16x16.png" />
         <link rel="icon" href="/favicon.ico" />
+        <link rel="manifest" href="/site.webmanifest" />
+        
+        {/* SEO meta tags */}
         <meta name="theme-color" content="#1b084e" />
+        <meta name="robots" content="index, follow" />
+        <meta name="googlebot" content="index, follow" />
+        <meta name="format-detection" content="telephone=no" />
+        
+        {/* Mobile/responsive meta tags */}
+        <meta name="application-name" content="Pyramid.Ninja" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Pyramid.Ninja" />
+        <meta name="mobile-web-app-capable" content="yes" />
       </Head>
       <body className="antialiased">
         <Main />

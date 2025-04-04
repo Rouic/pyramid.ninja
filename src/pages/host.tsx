@@ -5,6 +5,7 @@ import { db } from "../lib/firebase/firebase";
 import { usePlayerContext } from "../context/PlayerContext";
 import { v4 as uuidv4 } from "uuid";
 import { InformationCircleIcon } from "@heroicons/react/16/solid";
+import Head from "next/head";
 
 const HostPage = () => {
   const router = useRouter();
@@ -71,6 +72,29 @@ const HostPage = () => {
 
   return (
     <div className="min-h-screen bg-game-bg flex items-center justify-center p-4 sm:p-6 lg:p-10 relative overflow-hidden">
+      <Head>
+        <title>Host a Game - Pyramid.Ninja</title>
+        <meta
+          name="description"
+          content="Create a new Pyramid drinking game and invite your friends to join. Easy setup, no downloads required!"
+        />
+        {/* JSON-LD structured data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebPage",
+              "name": "Host a Game - Pyramid.Ninja",
+              "description": "Create a new Pyramid drinking game and invite your friends to join. Easy setup, no downloads required!",
+              "mainEntityOfPage": {
+                "@type": "WebPage",
+                "@id": "https://pyramid.ninja/host"
+              }
+            })
+          }}
+        />
+      </Head>
       {/* Background patterns - Balatro style */}
       <div
         className="absolute inset-0"

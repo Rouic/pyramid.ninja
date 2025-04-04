@@ -5,6 +5,7 @@ import { db } from "../lib/firebase/firebase";
 import { usePlayerContext } from "../context/PlayerContext";
 import { v4 as uuidv4 } from "uuid";
 import { CodeBracketIcon, FaceSmileIcon, NumberedListIcon } from "@heroicons/react/16/solid";
+import Head from "next/head";
 
 const JoinPage = () => {
   const router = useRouter();
@@ -92,6 +93,29 @@ const JoinPage = () => {
 
   return (
     <div className="min-h-screen bg-game-bg flex items-center justify-center p-4 sm:p-6 lg:p-10 relative overflow-hidden">
+      <Head>
+        <title>Join a Game - Pyramid.Ninja</title>
+        <meta
+          name="description"
+          content="Join an existing Pyramid drinking game with friends. Enter your name and the game ID to start playing!"
+        />
+        {/* JSON-LD structured data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebPage",
+              "name": "Join a Game - Pyramid.Ninja",
+              "description": "Join an existing Pyramid drinking game with friends. Enter your name and the game ID to start playing!",
+              "mainEntityOfPage": {
+                "@type": "WebPage",
+                "@id": "https://pyramid.ninja/join"
+              }
+            })
+          }}
+        />
+      </Head>
       {/* Background patterns - Balatro style */}
       <div
         className="absolute inset-0"
