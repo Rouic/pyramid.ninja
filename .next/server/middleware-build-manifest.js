@@ -1,1 +1,35 @@
-globalThis.__BUILD_MANIFEST={polyfillFiles:["static/chunks/polyfills-42372ed130431b0a.js"],devFiles:[],ampDevFiles:[],lowPriorityFiles:[],rootMainFiles:[],rootMainFilesTree:{},pages:{"/":["static/chunks/webpack-8cac0b4b405cede1.js","static/chunks/framework-84d6ee64cdf12741.js","static/chunks/main-e6602eb6bd38d35c.js","static/chunks/230-8a10a6030a242aaa.js","static/chunks/pages/index-40557a520549e94b.js"],"/_app":["static/chunks/webpack-8cac0b4b405cede1.js","static/chunks/framework-84d6ee64cdf12741.js","static/chunks/main-e6602eb6bd38d35c.js","static/css/985f3eb5cddd86de.css","static/chunks/pages/_app-819203259e22c111.js"],"/_error":["static/chunks/webpack-8cac0b4b405cede1.js","static/chunks/framework-84d6ee64cdf12741.js","static/chunks/main-e6602eb6bd38d35c.js","static/chunks/pages/_error-41608b100cc61246.js"],"/about":["static/chunks/webpack-8cac0b4b405cede1.js","static/chunks/framework-84d6ee64cdf12741.js","static/chunks/main-e6602eb6bd38d35c.js","static/chunks/230-8a10a6030a242aaa.js","static/chunks/pages/about-fcd0bb15b8598455.js"],"/game/[id]":["static/chunks/webpack-8cac0b4b405cede1.js","static/chunks/framework-84d6ee64cdf12741.js","static/chunks/main-e6602eb6bd38d35c.js","static/chunks/5db719f2-2521eb13d1188bf2.js","static/chunks/37a5c959-d7573b60dfd9f051.js","static/chunks/309-3e9cbe8efb11d2e3.js","static/chunks/625-8bd0793e410ea53f.js","static/chunks/pages/game/[id]-e0978179cd158fad.js"],"/host":["static/chunks/webpack-8cac0b4b405cede1.js","static/chunks/framework-84d6ee64cdf12741.js","static/chunks/main-e6602eb6bd38d35c.js","static/chunks/5db719f2-2521eb13d1188bf2.js","static/chunks/37a5c959-d7573b60dfd9f051.js","static/chunks/309-3e9cbe8efb11d2e3.js","static/chunks/pages/host-c4bf1cb9538202f8.js"],"/join":["static/chunks/webpack-8cac0b4b405cede1.js","static/chunks/framework-84d6ee64cdf12741.js","static/chunks/main-e6602eb6bd38d35c.js","static/chunks/5db719f2-2521eb13d1188bf2.js","static/chunks/37a5c959-d7573b60dfd9f051.js","static/chunks/309-3e9cbe8efb11d2e3.js","static/chunks/pages/join-b79ca14d030f14a8.js"]},ampFirstPages:[]},globalThis.__BUILD_MANIFEST.lowPriorityFiles=["/static/"+process.env.__NEXT_BUILD_ID+"/_buildManifest.js",,"/static/"+process.env.__NEXT_BUILD_ID+"/_ssgManifest.js"];
+globalThis.__BUILD_MANIFEST = {
+  "polyfillFiles": [
+    "static/chunks/polyfills.js"
+  ],
+  "devFiles": [
+    "static/chunks/react-refresh.js"
+  ],
+  "ampDevFiles": [],
+  "lowPriorityFiles": [],
+  "rootMainFiles": [],
+  "rootMainFilesTree": {},
+  "pages": {
+    "/_app": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/_app.js"
+    ],
+    "/_error": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/_error.js"
+    ],
+    "/game/[id]": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/game/[id].js"
+    ]
+  },
+  "ampFirstPages": []
+};
+globalThis.__BUILD_MANIFEST.lowPriorityFiles = [
+"/static/" + process.env.__NEXT_BUILD_ID + "/_buildManifest.js",
+,"/static/" + process.env.__NEXT_BUILD_ID + "/_ssgManifest.js",
+
+];

@@ -1,12 +1,6 @@
 {
   "/_app": "pages/_app.js",
-  "/_document": "pages/_document.js",
-  "/about": "pages/about.html",
-  "/api/hello": "pages/api/hello.js",
-  "/host": "pages/host.html",
-  "/": "pages/index.html",
-  "/join": "pages/join.html",
-  "/game/[id]": "pages/game/[id].html",
   "/_error": "pages/_error.js",
-  "/404": "pages/404.html"
+  "/_document": "pages/_document.js",
+  "/game/[id]": "pages/game/[id].js"
 }
