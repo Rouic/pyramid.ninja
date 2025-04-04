@@ -319,7 +319,7 @@ const PrivacyPage = () => {
                     Cookie Consent
                   </h4>
                   <p>
-                    When you first visit Pyramid.Ninja, you'll be asked to
+                    When you first visit Pyramid.Ninja, you&apos;ll be asked to
                     consent to our use of cookies and local storage. You can
                     change your preferences at any time.
                   </p>
@@ -422,7 +422,7 @@ const PrivacyPage = () => {
             {/* Children's Privacy section */}
             <div className="bg-black/30 backdrop-blur-sm p-6 rounded-xl border border-game-neon-red/20 transform rotate-0.5 shadow-neon-red-sm">
               <h3 className="text-xl sm:text-2xl text-game-neon-red font-game-fallback mb-4">
-                CHILDREN'S PRIVACY
+                CHILDREN&apos;S PRIVACY
               </h3>
               <p className="mb-4">
                 Pyramid.Ninja is a drinking game application and is not intended
@@ -446,7 +446,7 @@ const PrivacyPage = () => {
                 We may update this Privacy Policy from time to time to reflect
                 changes to our practices or for other operational, legal, or
                 regulatory reasons. We will post the updated Privacy Policy on
-                this page and update the "Last Updated" date.
+                this page and update the &quot;Last Updated&quot; date.
               </p>
               <p>
                 We encourage you to review this Privacy Policy periodically to
