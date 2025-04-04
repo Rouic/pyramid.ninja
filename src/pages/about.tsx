@@ -357,6 +357,9 @@ const AboutPage = () => {
 
           <ul className="space-y-2 text-white list-disc pl-5 sm:pl-6">
             <li className="text-base sm:text-lg">
+              Written, refactored and fiddled with over the years by Alex Cottenham (@Rouic)
+            </li>
+            <li className="text-base sm:text-lg">
               Special thanks to Will Nield for finding bugs :)
             </li>
             <li className="text-base sm:text-lg">
