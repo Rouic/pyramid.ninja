@@ -2,16 +2,7 @@
 module.exports = {
   // Using 'all' here to make sure Tailwind scans all files
   content: [
-    './**/*.{js,jsx,ts,tsx}',
-    './src/**/*.{js,jsx,ts,tsx}',
-    '../../packages/**/*.{js,jsx,ts,tsx}',
-    '/src/**/*.{js,jsx,ts,tsx}',
-    './src/components/**/*.{js,jsx,ts,tsx}',
-    './src/contexts/*.{js,jsx,ts,tsx}',
-    './src/hooks/*.{js,jsx,ts,tsx}',
-    './src/lib/*.{js,jsx,ts,tsx}',
-    './src/pages/**/*.{js,jsx,ts,tsx}',
-    './src/pages/*.{js,jsx,ts,tsx}',
+    "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
@@ -103,82 +94,5 @@ module.exports = {
   future: {
     respectDefaultRingColorOpacity: true,
     disableColorOpacityUtilitiesByDefault: false,
-  },
-  // Keep the safelist to ensure all needed classes are included
-  safelist: [
-    // Common colors
-    {
-      pattern: /(bg|text|border)-(blue|gray|rose|red|green|indigo|purple|yellow|black|white)-(50|100|200|300|400|500|600|700|800|900)/,
-    },
-    // Game colors
-    {
-      pattern: /(bg|text|border)-(game)-(bg|card|felt|accent|highlight)/,
-    },
-    // Neon colors
-    {
-      pattern: /(bg|text|border|shadow)-(neon)-(blue|red|green|purple|yellow|orange)/,
-    },
-    // Padding utilities (all variants)
-    {
-      pattern: /(p|px|py|pt|pr|pb|pl)-(.+)/,
-    },
-    // Margin utilities (all variants)
-    {
-      pattern: /(m|mx|my|mt|mr|mb|ml)-(.+)/,
-    },
-    // Gap utilities
-    {
-      pattern: /gap-(.+)/,
-    },
-    {
-      pattern: /space-y-(.+)/,
-    },
-    {
-      pattern: /space-x-(.+)/,
-    },
-    // Width and height utilities
-    {
-      pattern: /(w|h)-(.+)/,
-    },
-    // Flex and grid utilities
-    {
-      pattern: /(flex|grid|items|justify|space|gap|col|row)-(.+)/,
-    },
-    // Position and display utilities
-    {
-      pattern: /(relative|absolute|fixed|block|hidden|top|right|bottom|left|inset)-(.+)/,
-    },
-    // Border utilities
-    {
-      pattern: /(rounded|border|shadow)-(.+)/,
-    },
-    // Font utilities
-    {
-      pattern: /(text|font|tracking|leading)-(.+)/,
-    },
-    // Z-index utilities
-    {
-      pattern: /z-(.+)/,
-    },
-    // Transform utilities
-    {
-      pattern: /(transform|rotate|scale|translate)-(.+)/,
-    },
-    // Animation utilities
-    {
-      pattern: /(animate|transition|duration)-(.+)/,
-    },
-    // Opacity utilities
-    {
-      pattern: /opacity-(.+)/,
-    },
-    // Interactive state utilities
-    {
-      pattern: /(hover|focus|active|group-hover|focus-within|disabled):.+/,
-    },
-    // Backdrop utilities
-    {
-      pattern: /backdrop-(.+)/,
-    }
-  ]
+  }
 };
