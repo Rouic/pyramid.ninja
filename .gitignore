@@ -5,5 +5,6 @@ firebase-debug.log
 .firebase/
 .DS_Store
 *.cache
+.next
 dist
 firepit-log.txt
