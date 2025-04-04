@@ -416,7 +416,7 @@ export async function resolveDrinkChallenge(
       // Get fresh data again to avoid conflicts
       const summaryDoc = await getDocFromServer(gameRef);
       const summaryData = summaryDoc.data();
-      let drinkSummary = summaryData.drinkSummary || {};
+      const drinkSummary = summaryData.drinkSummary || {};
       const recipientId = wasSuccessful ? toPlayerId : fromPlayerId;
       
       drinkSummary[recipientId] = (drinkSummary[recipientId] || 0) + (drinkCount * 2);
