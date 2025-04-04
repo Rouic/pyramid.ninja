@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import Head from "next/head";
 import { usePlayerContext } from "../context/PlayerContext";
@@ -6,6 +6,165 @@ import Footer from "@/components/layout/Footer";
 
 const HomePage = () => {
   const { playerName } = usePlayerContext();
+  const [logoClicks, setLogoClicks] = useState(0);
+  const [easterEgg, setEasterEgg] = useState(null);
+
+  // List of Easter eggs - ninja and card-themed
+  const easterEggs = [
+    {
+      id: "ninja-stars",
+      element: (
+        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-50">
+          <div className="text-6xl animate-spin">⭐🥷⭐</div>
+        </div>
+      ),
+    },
+    {
+      id: "card-ninja",
+      element: (
+        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-50">
+          <div className="text-6xl animate-bounce">🃏🥷🃏</div>
+        </div>
+      ),
+    },
+    {
+      id: "ninja-message",
+      element: (
+        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black/80 p-4 rounded-lg shadow-lg z-50 animate-pulse">
+          <p className="text-game-neon-yellow text-2xl font-display-fallback">
+            {playerName
+              ? `${playerName.toUpperCase()} - NINJA MASTER UNLOCKED!`
+              : "NINJA MASTER UNLOCKED!"}
+          </p>
+        </div>
+      ),
+    },
+    {
+      id: "flying-cards",
+      element: (
+        <div className="fixed inset-0 pointer-events-none z-50">
+          <div
+            className="absolute text-7xl animate-ping"
+            style={{ left: "10%", top: "40%" }}
+          >
+            🃏
+          </div>
+          <div
+            className="absolute text-7xl animate-ping"
+            style={{ left: "90%", top: "30%", animationDelay: "0.5s" }}
+          >
+            🃏
+          </div>
+          <div
+            className="absolute text-7xl animate-ping"
+            style={{ left: "50%", top: "20%", animationDelay: "1s" }}
+          >
+            🃏
+          </div>
+          <div
+            className="absolute text-7xl animate-ping"
+            style={{ left: "30%", top: "70%", animationDelay: "1.5s" }}
+          >
+            🃏
+          </div>
+          <div
+            className="absolute text-7xl animate-ping"
+            style={{ left: "70%", top: "60%", animationDelay: "2s" }}
+          >
+            🃏
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "ninja-fortune",
+      element: (
+        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black/80 p-6 rounded-lg shadow-lg z-50">
+          <p className="text-game-neon-green text-xl font-game-fallback">
+            {
+              [
+                playerName
+                  ? `${playerName}, a ninja's strength lies in patience, just like in cards.`
+                  : "A ninja's strength lies in patience, just like in cards.",
+                playerName
+                  ? `${playerName}, the best card player, like a ninja, reveals nothing.`
+                  : "The best card player, like a ninja, reveals nothing.",
+                playerName
+                  ? `Fortune favors the bold ninja ${playerName} at the card table.`
+                  : "Fortune favors the bold ninja at the card table.",
+                playerName
+                  ? `${playerName}, a true ninja knows when to hold and when to fold.`
+                  : "A true ninja knows when to hold and when to fold.",
+                playerName
+                  ? `The card deck, like ${playerName}'s ninja weapons, holds many possibilities.`
+                  : "The card deck, like a ninja's weapons, holds many possibilities.",
+              ][Math.floor(Math.random() * 5)]
+            }
+          </p>
+        </div>
+      ),
+    },
+    {
+      id: "ninja-confetti",
+      element: (
+        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-50">
+          <div className="text-6xl">
+            {[...Array(20)].map((_, i) => (
+              <span
+                key={i}
+                className="absolute animate-pulse"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                  animationDelay: `${Math.random() * 2}s`,
+                  transform: `rotate(${Math.random() * 360}deg)`,
+                  fontSize: `${Math.random() * 2 + 1}rem`,
+                }}
+              >
+                {
+                  ["🥷", "🗡️", "⚔️", "🏮", "🈲", "🎴", "🀄", "🎭"][
+                    Math.floor(Math.random() * 8)
+                  ]
+                }
+              </span>
+            ))}
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "ninja-takeover",
+      element: (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 pointer-events-none">
+          <div className="text-center">
+            <div className="text-8xl mb-4">🥷</div>
+            <p className="text-game-neon-red text-3xl font-display-fallback animate-pulse">
+              NINJA TAKEOVER!
+            </p>
+          </div>
+        </div>
+      ),
+    },
+  ];
+
+  // Handle logo clicks
+  const handleLogoClick = () => {
+    const newClickCount = logoClicks + 1;
+    setLogoClicks(newClickCount);
+
+    // If three clicks detected, trigger Easter egg
+    if (newClickCount >= 3) {
+      const randomEgg =
+        easterEggs[Math.floor(Math.random() * easterEggs.length)];
+      setEasterEgg(randomEgg);
+
+      // Hide Easter egg after a delay
+      setTimeout(() => {
+        setEasterEgg(null);
+        setLogoClicks(0); // Reset click counter
+      }, 3000);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-game-bg flex flex-col items-center justify-between px-4 sm:px-8 py-4 sm:py-8 relative overflow-hidden">
@@ -92,7 +251,11 @@ const HomePage = () => {
       {/* Main content - positioned in the center */}
       <div className="max-w-5xl w-full mx-auto text-center relative z-10 flex flex-col items-center py-4 sm:py-8">
         <div className="flex flex-col items-center w-full px-1">
-          <div className="w-28 h-28 sm:w-40 sm:h-40 mb-2 sm:mb-4 animate-float-slow">
+          <div
+            className="w-28 h-28 sm:w-40 sm:h-40 mb-2 sm:mb-4 animate-float-slow cursor-pointer"
+            onClick={handleLogoClick}
+            aria-label="Click me three times for a surprise"
+          >
             <img
               src="/icon.png"
               alt="Pyramid Ninja Logo"
@@ -164,6 +327,9 @@ const HomePage = () => {
           </div>
         )}
       </div>
+
+      {/* Display active Easter egg */}
+      {easterEgg && easterEgg.element}
 
       {/* Footer - at the bottom */}
       <Footer />
