@@ -765,7 +765,7 @@ const GamePage = () => {
     return (
       <div className="fixed bottom-4 right-4 bg-green-600 text-white p-4 rounded-lg shadow-lg z-50 max-w-xs">
         <h4 className="font-bold mb-1">New Card!</h4>
-        <p>You have a new card. Memorize it before it's hidden again!</p>
+        <p>You have a new card. Memorize it before it&apos;s hidden again!</p>
         <div className="mt-2 bg-green-500 h-2 rounded-full overflow-hidden">
           <div
             className="bg-white h-full transition-all duration-1000"
@@ -895,8 +895,8 @@ const GamePage = () => {
                   />
                 </svg>
                 <span className="text-sm font-medium text-yellow-700 dark:text-yellow-300">
-                  Deck is empty! Any cards you reveal during challenges won't be
-                  replaced.
+                  Deck is empty! Any cards you reveal during challenges
+                  won&apos;t be replaced.
                 </span>
               </div>
             </div>
@@ -1121,7 +1121,8 @@ const GamePage = () => {
                               GAME READY
                             </h3>
                             <p className="text-lg text-white font-game-fallback tracking-wide text-center">
-                              CLICK "START GAME" TO BEGIN THE PYRAMID GAME
+                              CLICK &apos;START GAME&apos; TO BEGIN THE PYRAMID
+                              GAME
                             </p>
                           </div>
                         </div>
@@ -1211,49 +1212,57 @@ const GamePage = () => {
     return (
       <div className="min-h-screen bg-game-bg pb-8 relative overflow-hidden">
         {/* Background patterns - Balatro style */}
-        <div className="absolute inset-0" 
+        <div
+          className="absolute inset-0"
           style={{
-            backgroundImage: "linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px)",
-            backgroundSize: "20px 20px"
-          }}>
-        </div>
-        
+            backgroundImage:
+              "linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px)",
+            backgroundSize: "20px 20px",
+          }}
+        ></div>
+
         {/* Multiple glowing orb effects for visual interest */}
-        <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] rounded-full opacity-20"
+        <div
+          className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] rounded-full opacity-20"
           style={{
-            background: "radial-gradient(circle at center, rgba(50, 135, 252, 0.5), transparent 70%)",
-            filter: "blur(100px)"
-          }}>
-        </div>
-        
-        <div className="absolute bottom-1/3 right-1/3 w-[600px] h-[600px] rounded-full opacity-10"
+            background:
+              "radial-gradient(circle at center, rgba(50, 135, 252, 0.5), transparent 70%)",
+            filter: "blur(100px)",
+          }}
+        ></div>
+
+        <div
+          className="absolute bottom-1/3 right-1/3 w-[600px] h-[600px] rounded-full opacity-10"
           style={{
-            background: "radial-gradient(circle at center, rgba(151, 50, 252, 0.6), transparent 70%)",
-            filter: "blur(80px)"
-          }}>
-        </div>
-        
+            background:
+              "radial-gradient(circle at center, rgba(151, 50, 252, 0.6), transparent 70%)",
+            filter: "blur(80px)",
+          }}
+        ></div>
+
         {/* Card decorations in corners */}
         <div className="absolute bottom-24 right-24 w-52 h-72 rounded-lg bg-game-card opacity-5 transform rotate-12"></div>
         <div className="absolute top-24 left-24 w-52 h-72 rounded-lg bg-game-card opacity-5 transform -rotate-12"></div>
-        
+
         <div className="max-w-4xl mx-auto px-4 pt-6 relative z-10">
           {/* Game header */}
           <div className="bg-black/70 backdrop-blur-md rounded-xl border-2 border-game-neon-blue/40 shadow-neon-blue-sm p-6 mb-6 relative transform -rotate-0.5 overflow-hidden">
             {/* Glow effect */}
-            <div className="absolute -inset-px rounded-xl overflow-hidden opacity-20"
-              style={{ 
-                background: "radial-gradient(circle at 30% 30%, rgba(50, 135, 252, 0.7), transparent 70%)",
-                filter: "blur(20px)"
-              }}>
-            </div>
-            
+            <div
+              className="absolute -inset-px rounded-xl overflow-hidden opacity-20"
+              style={{
+                background:
+                  "radial-gradient(circle at 30% 30%, rgba(50, 135, 252, 0.7), transparent 70%)",
+                filter: "blur(20px)",
+              }}
+            ></div>
+
             {/* Card corner decorations */}
             <div className="absolute top-3 left-3 w-8 h-8 border-t-2 border-l-2 border-game-neon-blue/40 rounded-tl-lg"></div>
             <div className="absolute top-3 right-3 w-8 h-8 border-t-2 border-r-2 border-game-neon-blue/40 rounded-tr-lg"></div>
             <div className="absolute bottom-3 left-3 w-8 h-8 border-b-2 border-l-2 border-game-neon-blue/40 rounded-bl-lg"></div>
             <div className="absolute bottom-3 right-3 w-8 h-8 border-b-2 border-r-2 border-game-neon-blue/40 rounded-br-lg"></div>
-            
+
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 relative z-10">
               <div>
                 <h1 className="text-2xl font-game-fallback text-game-neon-blue mb-1 tracking-wide">
@@ -1262,7 +1271,10 @@ const GamePage = () => {
                 <p className="text-white text-sm">
                   Game ID: <span className="font-mono">{id}</span> •
                   <span className="ml-1">
-                    Playing as <span className="font-medium text-game-neon-green">{playerName}</span>
+                    Playing as{" "}
+                    <span className="font-medium text-game-neon-green">
+                      {playerName}
+                    </span>
                   </span>
                 </p>
               </div>
@@ -1309,8 +1321,8 @@ const GamePage = () => {
                   />
                 </svg>
                 <span className="text-sm font-medium text-yellow-700 dark:text-yellow-300">
-                  Deck is empty! Any cards you reveal during challenges won't be
-                  replaced.
+                  Deck is empty! Any cards you reveal during challenges
+                  won&apos;t be replaced.
                 </span>
               </div>
             </div>
@@ -1319,114 +1331,128 @@ const GamePage = () => {
           {/* Player game area */}
           <div className="bg-black/70 backdrop-blur-md rounded-xl border-2 border-game-neon-purple/40 shadow-neon-purple-sm p-6 mb-6 relative transform rotate-0.5 overflow-hidden">
             {/* Glow effect */}
-            <div className="absolute -inset-px rounded-xl overflow-hidden opacity-20"
-              style={{ 
-                background: "radial-gradient(circle at 30% 30%, rgba(153, 50, 252, 0.7), transparent 70%)",
-                filter: "blur(20px)"
-              }}>
-            </div>
-            
+            <div
+              className="absolute -inset-px rounded-xl overflow-hidden opacity-20"
+              style={{
+                background:
+                  "radial-gradient(circle at 30% 30%, rgba(153, 50, 252, 0.7), transparent 70%)",
+                filter: "blur(20px)",
+              }}
+            ></div>
+
             {/* Card corner decorations */}
             <div className="absolute top-3 left-3 w-8 h-8 border-t-2 border-l-2 border-game-neon-purple/40 rounded-tl-lg"></div>
             <div className="absolute top-3 right-3 w-8 h-8 border-t-2 border-r-2 border-game-neon-purple/40 rounded-tr-lg"></div>
             <div className="absolute bottom-3 left-3 w-8 h-8 border-b-2 border-l-2 border-game-neon-purple/40 rounded-bl-lg"></div>
             <div className="absolute bottom-3 right-3 w-8 h-8 border-b-2 border-r-2 border-game-neon-purple/40 rounded-br-lg"></div>
-            
+
             <div className="relative z-10">
-            {gameState === "waiting" && !allCardsDealt ? (
-              <div className="flex flex-col items-center justify-center py-16 relative overflow-hidden">
-                {/* Balatro-style background pattern */}
-                <div className="absolute inset-0" 
-                  style={{
-                    backgroundImage: "linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px)",
-                    backgroundSize: "20px 20px"
-                  }}>
-                </div>
-                
-                {/* Glowing orb effect */}
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full opacity-30"
-                  style={{
-                    background: "radial-gradient(circle at center, rgba(50, 135, 252, 0.7), transparent 70%)",
-                    filter: "blur(60px)"
-                  }}>
-                </div>
-                
-                {/* Card decorations */}
-                <div className="absolute top-1/4 right-1/4 w-32 h-44 rounded-lg opacity-20 transform rotate-12 animate-float-slow"
-                  style={{
-                    background: "radial-gradient(circle at center, rgba(252, 70, 107, 0.7), transparent 90%)", 
-                    boxShadow: "0 0 30px rgba(252, 70, 107, 0.5)"
-                  }}>
-                </div>
-                
-                <div className="absolute bottom-1/4 left-1/4 w-28 h-40 rounded-lg opacity-20 animate-float-slow-reverse"
-                  style={{
-                    background: "radial-gradient(circle at center, rgba(151, 50, 252, 0.7), transparent 90%)",
-                    boxShadow: "0 0 30px rgba(151, 50, 252, 0.5)",
-                    animationDelay: "2s"
-                  }}>
-                </div>
-                
-                <div className="relative z-10 bg-black bg-opacity-60 p-8 rounded-xl border-2 border-game-neon-blue border-opacity-40 shadow-neon-blue-sm transform rotate-1">
-                  {/* Glow effect */}
-                  <div className="absolute -inset-px rounded-xl overflow-hidden opacity-40"
-                    style={{ 
-                      background: "radial-gradient(circle at 30% 30%, rgba(50, 135, 252, 0.7), transparent 70%)",
-                      filter: "blur(20px)"
-                    }}>
-                  </div>
-                  
-                  {/* Corner card chip decorations */}
-                  <div className="absolute top-3 left-3 w-8 h-8 border-t-2 border-l-2 border-game-neon-blue border-opacity-50 rounded-tl-lg"></div>
-                  <div className="absolute top-3 right-3 w-8 h-8 border-t-2 border-r-2 border-game-neon-blue border-opacity-50 rounded-tr-lg"></div>
-                  <div className="absolute bottom-3 left-3 w-8 h-8 border-b-2 border-l-2 border-game-neon-blue border-opacity-50 rounded-bl-lg"></div>
-                  <div className="absolute bottom-3 right-3 w-8 h-8 border-b-2 border-r-2 border-game-neon-blue border-opacity-50 rounded-br-lg"></div>
-                  
-                  <div className="relative z-10 flex flex-col items-center">
-                    <svg 
-                      className="h-16 w-16 mb-4 text-game-neon-blue animate-pulse-slow"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <h3 className="text-2xl font-display-fallback text-game-neon-blue tracking-wide mb-2 animate-glow">
-                      WAITING FOR HOST
-                    </h3>
-                    <p className="text-lg text-white font-game-fallback tracking-wide text-center">
-                      THE HOST WILL START THE GAME SOON...
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <>
-                {/* Game controls for player readiness - always show for "ready" state */}
-                <div className="mb-6">
-                  <GameControls
-                    gameId={id as string}
-                    currentPhase={gameState === "ready" ? "ready" : gameState}
-                    isHost={isHost}
-                    onStartMemorization={handleStartMemorizing}
-                    onPersonalMemorizationStart={
-                      handlePersonalMemorizationStart
-                    }
-                    onPersonalMemorizationTick={handlePersonalMemorizationTick}
-                    onPersonalMemorizationEnd={handlePersonalMemorizationEnd}
-                  />
-                </div>
+              {gameState === "waiting" && !allCardsDealt ? (
+                <div className="flex flex-col items-center justify-center py-16 relative overflow-hidden">
+                  {/* Balatro-style background pattern */}
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      backgroundImage:
+                        "linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px)",
+                      backgroundSize: "20px 20px",
+                    }}
+                  ></div>
 
-                {/* Divider */}
-                <div className="border-t border-gray-200 dark:border-gray-700 my-6"></div>
+                  {/* Glowing orb effect */}
+                  <div
+                    className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full opacity-30"
+                    style={{
+                      background:
+                        "radial-gradient(circle at center, rgba(50, 135, 252, 0.7), transparent 70%)",
+                      filter: "blur(60px)",
+                    }}
+                  ></div>
 
-                {/* Player Emergency Controls */}
-                {/* <div className="mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
+                  {/* Card decorations */}
+                  <div
+                    className="absolute top-1/4 right-1/4 w-32 h-44 rounded-lg opacity-20 transform rotate-12 animate-float-slow"
+                    style={{
+                      background:
+                        "radial-gradient(circle at center, rgba(252, 70, 107, 0.7), transparent 90%)",
+                      boxShadow: "0 0 30px rgba(252, 70, 107, 0.5)",
+                    }}
+                  ></div>
+
+                  <div
+                    className="absolute bottom-1/4 left-1/4 w-28 h-40 rounded-lg opacity-20 animate-float-slow-reverse"
+                    style={{
+                      background:
+                        "radial-gradient(circle at center, rgba(151, 50, 252, 0.7), transparent 90%)",
+                      boxShadow: "0 0 30px rgba(151, 50, 252, 0.5)",
+                      animationDelay: "2s",
+                    }}
+                  ></div>
+
+                  <div className="relative z-10 bg-black bg-opacity-60 p-8 rounded-xl border-2 border-game-neon-blue border-opacity-40 shadow-neon-blue-sm transform rotate-1">
+                    {/* Glow effect */}
+                    <div
+                      className="absolute -inset-px rounded-xl overflow-hidden opacity-40"
+                      style={{
+                        background:
+                          "radial-gradient(circle at 30% 30%, rgba(50, 135, 252, 0.7), transparent 70%)",
+                        filter: "blur(20px)",
+                      }}
+                    ></div>
+
+                    {/* Corner card chip decorations */}
+                    <div className="absolute top-3 left-3 w-8 h-8 border-t-2 border-l-2 border-game-neon-blue border-opacity-50 rounded-tl-lg"></div>
+                    <div className="absolute top-3 right-3 w-8 h-8 border-t-2 border-r-2 border-game-neon-blue border-opacity-50 rounded-tr-lg"></div>
+                    <div className="absolute bottom-3 left-3 w-8 h-8 border-b-2 border-l-2 border-game-neon-blue border-opacity-50 rounded-bl-lg"></div>
+                    <div className="absolute bottom-3 right-3 w-8 h-8 border-b-2 border-r-2 border-game-neon-blue border-opacity-50 rounded-br-lg"></div>
+
+                    <div className="relative z-10 flex flex-col items-center">
+                      <svg
+                        className="h-16 w-16 mb-4 text-game-neon-blue animate-pulse-slow"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      <h3 className="text-2xl font-display-fallback text-game-neon-blue tracking-wide mb-2 animate-glow">
+                        WAITING FOR HOST
+                      </h3>
+                      <p className="text-lg text-white font-game-fallback tracking-wide text-center">
+                        THE HOST WILL START THE GAME SOON...
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* Game controls for player readiness - always show for "ready" state */}
+                  <div className="mb-6">
+                    <GameControls
+                      gameId={id as string}
+                      currentPhase={gameState === "ready" ? "ready" : gameState}
+                      isHost={isHost}
+                      onStartMemorization={handleStartMemorizing}
+                      onPersonalMemorizationStart={
+                        handlePersonalMemorizationStart
+                      }
+                      onPersonalMemorizationTick={
+                        handlePersonalMemorizationTick
+                      }
+                      onPersonalMemorizationEnd={handlePersonalMemorizationEnd}
+                    />
+                  </div>
+
+                  {/* Divider */}
+                  <div className="border-t border-gray-200 dark:border-gray-700 my-6"></div>
+
+                  {/* Player Emergency Controls */}
+                  {/* <div className="mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
                   <h3 className="text-sm font-medium text-red-600 dark:text-red-400 mb-2">
                     💥 Emergency Controls
                   </h3>
@@ -1540,55 +1566,55 @@ const GamePage = () => {
                   </div>
                 </div> */}
 
-                {/* Render new card alert */}
-                {renderNewCardAlert()}
+                  {/* Render new card alert */}
+                  {renderNewCardAlert()}
 
-                {/* Drink assignments panel */}
-                {gameState === "playing" && (
-                  <DrinkAssignmentPanel
+                  {/* Drink assignments panel */}
+                  {gameState === "playing" && (
+                    <DrinkAssignmentPanel
+                      gameId={id as string}
+                      assignments={drinkAssignments}
+                      players={gameData?.players || []}
+                      currentPlayerId={playerId}
+                      isHost={isHost}
+                      currentCardRank={currentPyramidCard?.rank}
+                      drinkCount={drinksForCurrentRow}
+                      onChallengeCard={handleChallengeCard}
+                      setIsSelectingForChallenge={setIsSelectingForChallenge}
+                      isSelectingForChallenge={isSelectingForChallenge} // Add this line
+                    />
+                  )}
+
+                  {/* Player's hand */}
+                  <PlayerHand
                     gameId={id as string}
-                    assignments={drinkAssignments}
-                    players={gameData?.players || []}
-                    currentPlayerId={playerId}
-                    isHost={isHost}
-                    currentCardRank={currentPyramidCard?.rank}
-                    drinkCount={drinksForCurrentRow}
-                    onChallengeCard={handleChallengeCard}
-                    setIsSelectingForChallenge={setIsSelectingForChallenge}
-                    isSelectingForChallenge={isSelectingForChallenge} // Add this line
+                    isGameStarted={gameState !== "waiting" || allCardsDealt}
+                    showFaceUp={
+                      gameState === "memorizing" ||
+                      gameState === "ended" ||
+                      isPersonallyMemorizing
+                    }
+                    highlightCurrentRank={currentPyramidCard?.rank}
+                    allowCardFlip={gameState === "playing"}
+                    challengedCardIndex={challengedCardIndex}
+                    onCardSelect={handleChallengeCard}
+                    isSelectingForChallenge={isSelectingForChallenge}
+                    onReplaceCard={handleCardReplacement}
                   />
-                )}
 
-                {/* Player's hand */}
-                <PlayerHand
-                  gameId={id as string}
-                  isGameStarted={gameState !== "waiting" || allCardsDealt}
-                  showFaceUp={
-                    gameState === "memorizing" ||
-                    gameState === "ended" ||
-                    isPersonallyMemorizing
-                  }
-                  highlightCurrentRank={currentPyramidCard?.rank}
-                  allowCardFlip={gameState === "playing"}
-                  challengedCardIndex={challengedCardIndex}
-                  onCardSelect={handleChallengeCard}
-                  isSelectingForChallenge={isSelectingForChallenge}
-                  onReplaceCard={handleCardReplacement}
-                />
+                  {isPersonallyMemorizing && memorizeTimeLeft !== null && (
+                    <MemorizationOverlay
+                      seconds={memorizeTimeLeft}
+                      isVisible={isPersonallyMemorizing}
+                    />
+                  )}
 
-                {isPersonallyMemorizing && memorizeTimeLeft !== null && (
-                  <MemorizationOverlay
-                    seconds={memorizeTimeLeft}
-                    isVisible={isPersonallyMemorizing}
+                  <ChallengeResetControls
+                    gameId={id as string}
+                    playerId={playerId}
                   />
-                )}
-
-                <ChallengeResetControls
-                  gameId={id as string}
-                  playerId={playerId}
-                />
-              </>
-            )}
+                </>
+              )}
             </div>
           </div>
         </div>

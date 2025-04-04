@@ -42,11 +42,12 @@ const CookieConsentBanner: React.FC = () => {
           <h2 className="text-2xl font-bold text-white font-game-fallback tracking-wide">
             Cookie Consent
           </h2>
-          
+
           <p className="text-white">
-            This website uses cookies and collects certain data to provide you with a better experience.
+            This website uses cookies and collects certain data to provide you
+            with a better experience.
           </p>
-          
+
           <div className="flex flex-col space-y-3 mt-2">
             <button
               onClick={handleAcceptAll}
@@ -54,14 +55,14 @@ const CookieConsentBanner: React.FC = () => {
             >
               ACCEPT ALL
             </button>
-            
+
             <button
               onClick={handleDeclineAll}
               className="w-full py-2 px-4 bg-neon-red text-white font-game-fallback tracking-wide rounded btn-neon shadow-neon-red-lg-shadow"
             >
               DECLINE ALL
             </button>
-            
+
             <button
               onClick={handleAcceptNecessary}
               className="w-full py-2 px-4 bg-neon-blue text-white font-game-fallback tracking-wide rounded btn-neon shadow-neon-blue-lg-shadow"
@@ -69,9 +70,10 @@ const CookieConsentBanner: React.FC = () => {
               NECESSARY COOKIES ONLY
             </button>
           </div>
-          
+
           <p className="text-white text-sm mt-2">
-            By clicking "Accept All", you consent to the use of ALL cookies. Visit our privacy policy to learn more.
+            By clicking &quot;Accept All&quot;, you consent to the use of ALL
+            cookies. Visit our privacy policy to learn more.
           </p>
         </div>
       </div>

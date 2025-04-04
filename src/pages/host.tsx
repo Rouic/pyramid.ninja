@@ -85,13 +85,14 @@ const HostPage = () => {
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebPage",
-              "name": "Host a Game - Pyramid.Ninja",
-              "description": "Create a new Pyramid drinking game and invite your friends to join. Easy setup, no downloads required!",
-              "mainEntityOfPage": {
+              name: "Host a Game - Pyramid.Ninja",
+              description:
+                "Create a new Pyramid drinking game and invite your friends to join. Easy setup, no downloads required!",
+              mainEntityOfPage: {
                 "@type": "WebPage",
-                "@id": "https://pyramid.ninja/host"
-              }
-            })
+                "@id": "https://pyramid.ninja/host",
+              },
+            }),
           }}
         />
       </Head>
@@ -181,9 +182,9 @@ const HostPage = () => {
                 HOST INFORMATION
               </h2>
               <p className="text-sm sm:text-base text-gray-200">
-                As the host, you'll control the game flow and display the
-                pyramid for all players. Hosts don't participate with their own
-                cards.
+                As the host, you&apos;ll control the game flow and display the
+                pyramid for all players. Hosts don&apos;t participate with their
+                own cards.
               </p>
             </div>
           </div>
