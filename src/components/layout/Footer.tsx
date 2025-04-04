@@ -52,9 +52,14 @@ const Footer: React.FC = () => {
           </nav>
 
           {/* Copyright */}
-          <div className=" text-xs mt-4 text-game-neon-yellow/50 font-display-fallback">
+          <Link
+            href="https://github.com/Rouic/pyramid.ninja"
+            target="_blank"
+            rel="noreferrer"
+            className=" text-xs mt-4 text-game-neon-yellow/50 font-display-fallback hover:text-game-neon-yellow transition duration-200"
+          >
             v{appVersion}
-          </div>
+          </Link>
         </div>
       </div>
     </footer>
