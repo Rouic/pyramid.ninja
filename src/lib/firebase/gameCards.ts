@@ -73,14 +73,22 @@ export function subscribeToPlayerCards(gameId: string, playerId: string, callbac
   
   return onSnapshot(playerRef, (snapshot) => {
     if (!snapshot.exists()) {
+      console.log("Player document does not exist, returning empty array");
       callback([]);
       return;
     }
     
     const playerData = snapshot.data();
-    const playerCards = playerData.cards || [];
     
-    callback(playerCards);
+    // Ensure cards is an array
+    if (!playerData.cards || !Array.isArray(playerData.cards)) {
+      console.log("Player has no cards or cards is not an array, returning empty array");
+      callback([]);
+      return;
+    }
+    
+    console.log(`Found ${playerData.cards.length} cards for player in snapshot`);
+    callback(playerData.cards);
   });
 }
 

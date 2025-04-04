@@ -29,6 +29,8 @@ const GameStartNotification: React.FC<GameStartNotificationProps> = ({
 
   if (!isShowing) return null;
 
+  return null;
+
   return (
     <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50">
       {/* Background glow effect */}

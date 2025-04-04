@@ -180,7 +180,7 @@ export function GameControls({
       )}
       
       {/* Player memorization controls - Enhanced Balatro style */}
-      {currentPhase === "memorizing" && (
+      {(currentPhase === "memorizing" || currentPhase === "ready") && !isHost && (
         <div className="flex flex-col space-y-4">
           {isMemorizing ? (
             <div className="bg-game-card rounded-xl shadow-xl border-4 border-game-neon-yellow border-opacity-30 overflow-hidden">
@@ -274,7 +274,8 @@ export function GameControls({
                 
                 <button
                   onClick={startPersonalMemorization}
-                  className="relative w-5/6 mx-auto flex items-center justify-center px-8 py-6 bg-game-neon-blue text-white rounded-xl font-game-fallback tracking-wide text-2xl border-4 border-game-neon-blue border-opacity-50 transition-all duration-300 hover:scale-105 shadow-neon-blue hover:shadow-neon-blue-lg animate-pulse-slow"
+                  className="relative w-5/6 mx-auto flex items-center justify-center px-8 py-8 bg-game-neon-blue text-white rounded-xl font-game-fallback tracking-wide text-3xl border-4 border-game-neon-blue border-opacity-70 transition-all duration-300 hover:scale-105 shadow-neon-blue hover:shadow-neon-blue-lg animate-pulse-slow"
+                  style={{ boxShadow: "0 0 20px rgba(50, 135, 252, 0.8), 0 0 40px rgba(50, 135, 252, 0.4)" }}
                 >
                   {/* Button shine effect */}
                   <div className="absolute inset-0 overflow-hidden rounded-lg">

@@ -306,7 +306,7 @@ const GamePage = () => {
         // Skip dealing cards to the host
         if (player.id !== gameData.hostId) {
           console.log(`Dealing cards to player ${player.id}`);
-          await dealCardsToPlayer(gameId, player.id, 5);
+          await dealCardsToPlayer(gameId, player.id, 4);
         }
       }
 
@@ -828,140 +828,52 @@ const GamePage = () => {
     return (
       <div className="min-h-screen bg-game-bg pb-8 relative overflow-hidden">
         {/* Background patterns - Balatro style */}
-        <div className="absolute inset-0" 
+        <div
+          className="absolute inset-0"
           style={{
-            backgroundImage: "linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px)",
-            backgroundSize: "20px 20px"
-          }}>
-        </div>
-        
+            backgroundImage:
+              "linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px)",
+            backgroundSize: "20px 20px",
+          }}
+        ></div>
+
         {/* Multiple glowing orb effects for visual interest */}
-        <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] rounded-full opacity-20"
+        <div
+          className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] rounded-full opacity-20"
           style={{
-            background: "radial-gradient(circle at center, rgba(252, 70, 107, 0.5), transparent 70%)",
-            filter: "blur(100px)"
-          }}>
-        </div>
-        
-        <div className="absolute bottom-1/3 right-1/3 w-[600px] h-[600px] rounded-full opacity-10"
+            background:
+              "radial-gradient(circle at center, rgba(252, 70, 107, 0.5), transparent 70%)",
+            filter: "blur(100px)",
+          }}
+        ></div>
+
+        <div
+          className="absolute bottom-1/3 right-1/3 w-[600px] h-[600px] rounded-full opacity-10"
           style={{
-            background: "radial-gradient(circle at center, rgba(151, 50, 252, 0.6), transparent 70%)",
-            filter: "blur(80px)"
-          }}>
-        </div>
-        
+            background:
+              "radial-gradient(circle at center, rgba(151, 50, 252, 0.6), transparent 70%)",
+            filter: "blur(80px)",
+          }}
+        ></div>
+
         {/* Card decorations in corners */}
         <div className="absolute bottom-24 right-24 w-52 h-72 rounded-lg bg-game-card opacity-5 transform rotate-12"></div>
         <div className="absolute top-24 left-24 w-52 h-72 rounded-lg bg-game-card opacity-5 transform -rotate-12"></div>
-        
+
         <div className="max-w-7xl mx-auto px-4 pt-6 relative z-10">
-          {/* Game header */}
-          <div className="bg-black/70 backdrop-blur-md rounded-xl border-2 border-game-neon-red/40 shadow-neon-red-sm p-6 mb-6 relative transform -rotate-0.5 overflow-hidden">
-            {/* Glow effect */}
-            <div className="absolute -inset-px rounded-xl overflow-hidden opacity-20"
-              style={{ 
-                background: "radial-gradient(circle at 30% 30%, rgba(252, 70, 107, 0.7), transparent 70%)",
-                filter: "blur(20px)"
-              }}>
-            </div>
-            
-            {/* Card corner decorations */}
-            <div className="absolute top-3 left-3 w-8 h-8 border-t-2 border-l-2 border-game-neon-red/40 rounded-tl-lg"></div>
-            <div className="absolute top-3 right-3 w-8 h-8 border-t-2 border-r-2 border-game-neon-red/40 rounded-tr-lg"></div>
-            <div className="absolute bottom-3 left-3 w-8 h-8 border-b-2 border-l-2 border-game-neon-red/40 rounded-bl-lg"></div>
-            <div className="absolute bottom-3 right-3 w-8 h-8 border-b-2 border-r-2 border-game-neon-red/40 rounded-br-lg"></div>
-            
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 relative z-10">
-              <div>
-                <h1 className="text-2xl font-game-fallback text-game-neon-red mb-1 tracking-wide">
-                  {gameData?.name || "PYRAMID GAME"}
+          {/* Small branded header with logo and game name */}
+          <div className="p-4 mb-6 relative">
+            <div className="flex items-center justify-between gap-4 relative z-10">
+              <div className="flex items-center">
+                <img
+                  src="/icon.png"
+                  alt="Pyramid Ninja"
+                  className="h-12 w-12 mr-3"
+                />
+                <h1 className="text-lg font-display text-game-neon-yellow tracking-tight xs:tracking-normal sm:tracking-wider mb-0 animate-glow font-display-fallback w-full px-2">
+                  PYRAMID.NINJA
                 </h1>
-                <p className="text-white text-sm">
-                  Game ID: <span className="font-mono">{id}</span> •
-                  <span className="ml-1 font-medium text-game-neon-yellow">
-                    HOST VIEW
-                  </span>
-                </p>
               </div>
-
-              {gameState === "waiting" && (
-                <div className="w-full flex justify-center">
-                <div className="relative group">
-                  {/* Button glow effect */}
-                  <div className="absolute inset-0 bg-game-neon-green/30 rounded-xl blur-xl group-hover:blur-2xl transition-all duration-300 animate-pulse-slow opacity-70"></div>
-                  
-                  <button
-                    onClick={handleStartGame}
-                    disabled={isStartingGame}
-                    className="btn-neon py-5 px-8 bg-black text-game-neon-green font-game-fallback tracking-wide text-2xl rounded-xl transition-all duration-300 group-hover:scale-[1.02] focus:outline-none border-2 border-game-neon-green relative overflow-hidden transform rotate-1 shadow-neon-green-sm group-hover:shadow-neon-green-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {/* Button gradient overlay */}
-                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-transparent via-game-neon-green to-transparent opacity-50"></div>
-                    
-                    {/* Corner card chip decorations */}
-                    <div className="absolute top-2 left-2 w-6 h-6 border-t-2 border-l-2 border-game-neon-green border-opacity-70 rounded-tl-lg"></div>
-                    <div className="absolute top-2 right-2 w-6 h-6 border-t-2 border-r-2 border-game-neon-green border-opacity-70 rounded-tr-lg"></div>
-                    <div className="absolute bottom-2 left-2 w-6 h-6 border-b-2 border-l-2 border-game-neon-green border-opacity-70 rounded-bl-lg"></div>
-                    <div className="absolute bottom-2 right-2 w-6 h-6 border-b-2 border-r-2 border-game-neon-green border-opacity-70 rounded-br-lg"></div>
-                    
-                    {isStartingGame ? (
-                      <span className="flex items-center justify-center">
-                        <svg
-                          className="animate-spin -ml-1 mr-3 h-7 w-7 text-game-neon-green"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
-                        STARTING...
-                      </span>
-                    ) : (
-                      <span className="flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 mr-3 group-hover:animate-pulse" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
-                        </svg>
-                        START GAME
-                      </span>
-                    )}
-                  </button>
-                </div>
-              </div>
-              )}
-
-              {gameState === "playing" && (
-                <div className="flex items-center gap-4">
-                  <div className="py-2 px-4 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
-                    <div className="text-sm text-yellow-800 dark:text-yellow-200">
-                      Current Drink Value
-                    </div>
-                    <div className="text-xl font-bold text-yellow-700 dark:text-yellow-300">
-                      {drinksForCurrentRow} drink
-                      {drinksForCurrentRow !== 1 ? "s" : ""}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {gameState === "ended" && (
-                <div className="py-2 px-4 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                  <div className="text-xl font-bold text-green-700 dark:text-green-300">
-                    Game Complete!
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 
@@ -990,199 +902,306 @@ const GamePage = () => {
             </div>
           )}
 
-          {/* Game content - two column layout */}
+          {/* Game content - Main game card */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left column - Pyramid */}
-            <div className="lg:col-span-2">
+            {/* Unified game card that contains both pyramid and controls */}
+            <div className="lg:col-span-3">
               <div className="bg-black/70 backdrop-blur-md rounded-xl border-2 border-game-neon-purple/40 shadow-neon-purple-sm p-6 mb-6 relative transform rotate-0.5 overflow-hidden">
                 {/* Glow effect */}
-                <div className="absolute -inset-px rounded-xl overflow-hidden opacity-20"
-                  style={{ 
-                    background: "radial-gradient(circle at 30% 30%, rgba(153, 50, 252, 0.7), transparent 70%)",
-                    filter: "blur(20px)"
-                  }}>
-                </div>
-                
+                <div
+                  className="absolute -inset-px rounded-xl overflow-hidden opacity-20"
+                  style={{
+                    background:
+                      "radial-gradient(circle at 30% 30%, rgba(153, 50, 252, 0.7), transparent 70%)",
+                    filter: "blur(20px)",
+                  }}
+                ></div>
+
                 {/* Card corner decorations */}
                 <div className="absolute top-3 left-3 w-8 h-8 border-t-2 border-l-2 border-game-neon-purple/40 rounded-tl-lg"></div>
                 <div className="absolute top-3 right-3 w-8 h-8 border-t-2 border-r-2 border-game-neon-purple/40 rounded-tr-lg"></div>
                 <div className="absolute bottom-3 left-3 w-8 h-8 border-b-2 border-l-2 border-game-neon-purple/40 rounded-bl-lg"></div>
                 <div className="absolute bottom-3 right-3 w-8 h-8 border-b-2 border-r-2 border-game-neon-purple/40 rounded-br-lg"></div>
-                
-                <h2 className="text-xl font-game-fallback text-game-neon-purple mb-4 tracking-wide relative z-10">
-                  PYRAMID
-                </h2>
 
-                {gameState === "waiting" ? (
-                  <div className="flex flex-col items-center justify-center py-16 relative overflow-hidden">
-                    {/* Balatro-style background pattern */}
-                    <div className="absolute inset-0" 
-                      style={{
-                        backgroundImage: "linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px)",
-                        backgroundSize: "20px 20px"
-                      }}>
-                    </div>
-                    
-                    {/* Glowing orb effect */}
-                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full opacity-30"
-                      style={{
-                        background: "radial-gradient(circle at center, rgba(252, 50, 151, 0.7), transparent 70%)",
-                        filter: "blur(60px)"
-                      }}>
-                    </div>
-                    
-                    {/* Card decorations */}
-                    <div className="absolute top-1/4 right-1/4 w-32 h-44 rounded-lg opacity-20 transform rotate-12 animate-float-slow"
-                      style={{
-                        background: "radial-gradient(circle at center, rgba(252, 70, 107, 0.7), transparent 90%)", 
-                        boxShadow: "0 0 30px rgba(252, 70, 107, 0.5)"
-                      }}>
-                    </div>
-                    
-                    <div className="absolute bottom-1/4 left-1/4 w-28 h-40 rounded-lg opacity-20 animate-float-slow-reverse"
-                      style={{
-                        background: "radial-gradient(circle at center, rgba(151, 50, 252, 0.7), transparent 90%)",
-                        boxShadow: "0 0 30px rgba(151, 50, 252, 0.5)",
-                        animationDelay: "2s"
-                      }}>
-                    </div>
-                    
-                    <div className="relative z-10 bg-black bg-opacity-60 p-8 rounded-xl border-2 border-game-neon-red border-opacity-40 shadow-neon-red-sm transform -rotate-1">
-                      {/* Glow effect */}
-                      <div className="absolute -inset-px rounded-xl overflow-hidden opacity-40"
-                        style={{ 
-                          background: "radial-gradient(circle at 30% 30%, rgba(252, 70, 107, 0.7), transparent 70%)",
-                          filter: "blur(20px)"
-                        }}>
+                {/* Game header information inside the card */}
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 relative z-10">
+                  <div className="flex-grow">
+                    <h2 className="text-2xl font-game-fallback text-game-neon-purple mb-1 tracking-wide">
+                      {gameData?.name || "PYRAMID GAME"}
+                    </h2>
+                    <div className="flex items-center">
+                      <div className="text-game-neon-yellow font-medium mr-2">
+                        GAME ID:
                       </div>
-                      
-                      {/* Corner card chip decorations */}
-                      <div className="absolute top-3 left-3 w-8 h-8 border-t-2 border-l-2 border-game-neon-red border-opacity-50 rounded-tl-lg"></div>
-                      <div className="absolute top-3 right-3 w-8 h-8 border-t-2 border-r-2 border-game-neon-red border-opacity-50 rounded-tr-lg"></div>
-                      <div className="absolute bottom-3 left-3 w-8 h-8 border-b-2 border-l-2 border-game-neon-red border-opacity-50 rounded-bl-lg"></div>
-                      <div className="absolute bottom-3 right-3 w-8 h-8 border-b-2 border-r-2 border-game-neon-red border-opacity-50 rounded-br-lg"></div>
-                      
-                      <div className="relative z-10 flex flex-col items-center">
-                        <svg 
-                          className="h-16 w-16 mb-4 text-game-neon-red animate-pulse-slow"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M13 10V3L4 14h7v7l9-11h-7z"
-                          />
-                        </svg>
-                        <h3 className="text-2xl font-display-fallback text-game-neon-red tracking-wide mb-2 animate-glow">
-                          GAME READY
-                        </h3>
-                        <p className="text-lg text-white font-game-fallback tracking-wide text-center">
-                          CLICK "START GAME" TO BEGIN THE PYRAMID GAME
-                        </p>
+                      <div className="bg-black/50 px-3 py-1 rounded-lg font-mono text-white text-lg tracking-wide border border-game-neon-yellow/30">
+                        {id}
                       </div>
                     </div>
                   </div>
-                ) : (
-                  <GamePyramid
-                    gameId={id as string}
-                    rows={5}
-                    isGameStarted={gameState !== "waiting"}
-                    highlightCurrentCard={currentPyramidCard?.id}
-                    drinksForCurrentRow={drinksForCurrentRow}
-                    canRevealCards={isHost && gameState !== "waiting"} // This is the key change
-                    onRevealCard={handleRevealCard}
-                  />
-                )}
-              </div>
 
-            </div>
+                  {gameState === "waiting" && (
+                    <div className="relative group md:min-w-[200px]">
+                      {/* Button glow effect */}
+                      <div className="absolute inset-0 bg-game-neon-green/30 rounded-xl blur-xl group-hover:blur-2xl transition-all duration-300 animate-pulse-slow opacity-70"></div>
 
-            {/* Right column - Game controls, player list */}
-            <div className="lg:col-span-1">
-              {/* Activity Log - Only for host during gameplay - Moved above game controls */}
-              {(gameState === "playing" || gameState === "ended") && (
-                <div className="mb-6">
-                  <ActivityLog
-                    assignments={drinkAssignments}
-                    players={gameData?.players || []}
-                    roundNumber={currentRound}
-                    currentCardRank={currentPyramidCard?.rank}
-                  />
-                </div>
-              )}
-            
-              {/* Game Controls */}
-              <div className="bg-black/70 backdrop-blur-md rounded-xl border-2 border-game-neon-blue/40 shadow-neon-blue-sm p-6 mb-6 relative transform -rotate-0.5 overflow-hidden">
-                {/* Glow effect */}
-                <div className="absolute -inset-px rounded-xl overflow-hidden opacity-20"
-                  style={{ 
-                    background: "radial-gradient(circle at 30% 30%, rgba(50, 135, 252, 0.7), transparent 70%)",
-                    filter: "blur(20px)"
-                  }}>
-                </div>
-                
-                {/* Card corner decorations */}
-                <div className="absolute top-3 left-3 w-8 h-8 border-t-2 border-l-2 border-game-neon-blue/40 rounded-tl-lg"></div>
-                <div className="absolute top-3 right-3 w-8 h-8 border-t-2 border-r-2 border-game-neon-blue/40 rounded-tr-lg"></div>
-                <div className="absolute bottom-3 left-3 w-8 h-8 border-b-2 border-l-2 border-game-neon-blue/40 rounded-bl-lg"></div>
-                <div className="absolute bottom-3 right-3 w-8 h-8 border-b-2 border-r-2 border-game-neon-blue/40 rounded-br-lg"></div>
-                
-                <h2 className="text-xl font-game-fallback text-game-neon-blue mb-4 tracking-wide relative z-10">
-                  GAME CONTROLS
-                </h2>
-                <GameControls
-                  gameId={id as string}
-                  currentPhase={gameState}
-                  isHost={isHost}
-                  onStartMemorization={handleStartMemorizing}
-                  onStartPlaying={handleStartPlaying} // Add this new prop
-                />
-                
-              </div>
-
-              {/* Player list */}
-              <div className="bg-black/70 backdrop-blur-md rounded-xl border-2 border-game-neon-yellow/40 shadow-neon-yellow-sm p-6 relative transform rotate-0.5 overflow-hidden">
-                {/* Glow effect */}
-                <div className="absolute -inset-px rounded-xl overflow-hidden opacity-20"
-                  style={{ 
-                    background: "radial-gradient(circle at 30% 30%, rgba(252, 222, 50, 0.7), transparent 70%)",
-                    filter: "blur(20px)"
-                  }}>
-                </div>
-                
-                {/* Card corner decorations */}
-                <div className="absolute top-3 left-3 w-8 h-8 border-t-2 border-l-2 border-game-neon-yellow/40 rounded-tl-lg"></div>
-                <div className="absolute top-3 right-3 w-8 h-8 border-t-2 border-r-2 border-game-neon-yellow/40 rounded-tr-lg"></div>
-                <div className="absolute bottom-3 left-3 w-8 h-8 border-b-2 border-l-2 border-game-neon-yellow/40 rounded-bl-lg"></div>
-                <div className="absolute bottom-3 right-3 w-8 h-8 border-b-2 border-r-2 border-game-neon-yellow/40 rounded-br-lg"></div>
-                
-                <h2 className="text-xl font-game-fallback text-game-neon-yellow mb-4 tracking-wide relative z-10">
-                  PLAYERS
-                </h2>
-                <div className="grid grid-cols-2 gap-3 relative z-10">
-                  {(gameData?.players || []).length > 0 ? (
-                    (gameData?.players || []).map((player: any) => (
-                      <div
-                        key={player.id}
-                        className="p-3 rounded-lg bg-black/40 border border-game-neon-yellow/30 flex flex-col items-center transform hover:scale-105 transition-transform duration-200"
+                      <button
+                        onClick={handleStartGame}
+                        disabled={isStartingGame}
+                        className="w-full btn-neon py-4 px-6 bg-black text-game-neon-green font-game-fallback tracking-wide text-xl rounded-xl transition-all duration-300 group-hover:scale-[1.02] focus:outline-none border-2 border-game-neon-green relative overflow-hidden transform rotate-1 shadow-neon-green-sm group-hover:shadow-neon-green-lg disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <div className="w-12 h-12 rounded-full bg-game-neon-yellow/20 border-2 border-game-neon-yellow/40 flex items-center justify-center text-game-neon-yellow mb-2 shadow-neon-yellow-sm">
-                          {player.name.charAt(0).toUpperCase()}
-                        </div>
-                        <span className="text-sm font-game-fallback text-white">
-                          {player.name}
-                        </span>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="col-span-2 text-center py-4 text-white/70">
-                      <p className="font-game-fallback">NO PLAYERS HAVE JOINED YET</p>
-                      <p className="text-sm mt-2">Share the Game ID with players</p>
+                        {/* Button gradient overlay */}
+                        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-transparent via-game-neon-green to-transparent opacity-50"></div>
+
+                        {/* Corner card chip decorations */}
+                        <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-game-neon-green border-opacity-70 rounded-tl-lg"></div>
+                        <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-game-neon-green border-opacity-70 rounded-tr-lg"></div>
+                        <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-game-neon-green border-opacity-70 rounded-bl-lg"></div>
+                        <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-game-neon-green border-opacity-70 rounded-br-lg"></div>
+
+                        {isStartingGame ? (
+                          <span className="flex items-center justify-center">
+                            <svg
+                              className="animate-spin -ml-1 mr-3 h-6 w-6 text-game-neon-green"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                            STARTING...
+                          </span>
+                        ) : (
+                          <span className="flex items-center justify-center">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-6 w-6 mr-3 group-hover:animate-pulse"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                            START GAME
+                          </span>
+                        )}
+                      </button>
                     </div>
                   )}
+
+                  {gameState === "playing" && (
+                    <div className="flex items-center gap-4">
+                      <div className="py-2 px-4 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg flex items-center shadow-neon-yellow-sm">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-6 w-6 mr-2 text-yellow-700 dark:text-yellow-300"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <div>
+                          <div className="text-sm text-yellow-800 dark:text-yellow-200">
+                            Current Drink Value
+                          </div>
+                          <div className="text-xl font-bold text-yellow-700 dark:text-yellow-300">
+                            {drinksForCurrentRow} drink
+                            {drinksForCurrentRow !== 1 ? "s" : ""}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {gameState === "ended" && (
+                    <div className="py-2 px-4 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                      <div className="text-xl font-bold text-green-700 dark:text-green-300">
+                        Game Complete!
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Main content area - split into two columns */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 relative z-10">
+                  {/* Pyramid column */}
+                  <div className="lg:col-span-2">
+                    {gameState === "waiting" ? (
+                      <div className="flex flex-col items-center justify-center py-16 relative overflow-hidden bg-black/40 rounded-xl">
+                        {/* Balatro-style background pattern */}
+                        <div
+                          className="absolute inset-0"
+                          style={{
+                            backgroundImage:
+                              "linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px)",
+                            backgroundSize: "20px 20px",
+                          }}
+                        ></div>
+
+                        {/* Glowing orb effect */}
+                        <div
+                          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full opacity-30"
+                          style={{
+                            background:
+                              "radial-gradient(circle at center, rgba(252, 50, 151, 0.7), transparent 70%)",
+                            filter: "blur(60px)",
+                          }}
+                        ></div>
+
+                        {/* Card decorations */}
+                        <div
+                          className="absolute top-1/4 right-1/4 w-32 h-44 rounded-lg opacity-20 transform rotate-12 animate-float-slow"
+                          style={{
+                            background:
+                              "radial-gradient(circle at center, rgba(252, 70, 107, 0.7), transparent 90%)",
+                            boxShadow: "0 0 30px rgba(252, 70, 107, 0.5)",
+                          }}
+                        ></div>
+
+                        <div
+                          className="absolute bottom-1/4 left-1/4 w-28 h-40 rounded-lg opacity-20 animate-float-slow-reverse"
+                          style={{
+                            background:
+                              "radial-gradient(circle at center, rgba(151, 50, 252, 0.7), transparent 90%)",
+                            boxShadow: "0 0 30px rgba(151, 50, 252, 0.5)",
+                            animationDelay: "2s",
+                          }}
+                        ></div>
+
+                        <div className="relative z-10 bg-black bg-opacity-60 p-8 rounded-xl border-2 border-game-neon-red border-opacity-40 shadow-neon-red-sm transform -rotate-1">
+                          {/* Glow effect */}
+                          <div
+                            className="absolute -inset-px rounded-xl overflow-hidden opacity-40"
+                            style={{
+                              background:
+                                "radial-gradient(circle at 30% 30%, rgba(252, 70, 107, 0.7), transparent 70%)",
+                              filter: "blur(20px)",
+                            }}
+                          ></div>
+
+                          {/* Corner card chip decorations */}
+                          <div className="absolute top-3 left-3 w-8 h-8 border-t-2 border-l-2 border-game-neon-red border-opacity-50 rounded-tl-lg"></div>
+                          <div className="absolute top-3 right-3 w-8 h-8 border-t-2 border-r-2 border-game-neon-red border-opacity-50 rounded-tr-lg"></div>
+                          <div className="absolute bottom-3 left-3 w-8 h-8 border-b-2 border-l-2 border-game-neon-red border-opacity-50 rounded-bl-lg"></div>
+                          <div className="absolute bottom-3 right-3 w-8 h-8 border-b-2 border-r-2 border-game-neon-red border-opacity-50 rounded-br-lg"></div>
+
+                          <div className="relative z-10 flex flex-col items-center">
+                            <svg
+                              className="h-16 w-16 mb-4 text-game-neon-red animate-pulse-slow"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M13 10V3L4 14h7v7l9-11h-7z"
+                              />
+                            </svg>
+                            <h3 className="text-2xl font-display-fallback text-game-neon-red tracking-wide mb-2 animate-glow">
+                              GAME READY
+                            </h3>
+                            <p className="text-lg text-white font-game-fallback tracking-wide text-center">
+                              CLICK "START GAME" TO BEGIN THE PYRAMID GAME
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <GamePyramid
+                        gameId={id as string}
+                        rows={5}
+                        isGameStarted={gameState !== "waiting"}
+                        highlightCurrentCard={currentPyramidCard?.id}
+                        drinksForCurrentRow={drinksForCurrentRow}
+                        canRevealCards={isHost && gameState !== "waiting"} // This is the key change
+                        onRevealCard={handleRevealCard}
+                      />
+                    )}
+                  </div>
+
+                  {/* Right column - Players, Activity Log, Controls */}
+                  <div className="lg:col-span-1 flex flex-col space-y-6">
+                    {/* Activity Log - Only for host during gameplay */}
+                    {(gameState === "playing" || gameState === "ended") && (
+                      <div>
+                        <ActivityLog
+                          assignments={drinkAssignments}
+                          players={gameData?.players || []}
+                          roundNumber={currentRound + 1} // Adding 1 to show Round 1 instead of Round 0
+                          currentCardRank={currentPyramidCard?.rank}
+                        />
+                      </div>
+                    )}
+
+                    {/* Player list moved into the main card */}
+                    <div className="bg-black/50 rounded-xl p-4 relative">
+                      <h3 className="text-lg font-game-fallback text-game-neon-yellow mb-4 tracking-wide relative">
+                        PLAYERS
+                      </h3>
+                      <div className="grid grid-cols-2 gap-3 relative">
+                        {(gameData?.players || []).length > 0 ? (
+                          (gameData?.players || []).map((player: any) => (
+                            <div
+                              key={player.id}
+                              className="p-3 rounded-lg bg-black/40 border border-game-neon-yellow/30 flex flex-col items-center transform hover:scale-105 transition-transform duration-200"
+                            >
+                              <div className="w-10 h-10 rounded-full bg-game-neon-yellow/20 border-2 border-game-neon-yellow/40 flex items-center justify-center text-game-neon-yellow mb-2 shadow-neon-yellow-sm">
+                                {player.name.charAt(0).toUpperCase()}
+                              </div>
+                              <span className="text-sm font-game-fallback text-white text-center truncate w-full">
+                                {player.name}
+                              </span>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="col-span-2 text-center py-4 text-white/70">
+                            <p className="font-game-fallback">
+                              NO PLAYERS HAVE JOINED YET
+                            </p>
+                            <p className="text-sm mt-2">
+                              Share the Game ID with players
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Game Controls - Only show when in ready or memorizing state when there are actual controls to show */}
+                    {(gameState === "ready" || gameState === "memorizing") && (
+                      <div className="bg-black/50 rounded-xl p-4 relative">
+                        <h3 className="text-lg font-game-fallback text-game-neon-blue mb-4 tracking-wide relative">
+                          GAME CONTROLS
+                        </h3>
+                        <GameControls
+                          gameId={id as string}
+                          currentPhase={gameState}
+                          isHost={isHost}
+                          onStartMemorization={handleStartMemorizing}
+                          onStartPlaying={handleStartPlaying}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -1317,7 +1336,7 @@ const GamePage = () => {
             <div className="absolute bottom-3 right-3 w-8 h-8 border-b-2 border-r-2 border-game-neon-purple/40 rounded-br-lg"></div>
             
             <div className="relative z-10">
-            {gameState === "waiting" ? (
+            {gameState === "waiting" && !allCardsDealt ? (
               <div className="flex flex-col items-center justify-center py-16 relative overflow-hidden">
                 {/* Balatro-style background pattern */}
                 <div className="absolute inset-0" 
@@ -1391,11 +1410,11 @@ const GamePage = () => {
               </div>
             ) : (
               <>
-                {/* Game controls for player readiness */}
+                {/* Game controls for player readiness - always show for "ready" state */}
                 <div className="mb-6">
                   <GameControls
                     gameId={id as string}
-                    currentPhase={gameState}
+                    currentPhase={gameState === "ready" ? "ready" : gameState}
                     isHost={isHost}
                     onStartMemorization={handleStartMemorizing}
                     onPersonalMemorizationStart={
@@ -1546,7 +1565,7 @@ const GamePage = () => {
                 {/* Player's hand */}
                 <PlayerHand
                   gameId={id as string}
-                  isGameStarted={gameState !== "waiting"}
+                  isGameStarted={gameState !== "waiting" || allCardsDealt}
                   showFaceUp={
                     gameState === "memorizing" ||
                     gameState === "ended" ||

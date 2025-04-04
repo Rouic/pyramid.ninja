@@ -41,6 +41,19 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
   const { playerId } = usePlayerContext();
   const [playerCards, setPlayerCards] = useState<Card[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Debug logging of component state
+  useEffect(() => {
+    console.log("PlayerHand component state:", {
+      gameId,
+      playerId,
+      isGameStarted,
+      showFaceUp,
+      cardsLength: playerCards.length,
+      isArray: Array.isArray(playerCards),
+      isLoading
+    });
+  }, [gameId, playerId, isGameStarted, showFaceUp, playerCards, isLoading]);
   const [selectedCardForChallenge, setSelectedCardForChallenge] = useState<
     number | null
   >(null);
@@ -66,22 +79,38 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
     setIsLoading(true);
 
     const unsubscribe = subscribeToPlayerCards(gameId, playerId, (cards) => {
+      // We already ensure cards is an array in the subscribeToPlayerCards function
+      // but we'll double-check here for extra safety
       console.log(`Received ${cards.length} cards for player ${playerId}`);
-
-      // Find any new card and record its index and timestamp
-      const newCard = cards.findIndex((card) => card.newCard === true);
-      if (newCard !== -1) {
-        setNewCardIndex(newCard);
-        // Use replacedAt if available, otherwise use current time
-        setNewCardTimestamp(
-          cards[newCard].replacedAt || new Date().toISOString()
-        );
-      } else {
-        setNewCardIndex(null);
-        setNewCardTimestamp(null);
+      
+      try {
+        if (cards.length > 0) {
+          // Find any new card and record its index and timestamp
+          const newCard = cards.findIndex((card) => card && card.newCard === true);
+          if (newCard !== -1) {
+            setNewCardIndex(newCard);
+            // Use replacedAt if available, otherwise use current time
+            setNewCardTimestamp(
+              cards[newCard].replacedAt || new Date().toISOString()
+            );
+          } else {
+            setNewCardIndex(null);
+            setNewCardTimestamp(null);
+          }
+        }
+        
+        // Always update player cards with whatever we received (even if empty)
+        setPlayerCards(cards);
+      } catch (error) {
+        console.error("Error processing player cards:", error);
+        // Only use an empty array as fallback if we really had an error
+        if (!Array.isArray(cards)) {
+          setPlayerCards([]);
+        } else {
+          setPlayerCards(cards);
+        }
       }
-
-      setPlayerCards(cards);
+      
       setIsLoading(false);
     });
 
@@ -209,11 +238,61 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
     if (!gameId || !playerId) return;
 
     try {
-      // Create a new position that adds the delta to the current position
-      const currentPos = card.position || { x: 0, y: 0 };
+      // Check for reset position signal (both x and y are 0)
+      // This is a special signal from the card component indicating we should reset position
+      if (newX === 0 && newY === 0) {
+        console.log(`Reset position requested for card ${index} - repositioning to default`);
+        
+        // Calculate default position based on screen size and index
+        const screenWidth = window.innerWidth;
+        const cardSpacing = screenWidth < 768 ? 30 : 40;
+        const defaultX = 20 + index * cardSpacing;
+        const defaultY = 20;
+        
+        // Use default position
+        const newPosition = { x: defaultX, y: defaultY };
+        console.log(`Resetting card ${index} to default position: (${newPosition.x}, ${newPosition.y})`);
+        
+        // Update the card's position in Firebase
+        const playerRef = doc(db, "games", gameId, "players", playerId);
+        await updateDoc(playerRef, {
+          [`cards.${index}.position`]: newPosition
+        });
+        
+        return;
+      }
+      
+      // Normal position update (not a reset)
+      // Get current position, defaulting to a reasonable position if none exists
+      const currentPos = card.position || { x: 20 + (index * 30), y: 20 };
+      
+      // Calculate new position with constraints to keep cards in view
+      const screenWidth = window.innerWidth;
+      const screenHeight = window.innerHeight;
+      const cardWidth = 100;
+      const cardHeight = 140;
+      
+      // Calculate constrained position to keep cards within the player area
+      // The player area is roughly the bottom 200px of the screen with 20px margins
+      const handAreaTop = Math.max(screenHeight - 200, 200); // Top of player hand area
+      const handAreaBottom = screenHeight - 20; // Bottom of player hand area with margin
+      const handAreaLeft = 20; // Left margin
+      const handAreaRight = screenWidth - 20; // Right margin
+      
+      // Apply constraints to keep card in player area
+      const constrainedX = Math.max(
+        handAreaLeft, 
+        Math.min(handAreaRight - cardWidth, currentPos.x + newX)
+      );
+      
+      const constrainedY = Math.max(
+        handAreaTop, 
+        Math.min(handAreaBottom - cardHeight, currentPos.y + newY)
+      );
+      
       const newPosition = {
-        x: currentPos.x + newX,
-        y: currentPos.y + newY,
+        x: constrainedX,
+        y: constrainedY,
       };
 
       console.log(
@@ -247,7 +326,13 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
   };
 
   // Handler for card selection during challenge
-  const handleCardSelect = (card: Card, index: number) => {
+  const handleCardSelect = (card: Card | null, index: number) => {
+    // Guard against invalid card data
+    if (!card) {
+      console.error("Attempted to select a null or undefined card");
+      return;
+    }
+    
     console.log(
       "🎮 Card selected:",
       index,
@@ -255,27 +340,31 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
       isSelectingForChallenge
     );
 
-    if (isSelectingForChallenge && onCardSelect) {
-      // Only allow selection if no card is already selected or this is the selected card
-      if (
-        selectedCardForChallenge === null ||
-        selectedCardForChallenge === index
-      ) {
-        console.log("🎮 CHALLENGE FLOW: Selected card for challenge", index);
-        setSelectedCardForChallenge(index);
+    try {
+      if (isSelectingForChallenge && onCardSelect) {
+        // Only allow selection if no card is already selected or this is the selected card
+        if (
+          selectedCardForChallenge === null ||
+          selectedCardForChallenge === index
+        ) {
+          console.log("🎮 CHALLENGE FLOW: Selected card for challenge", index);
+          setSelectedCardForChallenge(index);
 
-        // IMPORTANT: Call onCardSelect immediately to ensure the parent component knows
-        // which card was selected
-        onCardSelect(index);
+          // IMPORTANT: Call onCardSelect immediately to ensure the parent component knows
+          // which card was selected
+          onCardSelect(index);
 
-        // Directly fire an event to trigger the auto-submit in DrinkAssignmentPanel
-        // This helps bridge the communication gap between components
-        console.log("🎮 CHALLENGE FLOW: Dispatching auto-submit event");
-        const customEvent = new CustomEvent("challenge:autoSubmit", {
-          detail: { cardIndex: index },
-        });
-        document.dispatchEvent(customEvent);
+          // Directly fire an event to trigger the auto-submit in DrinkAssignmentPanel
+          // This helps bridge the communication gap between components
+          console.log("🎮 CHALLENGE FLOW: Dispatching auto-submit event");
+          const customEvent = new CustomEvent("challenge:autoSubmit", {
+            detail: { cardIndex: index },
+          });
+          document.dispatchEvent(customEvent);
+        }
       }
+    } catch (error) {
+      console.error("Error in handleCardSelect:", error);
     }
   };
 
@@ -396,14 +485,21 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
       return card;
     }
 
-    // Otherwise, calculate default position
-    const defaultX = 20 + index * (window.innerWidth < 768 ? 25 : 35);
-    const defaultPosition = { x: defaultX, y: 10 };
-
+    // Calculate simple evenly distributed positions for cards
+    const screenWidth = window.innerWidth;
+    const cardSpacing = screenWidth < 768 ? 30 : 40; // Spacing between cards
+    const totalCards = 4; // Fixed number of cards
+    
+    // Calculate the starting X position to center the cards
+    const startX = 20 + index * cardSpacing;
+    
+    // Simple flat layout - all cards at same height
+    const defaultY = 20;
+    
     // Return card with position added
     return {
       ...card,
-      position: defaultPosition,
+      position: { x: startX, y: defaultY },
       owner: playerId, // Always ensure owner is set for drag functionality
     };
   };
@@ -471,7 +567,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
       </h3>
 
       <div className="relative h-36 md:h-44 w-full px-4">
-        {playerCards.length === 0 && !isLoading ? (
+        {(!Array.isArray(playerCards) || playerCards.length === 0) && !isLoading ? (
           <div className="text-center py-8 text-white bg-black bg-opacity-30 rounded-lg shadow-inner border border-white border-opacity-5 font-game-fallback tracking-wide px-3">
             {isGameStarted
               ? "NO CARDS YET. WAITING FOR DEAL..."
@@ -479,102 +575,117 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
           </div>
         ) : (
           playerCards.map((cardData, index) => {
-            // Make sure card has position data
-            const card = ensureCardHasPosition(cardData, index);
+            // Skip processing if card data is invalid
+            if (!cardData) return null;
 
-            // Calculate default fan layout using the card's position
-            const position = card.position;
+            try {
+              // Make sure card has position data
+              const card = ensureCardHasPosition(cardData, index);
 
-            // Determine if this specific card is being challenged
-            const isBeingChallenged = challengedCardIndex === index;
+              // Calculate default fan layout using the card's position
+              const position = card.position || { x: 20 + (index * 30), y: 20 };
 
-            // Determine if this card has been selected for challenge
-            const isSelected = selectedCardForChallenge === index;
+              // Determine if this specific card is being challenged
+              const isBeingChallenged = challengedCardIndex === index;
 
-            // Check if card has been shown in a challenge
-            const hasBeenShown = shownCards.includes(index);
+              // Determine if this card has been selected for challenge
+              const isSelected = selectedCardForChallenge === index;
 
-            // Clear shown state for new cards (important to prevent issues after replacement)
-            if (card.newCard && hasBeenShown) {
-              setShownCards((prev) => prev.filter((idx) => idx !== index));
-            }
+              // Check if card has been shown in a challenge
+              const hasBeenShown = shownCards.includes(index);
 
-            // Determine if this card is selectable for challenge
-            const isSelectable =
-              isSelectingForChallenge &&
-              (selectedCardForChallenge === null ||
-                selectedCardForChallenge === index);
+              // Clear shown state for new cards (important to prevent issues after replacement)
+              if (card.newCard && hasBeenShown) {
+                setShownCards((prev) => prev.filter((idx) => idx !== index));
+              }
 
-            // Only highlight cards if they're face up AND match current rank,
-            // OR if they're specifically selected for challenge
-            // This prevents giving clues about face-down cards
-            const shouldHighlight =
-              (showFaceUp &&
-                highlightCurrentRank &&
-                card.rank === highlightCurrentRank) ||
-              isSelected ||
-              isBeingChallenged;
+              // Determine if this card is selectable for challenge
+              const isSelectable =
+                isSelectingForChallenge &&
+                (selectedCardForChallenge === null ||
+                  selectedCardForChallenge === index);
 
-            // Fix for "click to reveal" issue - determine when to allow peeking
-            // A card should be peekable during memorization or if it's a new card, but not in challenge mode
-            const allowPeekForCard =
-              (!showFaceUp && shouldHighlight) ||
-              (card.newCard && !isSelectingForChallenge);
+              // Only highlight cards if they're face up AND match current rank,
+              // OR if they're specifically selected for challenge
+              // This prevents giving clues about face-down cards
+              const shouldHighlight =
+                (showFaceUp &&
+                  highlightCurrentRank &&
+                  card.rank === highlightCurrentRank) ||
+                isSelected ||
+                isBeingChallenged;
 
-            // Fix for card visibility - update logic for when to show card face
-            // Include a check for specific cases where we want to show the card
-            const showCardFace =
-              showFaceUp ||
-              isBeingChallenged ||
-              card.newCard ||
-              card.faceVisible === true;
+              // Fix for "click to reveal" issue - determine when to allow peeking
+              // A card should be peekable during memorization or if it's a new card, but not in challenge mode
+              const allowPeekForCard =
+                (!showFaceUp && shouldHighlight) ||
+                (card.newCard && !isSelectingForChallenge);
 
-            return (
-              <div key={card.id || index} className="relative">
-                <GameCard
-                  card={card}
-                  index={index}
-                  position={position}
-                  isRevealing={false}
-                  canInteract={isGameStarted}
-                  onDragEnd={(delta) =>
-                    saveCardPosition(card, index, delta.x, delta.y)
-                  }
-                  className={`cursor-move ${
-                    shouldHighlight || isBeingChallenged
-                      ? "ring-4 ring-yellow-400 z-20"
-                      : ""
-                  } ${
-                    isSelected
-                      ? "ring-4 ring-blue-600 z-30"
-                      : isSelectable
-                      ? "hover:scale-110 hover:ring-2 hover:ring-blue-400"
-                      : ""
-                  }`}
-                  onReveal={() => {
-                    if (isSelectable) {
-                      // Simply handle card selection - nothing more
-                      handleCardSelect(card, index);
+              // Fix for card visibility - update logic for when to show card face
+              // Include a check for specific cases where we want to show the card
+              const showCardFace =
+                showFaceUp ||
+                isBeingChallenged ||
+                card.newCard ||
+                card.faceVisible === true;
+
+              return (
+                <div key={card.id || index} className="relative">
+                  <GameCard
+                    card={card}
+                    index={index}
+                    position={position}
+                    isRevealing={false}
+                    canInteract={isGameStarted}
+                    onDragEnd={(delta) =>
+                      saveCardPosition(card, index, delta.x, delta.y)
                     }
-                  }}
-                  allowPeek={allowPeekForCard}
-                  showFace={showCardFace}
-                  allowFlip={
-                    allowCardFlip && (isBeingChallenged || isSelectable)
-                  }
-                  isHighlighted={isSelectable}
-                  isSelectingForChallenge={isSelectingForChallenge}
-                />
+                    className={`cursor-move ${
+                      shouldHighlight || isBeingChallenged
+                        ? "ring-4 ring-yellow-400 z-20"
+                        : ""
+                    } ${
+                      isSelected
+                        ? "ring-4 ring-blue-600 z-30"
+                        : isSelectable
+                        ? "hover:scale-110 hover:ring-2 hover:ring-blue-400"
+                        : ""
+                    }`}
+                    onReveal={() => {
+                      if (isSelectable) {
+                        // Simply handle card selection - nothing more
+                        handleCardSelect(card, index);
+                      }
+                    }}
+                    allowPeek={allowPeekForCard}
+                    showFace={showCardFace}
+                    allowFlip={
+                      allowCardFlip && (isBeingChallenged || isSelectable)
+                    }
+                    isHighlighted={isSelectable}
+                    isSelectingForChallenge={isSelectingForChallenge}
+                  />
 
-                {/* New card indicator */}
-                {card.newCard && (
-                  <div className="absolute top-0 left-0 right-0 bg-green-600 bg-opacity-80 text-white text-center py-1 z-30 rounded-t-lg">
-                    <div className="text-xs font-bold">NEW CARD</div>
-                    <div className="text-sm">Memorize this card!</div>
+                  {/* New card indicator */}
+                  {card.newCard && (
+                    <div className="absolute top-0 left-0 right-0 bg-green-600 bg-opacity-80 text-white text-center py-1 z-30 rounded-t-lg">
+                      <div className="text-xs font-bold">NEW CARD</div>
+                      <div className="text-sm">Memorize this card!</div>
+                    </div>
+                  )}
+                </div>
+              );
+            } catch (error) {
+              console.error(`Error rendering card at index ${index}:`, error);
+              // Return a simple placeholder for the broken card
+              return (
+                <div key={`error-card-${index}`} className="relative w-[100px] h-[140px] absolute bg-red-900 rounded-lg flex items-center justify-center">
+                  <div className="text-white text-xs text-center">
+                    Card Error
                   </div>
-                )}
-              </div>
-            );
+                </div>
+              );
+            }
           })
         )}
 

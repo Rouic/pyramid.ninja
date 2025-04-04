@@ -10,7 +10,11 @@ const MemorizationOverlay: React.FC<MemorizationOverlayProps> = ({
   seconds,
   isVisible,
 }) => {
+
+    
   if (!isVisible) return null;
+
+  return null;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">

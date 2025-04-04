@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card as CardType } from "../lib/deck";
 import { motion } from "framer-motion";
 import { usePlayerContext } from "../context/PlayerContext";
@@ -41,6 +41,8 @@ const GameCard: React.FC<GameCardProps> = ({
   const [isPeeking, setIsPeeking] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [userFlipped, setUserFlipped] = useState(false);
+  const [clickCount, setClickCount] = useState(0);
+  const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Update flip state when revealed status or showFace changes
   useEffect(() => {
@@ -52,8 +54,57 @@ const GameCard: React.FC<GameCardProps> = ({
     // This will ensure constraints are recalculated when window is resized
     // The actual calculation happens in the render function
   }, [windowSize.width, windowSize.height, position.x, position.y]);
+  
+  // Reset click counter after timeout
+  useEffect(() => {
+    return () => {
+      // Cleanup function to clear timeout when component unmounts
+      if (clickTimeoutRef.current) {
+        clearTimeout(clickTimeoutRef.current);
+      }
+    };
+  }, []);
 
-  const handleReveal = () => {
+  const handleReveal = (e: React.MouseEvent) => {
+    // Prevent event from bubbling to the drag handler
+    if (e && e.stopPropagation) {
+      e.stopPropagation();
+    }
+    
+    // Detect multiple rapid clicks
+    setClickCount(prev => {
+      const newCount = prev + 1;
+      
+      // Check for multiple rapid clicks (3+ clicks within 1.5 seconds)
+      if (newCount >= 3) {
+        console.log("Multiple clicks detected - might be accidentally dragging");
+        
+        // Notify parent to reset position if we have 3+ rapid clicks
+        if (onDragEnd) {
+          // Signal to reset position by passing {0,0} as delta
+          onDragEnd({ x: 0, y: 0 });
+        }
+        
+        // Reset click counter
+        setTimeout(() => {
+          setClickCount(0);
+        }, 300);
+        
+        return 0;
+      }
+      
+      // Reset click counter after 1.5 seconds of no clicks
+      if (clickTimeoutRef.current) {
+        clearTimeout(clickTimeoutRef.current);
+      }
+      
+      clickTimeoutRef.current = setTimeout(() => {
+        setClickCount(0);
+      }, 1500);
+      
+      return newCount;
+    });
+    
     // Only allow card flips for certain conditions
     if (!canInteract) return;
 
@@ -292,17 +343,17 @@ const GameCard: React.FC<GameCardProps> = ({
     !card.newCard &&
     !card.seen;
 
-  // Calculate drag constraints based on window size and card dimensions
-  // Adding padding to ensure cards never go out of view
+  // Simple drag constraints to prevent cards from going off-screen
+  const safetyMargin = 50; // Keep cards at least partially visible
   const cardWidth = 100;
-  const cardHeight = 140;
-  const safetyMargin = 30; // Safety margin to keep cards partially visible
+  const cardHeight = 140; 
   
+  // Simple constraints to keep cards visible on screen
   const dragConstraints = {
-    left: Math.max(-position.x + safetyMargin, -Infinity), // Left edge constraint with safety margin
-    right: Math.min(windowSize.width - position.x - cardWidth + safetyMargin, Infinity), // Right edge constraint with safety margin
-    top: Math.max(-position.y + safetyMargin, -Infinity), // Top edge constraint with safety margin
-    bottom: Math.min(windowSize.height - position.y - cardHeight + safetyMargin, Infinity) // Bottom edge constraint with safety margin
+    left: -position.x + safetyMargin, 
+    right: windowSize.width - position.x - cardWidth + safetyMargin,
+    top: -position.y + safetyMargin,
+    bottom: windowSize.height - position.y - cardHeight + safetyMargin
   };
   
   // Debug log for card rendering (only in development)
@@ -350,17 +401,20 @@ const GameCard: React.FC<GameCardProps> = ({
           ? { scale: 1.05 }
           : {}
       }
-      // IMPROVED DRAG HANDLING: Use calculated constraints
+      // Simple drag handling 
       drag={!!canInteract}
       dragConstraints={dragConstraints}
-      dragElastic={0.2} // Reduced elasticity to prevent "flinging"
+      dragElastic={0.5}
       onDragStart={() => setIsDragging(true)}
       onDragEnd={(e, info) => {
         setIsDragging(false);
-
-        // Call the callback with the offset if it exists
+        
+        // Call the callback with the offset
         if (onDragEnd) {
-          onDragEnd({ x: info.offset.x, y: info.offset.y });
+          onDragEnd({ 
+            x: info.offset.x, 
+            y: info.offset.y 
+          });
         }
       }}
     >
@@ -386,7 +440,7 @@ const GameCard: React.FC<GameCardProps> = ({
                 ? "cursor-pointer"
                 : ""
             }`}
-            onClick={handleReveal}
+            onClick={(e) => handleReveal(e)}
             onMouseDown={handlePeekStart}
             onMouseUp={handlePeekEnd}
             onMouseLeave={handlePeekEnd}

@@ -33,8 +33,6 @@ if (typeof window !== 'undefined') {
     }
   });
   
-  // Initialize Firebase Performance
-  performance = getPerformance(app);
 }
 
 export { app, auth, db, analytics, performance };

@@ -34,7 +34,17 @@ const HostPage = () => {
 
     try {
       // Generate a new game ID
-      const gameId = uuidv4().substring(0, 8);
+      // Generate a human-readable 6-letter uppercase code
+      const generateGameCode = () => {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        let result = '';
+        for (let i = 0; i < 6; i++) {
+          result += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        return result;
+      };
+      
+      const gameId = generateGameCode();
 
       // Create game document in Firestore
       await setDoc(doc(db, "games", gameId), {
