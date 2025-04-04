@@ -186,11 +186,6 @@ The project is configured for deployment on Vercel with:
 ## 🚀 Future Enhancements
 
 - Additional game modes
-- Voice chat integration
 - More customization options
 - Enhanced mobile experience
 - Persistent user profiles
-
----
-
-© 2024 Pyramid.Ninja
