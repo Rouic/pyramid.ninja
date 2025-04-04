@@ -128,15 +128,18 @@ const ChallengeResetControls: React.FC<ChallengeResetControlsProps> = ({
           </div>
 
           <p className="text-xs text-gray-300 mb-3 border-l-2 border-game-neon-red/50 pl-2 bg-black/40 py-2 rounded-r-lg">
-            If you're stuck in a challenge state and can't proceed, use this emergency reset button.
+            If you&apos;re stuck in a challenge state and can&apos;t proceed,
+            use this emergency reset button.
           </p>
 
           <button
             onClick={resetPlayerChallengeState}
             disabled={isResetting}
-            className={`w-full px-4 py-3 rounded-lg text-sm font-game-fallback relative overflow-hidden ${isResetting
+            className={`w-full px-4 py-3 rounded-lg text-sm font-game-fallback relative overflow-hidden ${
+              isResetting
                 ? "bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700"
-                : "bg-black text-game-neon-red border-2 border-game-neon-red hover:bg-game-neon-red/10 transition-colors duration-300 shadow-neon-red-sm btn-neon"}
+                : "bg-black text-game-neon-red border-2 border-game-neon-red hover:bg-game-neon-red/10 transition-colors duration-300 shadow-neon-red-sm btn-neon"
+            }
             `}
           >
             {isResetting ? "RESETTING..." : "RESET MY CHALLENGE STATE"}
@@ -144,9 +147,11 @@ const ChallengeResetControls: React.FC<ChallengeResetControlsProps> = ({
 
           {resetResult && (
             <div
-              className={`mt-3 p-2 rounded-lg text-xs font-game-fallback border ${resetResult.startsWith("Error")
+              className={`mt-3 p-2 rounded-lg text-xs font-game-fallback border ${
+                resetResult.startsWith("Error")
                   ? "border-game-neon-red bg-black/60 text-game-neon-red animate-pulse-slow"
-                  : "border-game-neon-green bg-black/60 text-game-neon-green animate-pulse-slow"}
+                  : "border-game-neon-green bg-black/60 text-game-neon-green animate-pulse-slow"
+              }
               `}
             >
               {resetResult}

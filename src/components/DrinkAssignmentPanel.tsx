@@ -740,12 +740,17 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
     >
       {/* Balatro-style divider gradient */}
       <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-game-neon-purple to-transparent opacity-50"></div>
-      
+
       {/* Balatro-style header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center">
           <div className="w-10 h-10 rounded-lg bg-game-neon-purple bg-opacity-20 flex items-center justify-center mr-3 border-2 border-game-neon-purple border-opacity-30 shadow-neon-purple">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-game-neon-purple" viewBox="0 0 20 20" fill="currentColor">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5 text-game-neon-purple"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
               <path d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.616a1 1 0 01.894-1.79l1.599.8L9 4.323V3a1 1 0 011-1z" />
             </svg>
           </div>
@@ -760,65 +765,108 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
 
       {/* Challenge result notification - Balatro style */}
       {challengeResult && (
-        <div className={`mb-6 p-5 rounded-xl border-4 shadow-xl relative overflow-hidden ${
-          challengeResult.result
-            ? "border-game-neon-green border-opacity-40 shadow-neon-green"
-            : "border-game-neon-red border-opacity-40 shadow-neon-red"
-        }`}>
+        <div
+          className={`mb-6 p-5 rounded-xl border-4 shadow-xl relative overflow-hidden ${
+            challengeResult.result
+              ? "border-game-neon-green border-opacity-40 shadow-neon-green"
+              : "border-game-neon-red border-opacity-40 shadow-neon-red"
+          }`}
+        >
           {/* Background glow effect */}
-          <div className="absolute inset-0 opacity-10"
+          <div
+            className="absolute inset-0 opacity-10"
             style={{
-              background: challengeResult.result 
+              background: challengeResult.result
                 ? "radial-gradient(circle at center, rgba(50, 252, 88, 1), transparent 70%)"
                 : "radial-gradient(circle at center, rgba(252, 70, 107, 1), transparent 70%)",
-              filter: "blur(20px)"
-            }}>
-          </div>
-          
+              filter: "blur(20px)",
+            }}
+          ></div>
+
           {/* Challenge result header */}
-          <div className={`flex items-center mb-4 ${
-            challengeResult.result
-              ? "text-game-neon-green"
-              : "text-game-neon-red"
-          }`}>
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center mr-4 ${
+          <div
+            className={`flex items-center mb-4 ${
               challengeResult.result
-                ? "bg-game-neon-green bg-opacity-20 border-2 border-game-neon-green border-opacity-40"
-                : "bg-game-neon-red bg-opacity-20 border-2 border-game-neon-red border-opacity-40"
-            }`}>
+                ? "text-game-neon-green"
+                : "text-game-neon-red"
+            }`}
+          >
+            <div
+              className={`w-12 h-12 rounded-full flex items-center justify-center mr-4 ${
+                challengeResult.result
+                  ? "bg-game-neon-green bg-opacity-20 border-2 border-game-neon-green border-opacity-40"
+                  : "bg-game-neon-red bg-opacity-20 border-2 border-game-neon-red border-opacity-40"
+              }`}
+            >
               {challengeResult.result ? (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-7 w-7"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
               ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-7 w-7"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               )}
             </div>
             <div>
               <h4 className="font-game-fallback text-2xl tracking-wide">
-                {challengeResult.result ? "CHALLENGE SUCCESS!" : "CHALLENGE FAILED!"}
+                {challengeResult.result
+                  ? "CHALLENGE SUCCESS!"
+                  : "CHALLENGE FAILED!"}
               </h4>
-              <div className="text-sm text-gray-300">Card will be replaced automatically</div>
+              <div className="text-sm text-gray-300">
+                Card will be replaced automatically
+              </div>
             </div>
           </div>
-          
+
           {/* Result message - Balatro style box */}
           <div className="bg-black bg-opacity-40 p-4 rounded-lg border border-white border-opacity-10 text-white mb-3">
             <p className="text-lg font-game-fallback">
               {challengeResult.result
-                ? `You showed a ${assignments[challengeResult.index]?.cardRank || "card"}! ${getPlayerName(challengeResult.to)} drinks double (${(assignments[challengeResult.index]?.count || 0) * 2}).`
-                : `You didn't have the ${assignments[challengeResult.index]?.cardRank || "card"}! You drink double (${(assignments[challengeResult.index]?.count || 0) * 2}).`}
+                ? `You showed a ${
+                    assignments[challengeResult.index]?.cardRank || "card"
+                  }! ${getPlayerName(challengeResult.to)} drinks double (${
+                    (assignments[challengeResult.index]?.count || 0) * 2
+                  }).`
+                : `You didnt have the ${
+                    assignments[challengeResult.index]?.cardRank || "card"
+                  }! You drink double (${
+                    (assignments[challengeResult.index]?.count || 0) * 2
+                  }).`}
             </p>
           </div>
-          
+
           {/* Animation indicator */}
-          <div className={`text-center ${
-            challengeResult.result
-              ? "text-game-neon-green" 
-              : "text-game-neon-red"
-          } text-sm font-game-fallback animate-pulse-fast tracking-wide`}>
+          <div
+            className={`text-center ${
+              challengeResult.result
+                ? "text-game-neon-green"
+                : "text-game-neon-red"
+            } text-sm font-game-fallback animate-pulse-fast tracking-wide`}
+          >
             CHALLENGE COMPLETED
           </div>
         </div>
@@ -828,13 +876,15 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
       {currentCardRank && !isHost && (
         <div className="mb-6 p-5 bg-game-card rounded-xl border-4 border-game-neon-blue border-opacity-30 shadow-lg relative overflow-hidden">
           {/* Background pattern */}
-          <div className="absolute inset-0 opacity-5" 
+          <div
+            className="absolute inset-0 opacity-5"
             style={{
-              backgroundImage: "linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.1) 75%, transparent 75%, transparent)",
-              backgroundSize: "10px 10px"
-            }}>
-          </div>
-          
+              backgroundImage:
+                "linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.1) 75%, transparent 75%, transparent)",
+              backgroundSize: "10px 10px",
+            }}
+          ></div>
+
           {/* Header with card icon - Enhanced with suit symbol and color matching */}
           <div className="flex items-center mb-4">
             <div className="w-10 h-14 bg-white rounded-lg overflow-hidden relative mr-3 border-2 border-game-neon-blue shadow-neon-blue transform -rotate-3">
@@ -842,34 +892,54 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-xl font-bold">{currentCardRank}</span>
               </div>
-              
+
               {/* Top-left corner suit and rank */}
               <div className="absolute top-0.5 left-0.5 flex flex-col items-center">
-                <span className="text-[10px] font-bold leading-none">{currentCardRank}</span>
-                <span className={`text-[10px] leading-none ${
-                  // Determine if it's a red or black card (assuming simple pattern where even ranks are red)
-                  ["A", "3", "5", "7", "9", "J", "K"].includes(currentCardRank) 
-                    ? "text-gray-900" 
-                    : "text-red-600"
-                }`}>
+                <span className="text-[10px] font-bold leading-none">
+                  {currentCardRank}
+                </span>
+                <span
+                  className={`text-[10px] leading-none ${
+                    // Determine if it's a red or black card (assuming simple pattern where even ranks are red)
+                    ["A", "3", "5", "7", "9", "J", "K"].includes(
+                      currentCardRank
+                    )
+                      ? "text-gray-900"
+                      : "text-red-600"
+                  }`}
+                >
                   {/* Show appropriate suit symbol based on card rank (just example logic) */}
-                  {["A", "5", "9", "K"].includes(currentCardRank) ? "♠" : 
-                   ["2", "6", "10"].includes(currentCardRank) ? "♥" : 
-                   ["3", "7", "J"].includes(currentCardRank) ? "♣" : "♦"}
+                  {["A", "5", "9", "K"].includes(currentCardRank)
+                    ? "♠"
+                    : ["2", "6", "10"].includes(currentCardRank)
+                    ? "♥"
+                    : ["3", "7", "J"].includes(currentCardRank)
+                    ? "♣"
+                    : "♦"}
                 </span>
               </div>
-              
+
               {/* Bottom-right corner suit and rank (rotated) */}
               <div className="absolute bottom-0.5 right-0.5 flex flex-col items-center transform rotate-180">
-                <span className="text-[10px] font-bold leading-none">{currentCardRank}</span>
-                <span className={`text-[10px] leading-none ${
-                  ["A", "3", "5", "7", "9", "J", "K"].includes(currentCardRank) 
-                    ? "text-gray-900" 
-                    : "text-red-600"
-                }`}>
-                  {["A", "5", "9", "K"].includes(currentCardRank) ? "♠" : 
-                   ["2", "6", "10"].includes(currentCardRank) ? "♥" : 
-                   ["3", "7", "J"].includes(currentCardRank) ? "♣" : "♦"}
+                <span className="text-[10px] font-bold leading-none">
+                  {currentCardRank}
+                </span>
+                <span
+                  className={`text-[10px] leading-none ${
+                    ["A", "3", "5", "7", "9", "J", "K"].includes(
+                      currentCardRank
+                    )
+                      ? "text-gray-900"
+                      : "text-red-600"
+                  }`}
+                >
+                  {["A", "5", "9", "K"].includes(currentCardRank)
+                    ? "♠"
+                    : ["2", "6", "10"].includes(currentCardRank)
+                    ? "♥"
+                    : ["3", "7", "J"].includes(currentCardRank)
+                    ? "♣"
+                    : "♦"}
                 </span>
               </div>
             </div>
@@ -877,7 +947,7 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
               ASSIGN DRINKS FOR {currentCardRank}
             </h4>
           </div>
-          
+
           <div className="flex flex-col md:flex-row items-center gap-3 mt-3">
             {/* Select player dropdown - Balatro style */}
             <div className="relative w-full md:w-2/3">
@@ -891,25 +961,40 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
                 {players
                   .filter((p) => p.id !== currentPlayerId)
                   .map((player) => (
-                    <option key={player.id} value={player.id} className="bg-black">
+                    <option
+                      key={player.id}
+                      value={player.id}
+                      className="bg-black"
+                    >
                       {player.name}
                     </option>
                   ))}
               </select>
-              
+
               {/* Custom dropdown arrow */}
               <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-game-neon-blue" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 text-game-neon-blue"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </div>
-              
+
               {/* Select highlight effect */}
-              <div className="absolute inset-0 rounded-xl pointer-events-none"
+              <div
+                className="absolute inset-0 rounded-xl pointer-events-none"
                 style={{
-                  background: "linear-gradient(to bottom, rgba(50, 135, 252, 0.1), transparent 10%)"
-                }}>
-              </div>
+                  background:
+                    "linear-gradient(to bottom, rgba(50, 135, 252, 0.1), transparent 10%)",
+                }}
+              ></div>
             </div>
 
             {/* Assign button - Balatro style */}
@@ -923,14 +1008,16 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
               }`}
             >
               {/* Button highlight effect */}
-              {(!isSubmitting && selectedPlayerId) && (
-                <div className="absolute inset-0 opacity-20"
+              {!isSubmitting && selectedPlayerId && (
+                <div
+                  className="absolute inset-0 opacity-20"
                   style={{
-                    background: "linear-gradient(to bottom, rgba(255,255,255,0.2), transparent 70%)"
-                  }}>
-                </div>
+                    background:
+                      "linear-gradient(to bottom, rgba(255,255,255,0.2), transparent 70%)",
+                  }}
+                ></div>
               )}
-              
+
               {isSubmitting ? (
                 <span className="flex items-center justify-center">
                   <svg
@@ -964,96 +1051,116 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
       )}
 
       {/* Challenge notification - Balatro style */}
-      {challengesToResolve.length > 0 && processingChallenge && !challengeResult && !isSubmitting && (
-        <div className="mb-6 p-5 bg-game-card rounded-xl border-4 border-game-neon-yellow border-opacity-40 shadow-neon-yellow relative overflow-hidden">
-          {/* Background glow effect */}
-          <div className="absolute inset-0 opacity-10"
-            style={{
-              background: "radial-gradient(circle at center, rgba(255, 204, 0, 1), transparent 70%)",
-              filter: "blur(20px)"
-            }}>
-          </div>
-          
-          {/* Alert header */}
-          <div className="flex items-center mb-4">
-            <div className="w-12 h-12 rounded-full bg-game-neon-yellow bg-opacity-20 border-2 border-game-neon-yellow border-opacity-40 flex items-center justify-center mr-4 animate-pulse-fast">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-game-neon-yellow" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div>
-              <h4 className="font-game-fallback text-2xl text-game-neon-yellow tracking-wide">
-                YOU'VE BEEN CHALLENGED!
-              </h4>
-              <div className="text-sm text-white">
-                Select a card from your hand to show
+      {challengesToResolve.length > 0 &&
+        processingChallenge &&
+        !challengeResult &&
+        !isSubmitting && (
+          <div className="mb-6 p-5 bg-game-card rounded-xl border-4 border-game-neon-yellow border-opacity-40 shadow-neon-yellow relative overflow-hidden">
+            {/* Background glow effect */}
+            <div
+              className="absolute inset-0 opacity-10"
+              style={{
+                background:
+                  "radial-gradient(circle at center, rgba(255, 204, 0, 1), transparent 70%)",
+                filter: "blur(20px)",
+              }}
+            ></div>
+
+            {/* Alert header */}
+            <div className="flex items-center mb-4">
+              <div className="w-12 h-12 rounded-full bg-game-neon-yellow bg-opacity-20 border-2 border-game-neon-yellow border-opacity-40 flex items-center justify-center mr-4 animate-pulse-fast">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-7 w-7 text-game-neon-yellow"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h4 className="font-game-fallback text-2xl text-game-neon-yellow tracking-wide">
+                  YOU&apos;VE BEEN CHALLENGED!
+                </h4>
+                <div className="text-sm text-white">
+                  Select a card from your hand to show
+                </div>
               </div>
             </div>
-          </div>
-          
-          {/* Challenge details - Balatro style box */}
-          <div className="bg-black bg-opacity-40 p-4 rounded-lg border border-white border-opacity-10 text-white mb-4">
-            <p className="text-lg">
-              {activeChallenge !== null && assignments[activeChallenge]
-                ? `${getPlayerName(assignments[activeChallenge].to)} is challenging your claim about having a ${assignments[activeChallenge].cardRank}. Please select the card to reveal.`
-                : "You're being challenged. Please select a card to reveal."}
-            </p>
-          </div>
 
-          {/* Show confirmation button if card selected */}
-          {selectedCardIndex !== null && activeChallenge !== null && (
-            <div className="flex justify-center">
-              <button
-                data-action="confirm-challenge"
-                onClick={() => handleResolveChallenge(activeChallenge)}
-                disabled={isSubmitting}
-                className={`py-3 px-6 rounded-xl font-game-fallback tracking-wide text-lg relative overflow-hidden ${
-                  isSubmitting
-                    ? "bg-gray-700 text-gray-400 border-4 border-gray-600 border-opacity-50 cursor-not-allowed"
-                    : "bg-game-neon-green text-black border-4 border-game-neon-green border-opacity-50 hover:shadow-neon-green hover:scale-105 transition-all duration-300 btn-neon"
-                }`}
-              >
-                {/* Button highlight effect */}
-                {!isSubmitting && (
-                  <div className="absolute inset-0 opacity-20"
-                    style={{
-                      background: "linear-gradient(to bottom, rgba(255,255,255,0.3), transparent 70%)"
-                    }}>
-                  </div>
-                )}
-                
-                {isSubmitting ? (
-                  <span className="flex items-center justify-center">
-                    <svg
-                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    PROCESSING...
-                  </span>
-                ) : (
-                  `CONFIRM & SHOW CARD #${selectedCardIndex + 1}`
-                )}
-              </button>
+            {/* Challenge details - Balatro style box */}
+            <div className="bg-black bg-opacity-40 p-4 rounded-lg border border-white border-opacity-10 text-white mb-4">
+              <p className="text-lg">
+                {activeChallenge !== null && assignments[activeChallenge]
+                  ? `${getPlayerName(
+                      assignments[activeChallenge].to
+                    )} is challenging your claim about having a ${
+                      assignments[activeChallenge].cardRank
+                    }. Please select the card to reveal.`
+                  : "You're being challenged. Please select a card to reveal."}
+              </p>
             </div>
-          )}
-        </div>
-      )}
+
+            {/* Show confirmation button if card selected */}
+            {selectedCardIndex !== null && activeChallenge !== null && (
+              <div className="flex justify-center">
+                <button
+                  data-action="confirm-challenge"
+                  onClick={() => handleResolveChallenge(activeChallenge)}
+                  disabled={isSubmitting}
+                  className={`py-3 px-6 rounded-xl font-game-fallback tracking-wide text-lg relative overflow-hidden ${
+                    isSubmitting
+                      ? "bg-gray-700 text-gray-400 border-4 border-gray-600 border-opacity-50 cursor-not-allowed"
+                      : "bg-game-neon-green text-black border-4 border-game-neon-green border-opacity-50 hover:shadow-neon-green hover:scale-105 transition-all duration-300 btn-neon"
+                  }`}
+                >
+                  {/* Button highlight effect */}
+                  {!isSubmitting && (
+                    <div
+                      className="absolute inset-0 opacity-20"
+                      style={{
+                        background:
+                          "linear-gradient(to bottom, rgba(255,255,255,0.3), transparent 70%)",
+                      }}
+                    ></div>
+                  )}
+
+                  {isSubmitting ? (
+                    <span className="flex items-center justify-center">
+                      <svg
+                        className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      PROCESSING...
+                    </span>
+                  ) : (
+                    `CONFIRM & SHOW CARD #${selectedCardIndex + 1}`
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
       {/* List of active drink assignments - Balatro style */}
       {relevantAssignments.length > 0 ? (
@@ -1067,87 +1174,121 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
                   : "border-4 border-white border-opacity-10 shadow-lg"
               }`}
               style={{
-                background: assignment.status === "challenged"
-                  ? "linear-gradient(to right, rgba(255, 204, 0, 0.1), rgba(0, 0, 0, 0.3))"
-                  : "linear-gradient(to right, rgba(0, 0, 0, 0.4), rgba(30, 14, 96, 0.4))"
+                background:
+                  assignment.status === "challenged"
+                    ? "linear-gradient(to right, rgba(255, 204, 0, 0.1), rgba(0, 0, 0, 0.3))"
+                    : "linear-gradient(to right, rgba(0, 0, 0, 0.4), rgba(30, 14, 96, 0.4))",
               }}
             >
               {/* Card pattern background */}
-              <div className="absolute inset-0 opacity-10" 
+              <div
+                className="absolute inset-0 opacity-10"
                 style={{
-                  backgroundImage: "linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px)",
-                  backgroundSize: "20px 20px"
-                }}>
-              </div>
-              
+                  backgroundImage:
+                    "linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px)",
+                  backgroundSize: "20px 20px",
+                }}
+              ></div>
+
               <div className="relative flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                 <div className="flex-1">
                   {/* Assignment icons and info */}
                   <div className="flex items-center mb-2">
                     <div className="w-8 h-8 rounded-full bg-game-card flex items-center justify-center mr-2 border border-white border-opacity-20">
-                      <span className="text-white text-xs font-bold">{assignment.cardRank}</span>
+                      <span className="text-white text-xs font-bold">
+                        {assignment.cardRank}
+                      </span>
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center">
-                        <span className="font-game-fallback text-white mr-2">{getPlayerName(assignment.from)}</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-game-neon-blue mx-1" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                        <span className="font-game-fallback text-white mr-2">
+                          {getPlayerName(assignment.from)}
+                        </span>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4 text-game-neon-blue mx-1"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                            clipRule="evenodd"
+                          />
                         </svg>
-                        <span className="font-game-fallback text-white">{getPlayerName(assignment.to)}</span>
+                        <span className="font-game-fallback text-white">
+                          {getPlayerName(assignment.to)}
+                        </span>
                       </div>
                       <div className="text-sm text-gray-400">
-                        {assignment.count} drink{assignment.count !== 1 ? "s" : ""} • {assignment.cardRank} card
+                        {assignment.count} drink
+                        {assignment.count !== 1 ? "s" : ""} •{" "}
+                        {assignment.cardRank} card
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Challenge status indicator */}
                   {assignment.status === "challenged" && (
                     <div className="bg-black bg-opacity-40 rounded-lg px-3 py-2 border border-game-neon-yellow border-opacity-30 mt-2">
                       <div className="flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-game-neon-yellow mr-2 animate-pulse-fast" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5 text-game-neon-yellow mr-2 animate-pulse-fast"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                            clipRule="evenodd"
+                          />
                         </svg>
-                        <span className="text-game-neon-yellow font-game-fallback text-sm tracking-wide">CHALLENGE IN PROGRESS</span>
+                        <span className="text-game-neon-yellow font-game-fallback text-sm tracking-wide">
+                          CHALLENGE IN PROGRESS
+                        </span>
                       </div>
                     </div>
                   )}
                 </div>
 
                 {/* Action buttons */}
-                {assignment.to === currentPlayerId && assignment.status === "pending" && (
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => handleAcceptDrink(index)}
-                      disabled={isSubmitting}
-                      className={`py-2 px-4 rounded-lg font-game-fallback text-sm tracking-wide flex-1 transition-all duration-300 ${
-                        isSubmitting
-                          ? "bg-gray-700 text-gray-400 border-2 border-gray-600 border-opacity-50 cursor-not-allowed"
-                          : "bg-game-neon-green text-black border-2 border-game-neon-green border-opacity-40 hover:shadow-neon-green hover:scale-105"
-                      }`}
-                    >
-                      {isSubmitting ? "..." : "DRINK"}
-                    </button>
-                    <button
-                      onClick={() => handleChallengeClick(index)}
-                      disabled={isSubmitting}
-                      className={`py-2 px-4 rounded-lg font-game-fallback text-sm tracking-wide flex-1 transition-all duration-300 ${
-                        isSubmitting
-                          ? "bg-gray-700 text-gray-400 border-2 border-gray-600 border-opacity-50 cursor-not-allowed"
-                          : "bg-game-neon-red text-white border-2 border-game-neon-red border-opacity-40 hover:shadow-neon-red hover:scale-105"
-                      }`}
-                    >
-                      {isSubmitting ? "..." : "CHALLENGE"}
-                    </button>
-                  </div>
-                )}
+                {assignment.to === currentPlayerId &&
+                  assignment.status === "pending" && (
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => handleAcceptDrink(index)}
+                        disabled={isSubmitting}
+                        className={`py-2 px-4 rounded-lg font-game-fallback text-sm tracking-wide flex-1 transition-all duration-300 ${
+                          isSubmitting
+                            ? "bg-gray-700 text-gray-400 border-2 border-gray-600 border-opacity-50 cursor-not-allowed"
+                            : "bg-game-neon-green text-black border-2 border-game-neon-green border-opacity-40 hover:shadow-neon-green hover:scale-105"
+                        }`}
+                      >
+                        {isSubmitting ? "..." : "DRINK"}
+                      </button>
+                      <button
+                        onClick={() => handleChallengeClick(index)}
+                        disabled={isSubmitting}
+                        className={`py-2 px-4 rounded-lg font-game-fallback text-sm tracking-wide flex-1 transition-all duration-300 ${
+                          isSubmitting
+                            ? "bg-gray-700 text-gray-400 border-2 border-gray-600 border-opacity-50 cursor-not-allowed"
+                            : "bg-game-neon-red text-white border-2 border-game-neon-red border-opacity-40 hover:shadow-neon-red hover:scale-105"
+                        }`}
+                      >
+                        {isSubmitting ? "..." : "CHALLENGE"}
+                      </button>
+                    </div>
+                  )}
 
                 {/* Status indicator for host */}
                 {isHost && assignment.status === "challenged" && (
                   <div className="bg-black bg-opacity-30 rounded-lg px-3 py-2 border border-game-neon-yellow border-opacity-30 text-sm font-medium text-game-neon-yellow">
                     <div className="flex items-center">
                       <div className="animate-spin rounded-full h-4 w-4 border-2 border-game-neon-yellow border-t-transparent mr-2"></div>
-                      <span className="font-game-fallback">RESOLVING CHALLENGE...</span>
+                      <span className="font-game-fallback">
+                        RESOLVING CHALLENGE...
+                      </span>
                     </div>
                   </div>
                 )}
@@ -1158,11 +1299,20 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
       ) : (
         <div className="text-gray-400 text-center py-10 bg-black bg-opacity-30 rounded-xl border-2 border-white border-opacity-5 shadow-[inset_0_0_10px_rgba(0,0,0,0.5)]">
           <div className="flex flex-col items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-500 mb-3" viewBox="0 0 20 20" fill="currentColor">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-10 w-10 text-gray-500 mb-3"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
               <path d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.616a1 1 0 01.894-1.79l1.599.8L9 4.323V3a1 1 0 011-1z" />
             </svg>
-            <p className="font-game-fallback text-xl text-white mb-1">NO ACTIVE ASSIGNMENTS</p>
-            <p className="text-gray-500">Match pyramid cards to assign drinks</p>
+            <p className="font-game-fallback text-xl text-white mb-1">
+              NO ACTIVE ASSIGNMENTS
+            </p>
+            <p className="text-gray-500">
+              Match pyramid cards to assign drinks
+            </p>
           </div>
         </div>
       )}

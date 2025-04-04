@@ -14,7 +14,7 @@ const MemorizationOverlay: React.FC<MemorizationOverlayProps> = ({
     
   if (!isVisible) return null;
 
-  return null;
+  return null; //temp hide
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
@@ -31,7 +31,7 @@ const MemorizationOverlay: React.FC<MemorizationOverlayProps> = ({
           ></div>
         </div>
         <p className="text-white mt-4 text-lg">
-          Remember your cards before they're hidden again!
+          Remember your cards before they&apos;re hidden again!
         </p>
       </div>
     </div>

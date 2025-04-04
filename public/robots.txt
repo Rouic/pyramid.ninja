@@ -1,0 +1,12 @@
+# Allow all web crawlers
+User-agent: *
+Allow: /
+
+# Disallow dynamic game routes which have no SEO value
+Disallow: /game/
+
+# Sitemap location - Primary sitemap
+Sitemap: https://pyramid.ninja/sitemap.xml
+
+# Dynamic sitemap API endpoint
+Sitemap: https://pyramid.ninja/api/sitemap

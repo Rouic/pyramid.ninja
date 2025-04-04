@@ -304,8 +304,8 @@ const AboutPage = () => {
             </li>
             <li className="text-base sm:text-lg">
               <span className="text-game-neon-purple font-bold">Game End:</span>{" "}
-              Reveal all players' remaining cards after the final pyramid card
-              is processed
+              Reveal all players&apos; remaining cards after the final pyramid
+              card is processed
             </li>
           </ol>
         </div>
@@ -324,8 +324,8 @@ const AboutPage = () => {
             </li>
             <li className="text-base sm:text-lg">
               The pyramid is statically built but only ever has 5 rows. However
-              you can click any card in any order allowing for "reverse
-              pyramid".
+              you can click any card in any order allowing for &quot;reverse
+              pyramid&quot;.
             </li>
             <li className="text-base sm:text-lg">
               The game will only tell you who needs to drink what{" "}

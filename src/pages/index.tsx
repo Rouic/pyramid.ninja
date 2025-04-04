@@ -32,7 +32,41 @@ const HomePage = () => {
         <title>Pyramid.Ninja - The Card Drinking Game</title>
         <meta
           name="description"
-          content="A digital version of the popular drinking game Pyramid"
+          content="A digital version of the popular drinking game Pyramid. Play online with friends, perfect for parties!"
+        />
+
+        {/* Additional page-specific SEO */}
+        <meta
+          property="og:image"
+          content="https://pyramid.ninja/images/pyramid.ninja.background.png"
+        />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+
+        {/* JSON-LD structured data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebApplication",
+              name: "Pyramid.Ninja",
+              url: "https://pyramid.ninja",
+              description:
+                "A digital version of the popular drinking game Pyramid. Play online with friends!",
+              applicationCategory: "GameApplication",
+              operatingSystem: "All",
+              offers: {
+                "@type": "Offer",
+                price: "0",
+                priceCurrency: "USD",
+              },
+              author: {
+                "@type": "Person",
+                name: "Pyramid.Ninja Developer",
+              },
+            }),
+          }}
         />
       </Head>
 
@@ -122,7 +156,7 @@ const HomePage = () => {
 
         {playerName && (
           <div className="m-2 text-white font-game-fallback p-3 sm:p-4 bg-black/50 backdrop-blur-sm rounded-xl inline-block text-base sm:text-xl border border-game-neon-green/50 shadow-neon-green-sm transform -rotate-1">
-            YOU'LL BE JOINING AS:{" "}
+            YOU&apos;LL BE JOINING AS:{" "}
             <span className="text-game-neon-green animate-pulse-slow">
               {playerName}
             </span>
