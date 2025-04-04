@@ -862,7 +862,7 @@ const GamePage = () => {
 
         <div className="max-w-7xl mx-auto px-4 pt-6 relative z-10">
           {/* Small branded header with logo and game name */}
-          <div className="p-4 mb-6 relative">
+          <div className="pb-4  relative">
             <div className="flex items-center justify-between gap-4 relative z-10">
               <div className="flex items-center">
                 <img
