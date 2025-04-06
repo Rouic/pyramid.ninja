@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "../lib/firebase/firebase";
 import { usePlayerContext } from "../context/PlayerContext";
 import { v4 as uuidv4 } from "uuid";
@@ -13,6 +13,7 @@ const HostPage = () => {
   const { playerId, setPlayerId, setIsHost } = usePlayerContext();
 
   const [gameName, setGameName] = useState("");
+  const [gameType, setGameType] = useState("pyramid");
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,7 +37,9 @@ const HostPage = () => {
     setError(null);
 
     try {
-      // Generate a new game ID
+      // Import GameContext to use its createGame method
+      const { useGame } = await import("../contexts/GameContext");
+      
       // Generate a human-readable 6-letter uppercase code
       const generateGameCode = () => {
         const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -55,9 +58,23 @@ const HostPage = () => {
         name: gameName,
         hostId: playerId,
         createdAt: serverTimestamp(),
-        players: [], // Host is not a player in the game
+        players: [], // For pyramid, host is not a player in the game
         gameState: "waiting", // waiting, memorizing, playing, ended
+        gameType: gameType, // pyramid or yes
       });
+      
+      // If it's a YES game and the host is a player, add the host to players
+      if (gameType === "yes") {
+        await updateDoc(doc(db, "games", gameId), {
+          [`${playerId}`]: {
+            admin: true,
+            uid: playerId,
+            name: "HOST", // Default name for host in YES game
+            drinks: 0,
+            lives: 3, // Start with 3 lives in YES game
+          }
+        });
+      }
 
       // Mark this user as the host
       setIsHost(true);
@@ -238,6 +255,58 @@ const HostPage = () => {
                     <div className="absolute top-0 left-0 w-full h-10 bg-gradient-to-r from-transparent via-game-neon-yellow/30 to-transparent opacity-50"></div>
                     <div className="absolute bottom-0 left-0 w-full h-px bg-game-neon-yellow/50"></div>
                     <div className="absolute top-0 right-6 w-4 h-4 bg-game-neon-yellow/30 rounded-full blur-sm"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+              
+            <div className="mt-6">
+              <label
+                htmlFor="gameType"
+                className="block text-lg sm:text-xl font-game-fallback text-game-neon-yellow mb-2 sm:mb-3 tracking-wider animate-pulse-slow"
+              >
+                GAME TYPE
+              </label>
+              <div className="grid grid-cols-2 gap-4">
+                <div 
+                  onClick={() => setGameType("pyramid")}
+                  className={`relative cursor-pointer transition-all duration-300 transform hover:scale-105 ${
+                    gameType === "pyramid" ? "ring-4 ring-game-neon-yellow/70 scale-105" : ""
+                  }`}
+                >
+                  <div className={`rounded-xl p-4 bg-black bg-opacity-70 border-2 ${
+                    gameType === "pyramid" ? "border-game-neon-yellow/70" : "border-game-neon-yellow/30"
+                  } flex flex-col items-center justify-center`}>
+                    <div className="w-20 h-20 transform -rotate-6">
+                      <div className="relative w-full h-full">
+                        <div className="absolute transform rotate-6 opacity-60 top-1 left-1 w-6 h-8 bg-game-neon-red rounded"></div>
+                        <div className="absolute transform rotate-12 opacity-70 top-3 left-4 w-6 h-8 bg-game-neon-blue rounded"></div>
+                        <div className="absolute transform rotate-18 opacity-80 top-6 left-7 w-6 h-8 bg-game-neon-green rounded"></div>
+                        <div className="absolute transform rotate-24 top-8 left-10 w-6 h-8 bg-game-neon-yellow rounded"></div>
+                      </div>
+                    </div>
+                    <div className="mt-3 text-lg font-game-fallback text-game-neon-yellow">PYRAMID</div>
+                    <div className="text-xs text-white/70 mt-1">Classic drinking game</div>
+                  </div>
+                </div>
+                
+                <div 
+                  onClick={() => setGameType("yes")}
+                  className={`relative cursor-pointer transition-all duration-300 transform hover:scale-105 ${
+                    gameType === "yes" ? "ring-4 ring-game-neon-green/70 scale-105" : ""
+                  }`}
+                >
+                  <div className={`rounded-xl p-4 bg-black bg-opacity-70 border-2 ${
+                    gameType === "yes" ? "border-game-neon-green/70" : "border-game-neon-green/30"
+                  } flex flex-col items-center justify-center`}>
+                    <div className="w-20 h-20 transform">
+                      <div className="relative w-full h-full flex items-center justify-center">
+                        <div className="absolute w-10 h-14 bg-game-neon-green/30 border border-game-neon-green rounded"></div>
+                        <div className="text-game-neon-green text-2xl font-bold">A</div>
+                      </div>
+                    </div>
+                    <div className="mt-3 text-lg font-game-fallback text-game-neon-green">YES GAME</div>
+                    <div className="text-xs text-white/70 mt-1">Avoid the Ace!</div>
                   </div>
                 </div>
               </div>

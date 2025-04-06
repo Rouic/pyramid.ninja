@@ -26,12 +26,15 @@ import {
   clearPlayerChallengeState,
 } from "../../lib/firebase/gameState";
 import GamePyramid from "../../components/GamePyramid";
+import YesGameLayout from "../../components/YesGameLayout";
 import PlayerHand from "../../components/PlayerHand";
 import MemorizeTimer from "../../components/MemorizeTimer";
 import DrinkAssignmentPanel from "../../components/DrinkAssignmentPanel";
 import { GameControls } from "../../components/GameControls";
 import ActivityLog from "../../components/ActivityLog";
 import { usePlayerContext } from "../../context/PlayerContext";
+import { GameProvider } from "../../contexts/GameContext";
+import { YesPlayer, YesGameState } from "../../types";
 import MemorizationOverlay from "../../components/MemorizationOverlay";
 import GameStartNotification from "../../components/GameStartNotification";
 import ChallengeResetControls from "../../components/ChallengeResetControls";
@@ -47,6 +50,7 @@ const GamePage = () => {
   const [error, setError] = useState<string | null>(null);
   const [gameState, setGameState] = useState<string>("waiting");
   const [isStartingGame, setIsStartingGame] = useState(false);
+  const [gameType, setGameType] = useState<'pyramid' | 'yes' | null>(null);
   const [memorizationEndTime, setMemorizationEndTime] = useState<Date | null>(
     null
   );
@@ -154,6 +158,7 @@ const GamePage = () => {
          setGameState(data.gameState || "waiting");
          setDrinkAssignments(data.drinkAssignments || []);
          setAllCardsDealt(data.allCardsDealt || false);
+         setGameType(data.gameType || 'pyramid');
 
          // Update challenge resolution ID only if it changed
          // Also check it against a ref to prevent extra renders
@@ -822,8 +827,123 @@ const GamePage = () => {
   // Determine drinks for current row
   const drinksForCurrentRow = Math.max(1, currentRowNumber);
 
-  // Render different UIs for host and players
-  if (isHost) {
+  // Check if this is a YES game
+  if (gameType === 'yes') {
+    console.log("Rendering YES game UI with gameData:", gameData);
+    
+    // Map players from gameData to YesPlayer type
+    const yesPlayers: YesPlayer[] = Object.entries(gameData || {})
+      .filter(([key, value]) => 
+        typeof value === 'object' && 
+        value !== null && 
+        'name' in value &&
+        !key.startsWith('__')
+      )
+      .map(([key, playerData]) => {
+        // Type assertion for accessing properties
+        const player = playerData as {
+          name?: string;
+          lives?: number;
+          isDealer?: boolean;
+          card?: any;
+          hasSwapped?: boolean;
+          hasChecked?: boolean;
+          admin?: boolean;
+          drinks?: number;
+          blockingSwap?: boolean;
+          lostLife?: boolean;
+          hasCut?: boolean;
+        };
+        
+        return {
+          uid: key,
+          name: player.name || 'Unknown',
+          lives: player.lives || 3,
+          isDealer: player.isDealer || false,
+          card: player.card,
+          hasSwapped: player.hasSwapped || false,
+          hasChecked: player.hasChecked || false,
+          admin: player.admin || false,
+          drinks: player.drinks || 0,
+          blockingSwap: player.blockingSwap || false,
+          lostLife: player.lostLife || false,
+          hasCut: player.hasCut || false
+        };
+      });
+    
+    // Get the YES state
+    const yesState = (gameData && gameData["__yes.state"]) 
+      ? gameData["__yes.state"] 
+      : {
+          started: false,
+          dealer: '',
+          currentRound: 0,
+          deck: [],
+          usedCards: [],
+          playerOrder: [],
+          revealPhase: false
+        };
+        
+    console.log("YES state for component:", yesState);
+    console.log("YES players for component:", yesPlayers);
+    console.log("Is started:", yesState.started);
+    console.log("Is host:", isHost);
+      
+    return (
+      <div className="min-h-screen bg-game-bg pb-8 relative overflow-hidden">
+        {/* Background patterns - Balatro style */}
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px)",
+            backgroundSize: "20px 20px",
+          }}
+        ></div>
+        
+        {/* Decorative elements */}
+        <div
+          className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] rounded-full opacity-20"
+          style={{
+            background:
+              "radial-gradient(circle at center, rgba(70, 252, 167, 0.5), transparent 70%)",
+            filter: "blur(100px)",
+          }}
+        ></div>
+        
+        <div className="max-w-7xl mx-auto px-4 pt-6 relative z-10">
+          <div className="pb-4 relative">
+            <div className="flex items-center justify-between gap-4 relative z-10">
+              <div className="flex items-center">
+                <img
+                  src="/icon.png"
+                  alt="YES Game"
+                  className="h-12 w-12 mr-3"
+                />
+                <h1 className="text-lg font-display text-game-neon-green tracking-tight xs:tracking-normal sm:tracking-wider mb-0 animate-glow font-display-fallback w-full px-2">
+                  YES GAME
+                </h1>
+              </div>
+              <div className="text-white font-medium">
+                Game ID: <span className="font-mono">{id}</span>
+              </div>
+            </div>
+          </div>
+          
+          <YesGameLayout 
+            gameId={id as string}
+            currentPlayerId={playerId}
+            gameState={yesState as YesGameState}
+            players={yesPlayers}
+            isHost={isHost}
+          />
+        </div>
+      </div>
+    );
+  }
+  
+  // Standard Pyramid Game UI - Pyramid game
+  else if (isHost) {
     // Host View - shows the pyramid and game controls
     return (
       <div className="min-h-screen bg-game-bg pb-8 relative overflow-hidden">
@@ -1623,4 +1743,14 @@ const GamePage = () => {
   }
 };
 
-export default GamePage;
+// GameProvider is now imported at the top of the file
+
+const GamePageWithProvider = () => {
+  return (
+    <GameProvider>
+      <GamePage />
+    </GameProvider>
+  );
+};
+
+export default GamePageWithProvider;

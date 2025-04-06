@@ -74,15 +74,56 @@ export interface GameMeta {
   fancy_shown?: boolean;
 }
 
+// YES Game specific types
+export interface YesPlayer extends Player {
+  lives: number;
+  isDealer: boolean;
+  card?: PlayerCard;
+  hasSwapped?: boolean;
+  hasChecked?: boolean;
+  blockingSwap?: boolean;
+  lostLife?: boolean;
+  hasCut?: boolean;
+}
+
+export interface YesGameState {
+  dealer: string; // Player ID of current dealer
+  currentRound: number;
+  deck: number[];
+  usedCards: number[];
+  started: boolean;
+  finished?: boolean;
+  revealPhase?: boolean;
+  winner?: string;
+  playerOrder: string[]; // Ordered player IDs in clockwise order
+}
+
+// Custom type for player data in documents
+export type PlayerData = Player | YesPlayer | DocumentData;
+
 // Firestore game document structure
 export interface GameData extends DocumentData {
-  '__pyramid.meta': GameMeta;
-  '__pyramid.cards': PyramidCard[];
-  '__pyramid.deck': number[];
+  id?: string;
+  name?: string;
+  hostId?: string;
+  createdAt?: any;
+  players?: any[];
+  gameState?: string;
+  gameType?: 'pyramid' | 'yes';
+  
+  // Pyramid game data
+  '__pyramid.meta'?: GameMeta;
+  '__pyramid.cards'?: PyramidCard[];
+  '__pyramid.deck'?: number[];
   '__pyramid.currentRound'?: CurrentRound;
   '__pyramid.rounds'?: Record<number, Round>;
   '__pyramid.summary'?: Record<string, number>;
-  [playerUid: string]: Player | DocumentData; // Using index signature for dynamic player data
+  
+  // YES game data
+  '__yes.state'?: YesGameState;
+  
+  // Dynamic player data indexed by UID
+  [playerUid: string]: PlayerData | string | any[] | 'pyramid' | 'yes' | undefined;
 }
 
 export interface PyramidCard {
@@ -105,8 +146,12 @@ export interface GameContextType {
   players: Player[];
   loading: boolean;
   error: string | null;
+  
+  // Common functions for both games
   joinGame: (gameId: string, name: string) => Promise<void>;
-  createGame: () => Promise<string>;
+  createGame: (gameType?: 'pyramid' | 'yes') => Promise<string>;
+  
+  // Pyramid game functions
   startGame: (gameId: string) => Promise<void>;
   selectCard: (gameId: string, cardIndex: number) => Promise<void>;
   callPlayer: (gameId: string, fromUid: string, toUid: string, roundNumber: number) => Promise<void>;
@@ -115,4 +160,12 @@ export interface GameContextType {
   markCardsAsSeen: (gameId: string, playerUid: string) => Promise<void>;
   getNewCard: (gameId: string, playerUid: string, cardIndex: number) => Promise<void>;
   checkCardMatch: (gameData: GameData, roundNumber: number, cardIndex: number) => boolean;
+  
+  // YES game functions
+  startYesGame: (gameId: string) => Promise<void>;
+  peekCard: (gameId: string, playerId: string) => Promise<void>;
+  swapCard: (gameId: string, fromPlayerId: string, toPlayerId: string) => Promise<void>;
+  cutDeck: (gameId: string, dealerId: string) => Promise<void>;
+  revealCards: (gameId: string) => Promise<void>;
+  nextRound: (gameId: string) => Promise<void>;
 }

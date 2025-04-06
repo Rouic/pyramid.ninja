@@ -5,8 +5,9 @@ import {
   signOut as firebaseSignOut,
   onAuthStateChanged,
   User,
+  getAuth,
 } from "firebase/auth";
-import { auth } from "../lib/firebase/firebase";
+import { initializeFirebase, auth as firebaseAuth } from "../lib/firebase/firebase";
 import { AuthContextType } from "../types";
 
 // Create the Auth Context
@@ -20,9 +21,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [userUid, setUserUid] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Initialize Firebase
+  useEffect(() => {
+    // Initialize Firebase with default consent settings
+    const { auth } = initializeFirebase(true, false);
+    console.log("Firebase initialized in AuthContext");
+  }, []);
+
   // Listen for auth state changes
   useEffect(() => {
+    // Use the auth instance from the initialized Firebase
+    // Fall back to getAuth() if firebaseAuth is not available
+    const auth = firebaseAuth || getAuth();
+    
+    if (!auth) {
+      console.error("Firebase auth is not initialized");
+      return;
+    }
+    
+    console.log("Setting up auth state listener");
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log("Auth state changed:", user ? `User: ${user.uid}` : "No user");
       setUser(user);
       setUserUid(user ? user.uid : null);
       setLoading(false);
@@ -35,6 +54,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   // Sign in anonymously
   const signInAnonymously = async () => {
     try {
+      // Use the auth instance from the initialized Firebase or get auth directly
+      const auth = firebaseAuth || getAuth();
+      if (!auth) {
+        console.error("Firebase auth is not initialized");
+        return;
+      }
+      
+      console.log("Attempting anonymous sign in");
       await firebaseSignInAnonymously(auth);
     } catch (error) {
       console.error("Error signing in anonymously:", error);
@@ -44,6 +71,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   // Sign out
   const signOut = async () => {
     try {
+      // Use the auth instance from the initialized Firebase or get auth directly
+      const auth = firebaseAuth || getAuth();
+      if (!auth) {
+        console.error("Firebase auth is not initialized");
+        return;
+      }
+      
       await firebaseSignOut(auth);
     } catch (error) {
       console.error("Error signing out:", error);

@@ -5,12 +5,21 @@ import { PlayerProvider } from "../context/PlayerContext";
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import { ConsentProvider } from "../contexts/ConsentContext";
+import { AuthProvider } from "../contexts/AuthContext";
 import CookieConsentBanner from "../components/CookieConsentBanner";
 import AnalyticsWrapper from "../components/AnalyticsWrapper";
+import { initializeFirebase } from "../lib/firebase/firebase";
 
 function MyApp({ Component, pageProps }: AppProps) {
   const router = useRouter();
   const canonicalUrl = `https://pyramid.ninja${router.asPath === "/" ? "" : router.asPath}`;
+  
+  // Initialize Firebase
+  useEffect(() => {
+    // Initialize Firebase before anything else
+    initializeFirebase(true, false);
+    console.log("Firebase initialized in _app.tsx");
+  }, []);
   
   // Load fonts
   useEffect(() => {
@@ -34,9 +43,10 @@ function MyApp({ Component, pageProps }: AppProps) {
   
   return (
     <ConsentProvider>
-      <PlayerProvider>
-        <Head>
-          {/* Primary Meta Tags */}
+      <AuthProvider>
+        <PlayerProvider>
+          <Head>
+            {/* Primary Meta Tags */}
           <title>Pyramid.Ninja - The Digital Card Drinking Game</title>
           <meta
             name="description"
@@ -81,10 +91,11 @@ function MyApp({ Component, pageProps }: AppProps) {
             as="style" 
           />
         </Head>
-        <Component {...pageProps} />
-        <AnalyticsWrapper />
-        <CookieConsentBanner />
-      </PlayerProvider>
+          <Component {...pageProps} />
+          <AnalyticsWrapper />
+          <CookieConsentBanner />
+        </PlayerProvider>
+      </AuthProvider>
     </ConsentProvider>
   );
 }

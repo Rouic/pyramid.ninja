@@ -1,5 +1,5 @@
 // src/lib/CardHelpers.ts
-import { GameData, PlayerCard } from "../types";
+import { GameData, PlayerCard, PlayerData } from "../types";
 import { getCardDetails } from "./deckUtils";
 
 /**
@@ -109,13 +109,18 @@ export class CardHelpers {
       console.log(`Pyramid: ${revealedCount}/${gameData["__pyramid.cards"].length} cards revealed`);
     }
     
-    if (playerUid && gameData[playerUid] && gameData[playerUid].cards) {
-      const playerCards = gameData[playerUid].cards;
-      const seenCount = playerCards.filter(c => c.seen).length;
-      console.log(`Player ${playerUid}: ${playerCards.length} cards, ${seenCount} seen`);
-      console.log("Cards:", playerCards);
+    if (playerUid && gameData[playerUid]) {
+      const playerData = gameData[playerUid] as PlayerData;
+      if (playerData && 'cards' in playerData && Array.isArray(playerData.cards)) {
+        const playerCards = playerData.cards;
+        const seenCount = playerCards.filter(c => c.seen).length;
+        console.log(`Player ${playerUid}: ${playerCards.length} cards, ${seenCount} seen`);
+        console.log("Cards:", playerCards);
+      } else {
+        console.log(`Player ${playerUid}: No cards found`);
+      }
     } else {
-      console.log(`Player ${playerUid}: No cards found`);
+      console.log(`Player ${playerUid}: No player data found`);
     }
     
     console.log("======================");
