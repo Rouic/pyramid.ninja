@@ -52,7 +52,8 @@ export async function getDoc(
 ): Promise<Record<string, unknown> | null> {
   try {
     const res = await dbRequest("get", { collection, id });
-    return res.data ?? null;
+    // API returns document fields at top level (no "data" wrapper)
+    return res ?? null;
   } catch {
     return null;
   }
