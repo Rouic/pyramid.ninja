@@ -1,6 +1,8 @@
 // src/types/index.ts
-import { User } from 'firebase/auth';
-import { DocumentData } from 'firebase/firestore';
+
+// User type compatible with Firebase User interface (subset used by app)
+type User = { uid: string; [key: string]: unknown };
+type DocumentData = Record<string, unknown>;
 
 // Card types
 export interface Card {

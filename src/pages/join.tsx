@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import { doc, getDoc, updateDoc, arrayUnion } from "firebase/firestore";
-import { db } from "../lib/firebase/firebase";
+import { getDoc, modifyDoc } from "../lib/api/client";
 import { usePlayerContext } from "../context/PlayerContext";
 import { v4 as uuidv4 } from "uuid";
 import { CodeBracketIcon, FaceSmileIcon, NumberedListIcon } from "@heroicons/react/16/solid";
@@ -49,16 +48,13 @@ const JoinPage = () => {
     setError(null);
 
     try {
-      const gameRef = doc(db, "games", gameId);
-      const gameSnapshot = await getDoc(gameRef);
+      const gameData = await getDoc("games", gameId);
 
-      if (!gameSnapshot.exists()) {
+      if (!gameData) {
         setError("Game not found");
         setIsJoining(false);
         return;
       }
-
-      const gameData = gameSnapshot.data();
 
       // Check if the game has already started
       if (gameData.gameState === "started") {
@@ -75,13 +71,11 @@ const JoinPage = () => {
         return;
       }
 
-      // Add player to the game
-      await updateDoc(gameRef, {
-        players: arrayUnion({
-          id: playerId,
-          name: playerName,
-        }),
-      });
+      // Add player to the game (arrayUnion equivalent: read-modify-write)
+      await modifyDoc("games", gameId, (current) => ({
+        ...current,
+        players: [...((current.players as any[]) || []), { id: playerId, name: playerName }],
+      }));
 
       // Navigate to the game page
       router.push(`/game/${gameId}`);

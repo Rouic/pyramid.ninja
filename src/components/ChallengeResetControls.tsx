@@ -1,8 +1,7 @@
 // src/components/ChallengeResetControls.tsx
 import React, { useState } from "react";
-import { doc, updateDoc, getDoc, deleteField } from "firebase/firestore";
-import { db } from "../lib/firebase/firebase";
-import { clearPlayerChallengeState } from "../lib/firebase/gameState";
+import { updateDoc, getDoc, modifyDoc } from "../lib/api/client";
+import { clearPlayerChallengeState } from "../lib/api/gameState";
 
 interface ChallengeResetControlsProps {
   gameId: string;
@@ -23,8 +22,8 @@ const ChallengeResetControls: React.FC<ChallengeResetControlsProps> = ({
 
     try {
       // 1. Reset player document
-      const playerRef = doc(db, "games", gameId, "players", playerId);
-      await updateDoc(playerRef, {
+      const playerDocId = `${gameId}_${playerId}`;
+      await updateDoc("players", playerDocId, {
         isInChallenge: false,
         inChallenge: false,
         challengeCardIndex: null,
@@ -34,20 +33,23 @@ const ChallengeResetControls: React.FC<ChallengeResetControlsProps> = ({
         updatedAt: new Date().toISOString(),
       });
 
-      // 2. Reset any pending replacements
-      const gameRef = doc(db, "games", gameId);
-      await updateDoc(gameRef, {
-        [`pendingCardReplacements.${playerId}`]: deleteField(),
-        [`playerChallenges.${playerId}`]: deleteField(),
-        [`challengeTimers.${playerId}`]: deleteField(),
+      // 2. Reset any pending replacements (deleteField via modifyDoc)
+      await modifyDoc("games", gameId, (c) => {
+        const updated = { ...c };
+        const pending = { ...((updated.pendingCardReplacements as any) || {}) };
+        const challenges = { ...((updated.playerChallenges as any) || {}) };
+        const timers = { ...((updated.challengeTimers as any) || {}) };
+        delete pending[playerId];
+        delete challenges[playerId];
+        delete timers[playerId];
+        return { ...updated, pendingCardReplacements: pending, playerChallenges: challenges, challengeTimers: timers };
       });
 
       // 3. Try to fix any stuck challenges in the drink assignments
       try {
-        const gameDoc = await getDoc(gameRef);
-        if (gameDoc.exists()) {
-          const gameData = gameDoc.data();
-          const assignments = gameData.drinkAssignments || [];
+        const gameData = await getDoc("games", gameId);
+        if (gameData) {
+          const assignments = (gameData.drinkAssignments as any[]) || [];
           let fixedChallenges = false;
 
           // Look for assignments in "challenged" state involving this player
@@ -80,9 +82,9 @@ const ChallengeResetControls: React.FC<ChallengeResetControlsProps> = ({
           }
 
           if (fixedChallenges) {
-            await updateDoc(gameRef, {
+            await updateDoc("games", gameId, {
               drinkAssignments: assignments,
-              [`challengeResultId`]: `emergency_reset_${Date.now()}`,
+              challengeResultId: `emergency_reset_${Date.now()}`,
             });
           }
         }

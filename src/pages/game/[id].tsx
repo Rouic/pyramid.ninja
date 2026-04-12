@@ -1,21 +1,13 @@
 // src/pages/game/[id].tsx
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/router";
-import {
-  doc,
-  getDoc,
-  onSnapshot,
-  updateDoc,
-  collection,
-  getDocs
-} from "firebase/firestore";
-import { db } from "../../lib/firebase/firebase";
+import { getDoc, updateDoc, modifyDoc, subscribeDoc } from "../../lib/api/client";
 import {
   dealCardsToPlayer,
   initializeGameDeck,
   revealPyramidCard,
   updatePlayerCard,
-} from "../../lib/firebase/gameCards";
+} from "../../lib/api/gameCards";
 import { Card } from "../../lib/deck";
 import {
   DrinkAssignment,
@@ -24,7 +16,7 @@ import {
   startPlayingPhase,
   replacePlayerCard,
   clearPlayerChallengeState,
-} from "../../lib/firebase/gameState";
+} from "../../lib/api/gameState";
 import GamePyramid from "../../components/GamePyramid";
 import YesGameLayout from "../../components/YesGameLayout";
 import PlayerHand from "../../components/PlayerHand";
@@ -126,18 +118,14 @@ const GamePage = () => {
  useEffect(() => {
    if (!id || typeof id !== "string") return;
 
-   const gameRef = doc(db, "games", id);
-
    // Initial fetch to check if player is allowed
-   getDoc(gameRef)
-     .then((docSnap) => {
-       if (!docSnap.exists()) {
+   getDoc("games", id)
+     .then((data) => {
+       if (!data) {
          setError("Game not found");
          setIsLoading(false);
          return;
        }
-
-       const data = docSnap.data();
 
        // Check if player is in the game or is host
        const players = data.players || [];
@@ -316,7 +304,7 @@ const GamePage = () => {
       }
 
       // Mark all cards as dealt
-      await updateDoc(doc(db, "games", gameId), {
+      await updateDoc("games", gameId, {
         allCardsDealt: true,
         gameState: "ready", // Change to 'ready' state
       });
@@ -519,11 +507,10 @@ const GamePage = () => {
               // Get current player cards
               const gameId = typeof id === 'string' ? id : id[0];
               if (!gameId) return;
-              const playerRef = doc(db, "games", gameId, "players", playerId);
-              const playerDoc = await getDoc(playerRef);
+              const playerDocId = `${gameId}_${playerId}`;
+              const playerData = await getDoc("players", playerDocId);
 
-              if (playerDoc.exists()) {
-                const playerData = playerDoc.data();
+              if (playerData) {
                 const cards = playerData.cards || [];
 
                 // Find the card by ID and update it - Add proper null checks
@@ -540,18 +527,19 @@ const GamePage = () => {
                   return card;
                 });
 
-                // Update the cards in Firebase
-                await updateDoc(playerRef, {
+                // Update the cards
+                await updateDoc("players", playerDocId, {
                   cards: updatedCards,
                   updatedAt: new Date().toISOString(),
                 });
 
-                // Remove this timer from Firebase
-                const gameId = typeof id === 'string' ? id : id[0];
+                // Remove this timer
                 if (gameId) {
-                  const gameRef = doc(db, "games", gameId);
-                  await updateDoc(gameRef, {
-                    [`newCardTimers.${playerId}.${cardId}`]: null,
+                  await modifyDoc("games", gameId, (doc) => {
+                    if (doc.newCardTimers?.[playerId]) {
+                      delete doc.newCardTimers[playerId][cardId];
+                    }
+                    return doc;
                   });
                 }
               }
@@ -586,19 +574,18 @@ const GamePage = () => {
               const gameId = typeof id === 'string' ? id : id[0];
               if (!gameId) return;
               
-              // Update the card in Firebase
-              const playerRef = doc(db, "games", gameId, "players", playerId);
-              getDoc(playerRef)
-                .then((snapshot) => {
-                  if (snapshot.exists()) {
-                    const playerData = snapshot.data();
+              // Update the card
+              const playerDocId = `${gameId}_${playerId}`;
+              getDoc("players", playerDocId)
+                .then((playerData) => {
+                  if (playerData) {
                     const updatedCards = playerData.cards.map((card) =>
                       card.i === cardId
                         ? { ...card, newCard: false, faceVisible: false }
                         : card
                     );
 
-                    updateDoc(playerRef, {
+                    updateDoc("players", playerDocId, {
                       cards: updatedCards,
                       updatedAt: new Date().toISOString(),
                     }).catch((err) =>
@@ -1613,11 +1600,9 @@ const GamePage = () => {
 
                         try {
                           // Get the current game data
-                          const gameRef = doc(db, "games", gameId);
-                          const gameDoc = await getDoc(gameRef);
+                          const gameData = await getDoc("games", gameId);
 
-                          if (gameDoc.exists()) {
-                            const gameData = gameDoc.data();
+                          if (gameData) {
                             const assignments = gameData.drinkAssignments || [];
 
                             // Find any challenged assignments involving this player
@@ -1651,7 +1636,7 @@ const GamePage = () => {
                               }
 
                               // Update all assignments at once
-                              await updateDoc(gameRef, {
+                              await updateDoc("games", gameId, {
                                 drinkAssignments: assignments,
                               });
 

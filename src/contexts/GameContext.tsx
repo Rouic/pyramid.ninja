@@ -1,17 +1,7 @@
 // src/contexts/GameContext.tsx
 import React, { createContext, useContext, useState, useEffect } from "react";
-import {
-  doc,
-  setDoc,
-  getDoc,
-  getDocFromServer,
-  updateDoc,
-  onSnapshot,
-  DocumentSnapshot,
-  getFirestore,
-} from "firebase/firestore";
+import { getDoc, setDoc, updateDoc, modifyDoc, subscribeDoc } from "../lib/api/client";
 import { CardHelpers } from "../lib/CardHelpers";
-import { db as firebaseDb, initializeFirebase } from "../lib/firebase/firebase";
 import { useAuth } from "./AuthContext";
 import { generateGameCode, shuffleDeck } from "../lib/deckUtils";
 import {
@@ -36,22 +26,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [db, setDb] = useState(firebaseDb);
-
-  // Initialize Firebase and get Firestore instance
-  useEffect(() => {
-    // Make sure Firebase is initialized and get the db instance
-    const { db: firestoreDb } = initializeFirebase(true, false);
-    if (firestoreDb) {
-      setDb(firestoreDb);
-      console.log("Firestore initialized in GameContext");
-    } else {
-      // Fallback to getting Firestore directly
-      const fallbackDb = getFirestore();
-      setDb(fallbackDb);
-      console.log("Using fallback Firestore in GameContext");
-    }
-  }, []);
+  // No db state needed - API client handles connection internally
 
   
 
@@ -114,7 +89,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       // Create the document
-      await setDoc(doc(db, "games", roomCode), gameData);
+      await setDoc("games", roomCode, gameData);
 
       setGameId(roomCode);
 
@@ -139,10 +114,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
       console.log(`Joining game: ${gameId} as ${name}`);
 
       // Check if game exists
-      const gameRef = doc(db, "games", gameId.toUpperCase());
-      const gameSnap = await getDoc(gameRef);
+      const gameData = await getDoc("games", gameId.toUpperCase()) as GameData;
 
-      if (!gameSnap.exists()) {
+      if (!gameData) {
         throw new Error("Game not found");
       }
 
@@ -151,7 +125,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       // Get the game data to check if it's started
-      const gameData = gameSnap.data() as GameData;
       const gameStarted = gameData["__pyramid.meta"]?.started === true;
 
       // If game has already started, we need to deal cards to the player immediately
@@ -169,7 +142,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
         playerCards = cardIds.map((id) => ({ i: id, seen: false }));
 
         // Update the deck in the game data
-        await updateDoc(gameRef, {
+        await updateDoc("games", gameId.toUpperCase(), {
           "__pyramid.deck": newDeck,
         });
 
@@ -187,7 +160,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
       };
 
       console.log("Adding player to game:", playerData);
-      await updateDoc(gameRef, {
+      await updateDoc("games", gameId.toUpperCase(), {
         [userUid]: playerData,
       });
 
@@ -216,17 +189,11 @@ const startGame = async (gameId: string): Promise<void> => {
     const gameIdUpper = gameId.toUpperCase();
     console.log(`Starting game with ID: ${gameIdUpper}`);
 
-    // Get a fresh reference to the game
-    const gameRef = doc(db, "games", gameIdUpper);
-
-    // Get current document data directly from server
-    const gameSnap = await getDocFromServer(gameRef);
-    if (!gameSnap.exists()) {
+    // Get current document data
+    const gameData = await getDoc("games", gameIdUpper);
+    if (!gameData) {
       throw new Error("Game not found");
     }
-
-    // Get the complete document data
-    const gameData = gameSnap.data();
     console.log("Current full game data:", gameData);
 
     // Create an entirely new meta object
@@ -246,12 +213,11 @@ const startGame = async (gameId: string): Promise<void> => {
     console.log("New game data to save:", newGameData);
 
     // Complete document replacement instead of field update
-    await setDoc(gameRef, newGameData);
+    await setDoc("games", gameIdUpper, newGameData);
 
-    // Force a server read right after update to verify
+    // Force a read right after update to verify
     setTimeout(async () => {
-      const verifySnap = await getDocFromServer(gameRef);
-      const verifyData = verifySnap.data();
+      const verifyData = await getDoc("games", gameIdUpper);
       console.log("VERIFICATION - Game data after update:", verifyData);
       console.log(
         "VERIFICATION - Started value:",
@@ -269,15 +235,13 @@ const selectCard = async (gameId: string, cardIndex: number): Promise<void> => {
   try {
     console.log(`Selecting card at index ${cardIndex} in game ${gameId}`);
 
-    // Get fresh game data from server to avoid race conditions
-    const gameRef = doc(db, "games", gameId.toUpperCase());
-    const gameSnap = await getDocFromServer(gameRef);
+    // Get fresh game data to avoid race conditions
+    const gameData = await getDoc("games", gameId.toUpperCase()) as GameData;
 
-    if (!gameSnap.exists()) {
+    if (!gameData) {
       throw new Error("Game not found");
     }
 
-    const gameData = gameSnap.data() as GameData;
     console.log("Game data before card selection:", gameData);
 
     if (
@@ -319,13 +283,13 @@ const selectCard = async (gameId: string, cardIndex: number): Promise<void> => {
 
     console.log("Updating game with:", updateData);
 
-    await updateDoc(gameRef, updateData);
-    console.log("Card selection successfully updated in Firebase");
+    await updateDoc("games", gameId.toUpperCase(), updateData);
+    console.log("Card selection successfully updated");
 
     // Verify the update
     setTimeout(async () => {
-      const verifySnap = await getDocFromServer(gameRef);
-      console.log("Game data after card selection:", verifySnap.data());
+      const verifyData = await getDoc("games", gameId.toUpperCase());
+      console.log("Game data after card selection:", verifyData);
     }, 1000);
   } catch (error) {
     console.error("Error selecting card:", error);
@@ -341,9 +305,7 @@ const selectCard = async (gameId: string, cardIndex: number): Promise<void> => {
     roundNumber: number
   ): Promise<void> => {
     try {
-      const gameRef = doc(db, "games", gameId.toUpperCase());
-      const gameSnap = await getDoc(gameRef);
-      const gameData = gameSnap.data() as GameData;
+      const gameData = await getDoc("games", gameId.toUpperCase()) as GameData;
 
       if (
         !gameData ||
@@ -364,7 +326,7 @@ const selectCard = async (gameId: string, cardIndex: number): Promise<void> => {
         transaction,
       ];
 
-      await updateDoc(gameRef, {
+      await updateDoc("games", gameId.toUpperCase(), {
         [`__pyramid.rounds.${roundNumber}.round_transactions`]:
           currentRoundTransactions,
       });
@@ -383,9 +345,7 @@ const selectCard = async (gameId: string, cardIndex: number): Promise<void> => {
     accept: boolean
   ): Promise<void> => {
     try {
-      const gameRef = doc(db, "games", gameId.toUpperCase());
-      const gameSnap = await getDoc(gameRef);
-      const gameData = gameSnap.data() as GameData;
+      const gameData = await getDoc("games", gameId.toUpperCase()) as GameData;
 
       if (
         !gameData ||
@@ -411,7 +371,7 @@ const selectCard = async (gameId: string, cardIndex: number): Promise<void> => {
         ? "accepted"
         : "bullshit";
 
-      await updateDoc(gameRef, {
+      await updateDoc("games", gameId.toUpperCase(), {
         [`__pyramid.rounds.${roundNumber}.round_transactions`]:
           updatedTransactions,
       });
@@ -430,9 +390,7 @@ const selectCard = async (gameId: string, cardIndex: number): Promise<void> => {
     correct: boolean
   ): Promise<void> => {
     try {
-      const gameRef = doc(db, "games", gameId.toUpperCase());
-      const gameSnap = await getDoc(gameRef);
-      const gameData = gameSnap.data() as GameData;
+      const gameData = await getDoc("games", gameId.toUpperCase()) as GameData;
 
       if (!gameData) return;
 
@@ -464,7 +422,7 @@ const selectCard = async (gameId: string, cardIndex: number): Promise<void> => {
       }
 
       // Update game state
-      await updateDoc(gameRef, {
+      await updateDoc("games", gameId.toUpperCase(), {
         [`__pyramid.rounds.${roundNumber}.round_transactions`]:
           updatedTransactions,
         [`${playerUid}.cards`]: updatedCards,
@@ -481,18 +439,13 @@ const selectCard = async (gameId: string, cardIndex: number): Promise<void> => {
     const gameIdUpper = gameId.toUpperCase();
     console.log(`Subscribing to game updates for: ${gameIdUpper}`);
 
-    // Use getDocFromServer to ensure fresh data
-    const gameRef = doc(db, "games", gameIdUpper);
-
     // Get fresh data first
-    getDocFromServer(gameRef)
-      .then((snapshot) => {
-        console.log("Initial fresh server data:", snapshot.data());
+    getDoc("games", gameIdUpper)
+      .then((data) => {
+        console.log("Initial fresh server data:", data);
 
-        // Process this initial data
-        const data = snapshot.data() as GameData | undefined;
         if (data) {
-          setGameData(data);
+          setGameData(data as GameData);
 
           // Extract players from game data
           const playerEntries = Object.entries(data).filter(
@@ -510,57 +463,36 @@ const selectCard = async (gameId: string, cardIndex: number): Promise<void> => {
       })
       .catch((err) => console.error("Error getting fresh data:", err));
 
-    // Then set up real-time listener with metadata to detect data source
-    return onSnapshot(
-      gameRef,
-      { includeMetadataChanges: true },
-      (snapshot: DocumentSnapshot) => {
-        const source = snapshot.metadata.hasPendingWrites
-          ? "Local"
-          : snapshot.metadata.fromCache
-          ? "Cache"
-          : "Server";
+    // Set up real-time listener
+    return subscribeDoc("games", gameIdUpper, (data) => {
+      console.log("Game update received:", data);
 
-        console.log(`Data came from ${source}:`, snapshot.data());
+      if (data) {
+        const gameData = data as GameData;
 
-        const data = snapshot.data() as GameData | undefined;
-        if (data) {
-          // Force data refresh when needed
-          if (source === "Cache") {
-            console.log("Got cached data, forcing refresh from server");
-            getDocFromServer(gameRef).catch((err) =>
-              console.error("Refresh error:", err)
-            );
-          }
+        // Log the specific meta field we care about
+        console.log("Meta data:", gameData["__pyramid.meta"]);
+        console.log(
+          "Started value:",
+          gameData["__pyramid.meta"]?.started
+        );
 
-          // Log the specific meta field we care about
-          console.log("Meta data:", data["__pyramid.meta"]);
-          console.log(
-            "Started value from Firestore:",
-            data["__pyramid.meta"]?.started
-          );
+        setGameData(gameData);
 
-          setGameData(data);
+        // Extract players from game data
+        const playerEntries = Object.entries(gameData).filter(
+          ([key, value]) =>
+            typeof value === "object" && value !== null && "name" in value
+        );
 
-          // Extract players from game data
-          const playerEntries = Object.entries(data).filter(
-            ([key, value]) =>
-              typeof value === "object" && value !== null && "name" in value
-          );
+        const playersList = playerEntries.map(([uid, player]) => ({
+          uid,
+          ...(player as Player),
+        }));
 
-          const playersList = playerEntries.map(([uid, player]) => ({
-            uid,
-            ...(player as Player),
-          }));
-
-          setPlayers(playersList);
-        }
-      },
-      (error) => {
-        console.error("Error getting game updates:", error);
-        setError("Failed to get game updates. Please try refreshing the page.");
+        setPlayers(playersList);
       }
-    );
+    });
   };
 
 const markCardsAsSeen = async (
@@ -579,14 +511,12 @@ const markCardsAsSeen = async (
     setLoading(true);
 
     // Get fresh game data
-    const gameRef = doc(db, "games", gameId.toUpperCase());
-    const gameSnap = await getDocFromServer(gameRef);
+    const gameData = await getDoc("games", gameId.toUpperCase()) as GameData;
 
-    if (!gameSnap.exists()) {
+    if (!gameData) {
       throw new Error("Game not found");
     }
 
-    const gameData = gameSnap.data() as GameData;
     console.log("Game data retrieved:", gameData);
     console.log("Player data:", gameData[playerUid]);
 
@@ -624,7 +554,7 @@ const markCardsAsSeen = async (
           .map((cardId) => ({ i: cardId, seen: true }));
 
         // Update player cards and deck in database
-        await updateDoc(gameRef, {
+        await updateDoc("games", gameId.toUpperCase(), {
           [`${playerUid}.cards`]: playerCards,
           [`${playerUid}.initial_deal`]: true,
           "__pyramid.deck": newDeck,
@@ -648,10 +578,10 @@ const markCardsAsSeen = async (
       seen: true,
     }));
 
-    console.log("Updating cards in Firebase:", updatedCards);
+    console.log("Updating cards:", updatedCards);
 
-    // Update Firebase
-    await updateDoc(gameRef, {
+    // Update document
+    await updateDoc("games", gameId.toUpperCase(), {
       [`${playerUid}.cards`]: updatedCards,
     });
 
@@ -683,15 +613,12 @@ const getNewCard = async (
     setLoading(true);
     
     // Get fresh game data
-    const gameRef = doc(db, "games", gameId.toUpperCase());
-    const gameSnap = await getDocFromServer(gameRef);
-    
-    if (!gameSnap.exists()) {
+    const gameData = await getDoc("games", gameId.toUpperCase()) as GameData;
+
+    if (!gameData) {
       throw new Error("Game not found");
     }
-    
-    const gameData = gameSnap.data() as GameData;
-    
+
     // Check if player exists and has cards
     const playerData = gameData[playerUid] as Player;
     if (!playerData || !playerData.cards) {
@@ -712,10 +639,10 @@ const getNewCard = async (
     const updatedCards = playerData.cards.filter((_, i) => i !== cardIndex);
     updatedCards.push({ i: newCard, seen: false });
     
-    console.log("Updating cards and deck in Firebase:", { updatedCards, newDeck });
-    
-    // Update Firebase
-    await updateDoc(gameRef, {
+    console.log("Updating cards and deck:", { updatedCards, newDeck });
+
+    // Update document
+    await updateDoc("games", gameId.toUpperCase(), {
       [`${playerUid}.cards`]: updatedCards,
       "__pyramid.deck": newDeck
     });
@@ -773,15 +700,11 @@ const checkCardMatch = (
         const gameIdUpper = gameId.toUpperCase();
         console.log(`Starting YES game with ID: ${gameIdUpper}`);
         
-        const gameRef = doc(db, "games", gameIdUpper);
-        
         // Get current game state
-        const gameSnap = await getDocFromServer(gameRef);
-        if (!gameSnap.exists()) {
+        const gameData = await getDoc("games", gameIdUpper) as GameData;
+        if (!gameData) {
           throw new Error("Game not found");
         }
-        
-        const gameData = gameSnap.data() as GameData;
         
         // Make sure it's a YES game
         if (gameData.gameType !== "yes") {
@@ -841,7 +764,7 @@ const checkCardMatch = (
         
         // Update game state
         console.log("Updating YES state:", updatedYesState);
-        await updateDoc(gameRef, {
+        await updateDoc("games", gameIdUpper, {
           "__yes.state": updatedYesState
         });
         
@@ -861,7 +784,7 @@ const checkCardMatch = (
           console.log(`Dealing card ${cardId} to player ${playerId}`);
           
           // Store the player's card
-          await updateDoc(gameRef, {
+          await updateDoc("games", gameIdUpper, {
             [`${playerId}.card`]: { i: cardId, seen: false },
             [`${playerId}.hasSwapped`]: false,
             [`${playerId}.hasChecked`]: false,
@@ -872,7 +795,7 @@ const checkCardMatch = (
         
         // Update the deck after dealing all cards
         console.log("Remaining deck after dealing:", remainingDeck.length, "cards");
-        await updateDoc(gameRef, {
+        await updateDoc("games", gameIdUpper, {
           "__yes.state.deck": remainingDeck
         });
         
@@ -884,23 +807,20 @@ const checkCardMatch = (
     
     const peekCard = async (gameId: string, playerId: string): Promise<void> => {
       try {
-        const gameRef = doc(db, "games", gameId.toUpperCase());
-        const gameSnap = await getDocFromServer(gameRef);
-        
-        if (!gameSnap.exists()) {
+        const gameData = await getDoc("games", gameId.toUpperCase()) as GameData;
+
+        if (!gameData) {
           throw new Error("Game not found");
         }
-        
-        const gameData = gameSnap.data() as GameData;
-        
+
         // Check that this is a YES game and player exists
         const playerData = gameData[playerId] as YesPlayer;
         if (!playerData || !playerData.card) {
           throw new Error("Player or card not found");
         }
-        
+
         // Mark the player's card as seen
-        await updateDoc(gameRef, {
+        await updateDoc("games", gameId.toUpperCase(), {
           [`${playerId}.card.seen`]: true,
           [`${playerId}.hasChecked`]: true
         });
@@ -913,14 +833,11 @@ const checkCardMatch = (
     
     const swapCard = async (gameId: string, fromPlayerId: string, toPlayerId: string): Promise<void> => {
       try {
-        const gameRef = doc(db, "games", gameId.toUpperCase());
-        const gameSnap = await getDocFromServer(gameRef);
-        
-        if (!gameSnap.exists()) {
+        const gameData = await getDoc("games", gameId.toUpperCase()) as GameData;
+
+        if (!gameData) {
           throw new Error("Game not found");
         }
-        
-        const gameData = gameSnap.data() as GameData;
         
         // Check if the players exist and have YES game data
         const fromPlayerData = gameData[fromPlayerId] as YesPlayer;
@@ -938,7 +855,7 @@ const checkCardMatch = (
           // King is rank 12 (0-based)
           if (cardRank === 12) {
             // Reveal King and block the swap
-            await updateDoc(gameRef, {
+            await updateDoc("games", gameId.toUpperCase(), {
               [`${toPlayerId}.card.seen`]: true,
               [`${toPlayerId}.blockingSwap`]: true,
             });
@@ -955,7 +872,7 @@ const checkCardMatch = (
           throw new Error("One or both players don't have cards to swap");
         }
         
-        await updateDoc(gameRef, {
+        await updateDoc("games", gameId.toUpperCase(), {
           [`${fromPlayerId}.card`]: { ...toPlayerCard, seen: false },
           [`${toPlayerId}.card`]: { ...fromPlayerCard, seen: false },
           [`${fromPlayerId}.hasSwapped`]: true
@@ -969,14 +886,12 @@ const checkCardMatch = (
     
     const cutDeck = async (gameId: string, dealerId: string): Promise<void> => {
       try {
-        const gameRef = doc(db, "games", gameId.toUpperCase());
-        const gameSnap = await getDocFromServer(gameRef);
-        
-        if (!gameSnap.exists()) {
+        const gameData = await getDoc("games", gameId.toUpperCase()) as GameData;
+
+        if (!gameData) {
           throw new Error("Game not found");
         }
-        
-        const gameData = gameSnap.data() as GameData;
+
         console.log("Game data in cutDeck:", gameData);
         
         // Check that this is a YES game with valid state
@@ -1018,7 +933,7 @@ const checkCardMatch = (
         
         console.log(`Dealer ${dealerId} cut deck, got card ${cardId}`);
         
-        await updateDoc(gameRef, {
+        await updateDoc("games", gameId.toUpperCase(), {
           [`${dealerId}.card`]: { i: cardId, seen: true },
           "__yes.state.deck": gameDeck,
           "__yes.state.usedCards": usedCards,
@@ -1033,14 +948,12 @@ const checkCardMatch = (
     
     const revealCards = async (gameId: string): Promise<void> => {
       try {
-        const gameRef = doc(db, "games", gameId.toUpperCase());
-        const gameSnap = await getDocFromServer(gameRef);
-        
-        if (!gameSnap.exists()) {
+        const gameData = await getDoc("games", gameId.toUpperCase()) as GameData;
+
+        if (!gameData) {
           throw new Error("Game not found");
         }
-        
-        const gameData = gameSnap.data() as GameData;
+
         console.log("Game data in revealCards:", gameData);
         
         // Check that this is a YES game with valid state
@@ -1119,24 +1032,22 @@ const checkCardMatch = (
           updates[`${lowestCardPlayerId}.lostLife`] = true;
         }
         
-        await updateDoc(gameRef, updates);
-        
+        await updateDoc("games", gameId.toUpperCase(), updates);
+
       } catch (error) {
         console.error("Error revealing cards:", error);
         throw error;
       }
     };
-    
+
     const nextRound = async (gameId: string): Promise<void> => {
       try {
-        const gameRef = doc(db, "games", gameId.toUpperCase());
-        const gameSnap = await getDocFromServer(gameRef);
-        
-        if (!gameSnap.exists()) {
+        const gameData = await getDoc("games", gameId.toUpperCase()) as GameData;
+
+        if (!gameData) {
           throw new Error("Game not found");
         }
-        
-        const gameData = gameSnap.data() as GameData;
+
         console.log("Game data in nextRound:", gameData);
         
         // Check that this is a YES game with valid state
@@ -1268,8 +1179,8 @@ const checkCardMatch = (
           updates["__yes.state.deck"] = newDeck;
         }
         
-        await updateDoc(gameRef, updates);
-        
+        await updateDoc("games", gameId.toUpperCase(), updates);
+
       } catch (error) {
         console.error("Error advancing to next round:", error);
         throw error;

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Card } from "../lib/deck";
 import { generatePyramidLayout, getPyramidIndex } from "../lib/deck";
 import GameCard from "./GameCard";
-import { subscribeToPyramidCards } from "../lib/firebase/gameCards";
+import { subscribeToPyramidCards } from "../lib/api/gameCards";
 import { usePlayerContext } from "../context/PlayerContext";
 
 interface GamePyramidProps {

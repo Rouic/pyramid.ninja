@@ -8,9 +8,8 @@ import {
   resolveDrinkChallenge,
   markCardForReplacement,
   clearPlayerChallengeState,
-} from "../lib/firebase/gameState";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { db } from "../lib/firebase/firebase";
+} from "../lib/api/gameState";
+import { getDoc, updateDoc } from "../lib/api/client";
 import { HandRaisedIcon } from "@heroicons/react/16/solid";
 
 interface DrinkAssignmentPanelProps {
@@ -439,17 +438,15 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
       );
 
       // Find the player's cards
-      const playerRef = doc(db, "games", gameId, "players", currentPlayerId);
-      const playerDoc = await getDoc(playerRef);
+      const playerData = await getDoc("players", `${gameId}_${currentPlayerId}`);
 
-      if (!playerDoc.exists()) {
+      if (!playerData) {
         console.error("Player document not found");
         setIsSubmitting(false);
         return;
       }
 
-      const playerData = playerDoc.data();
-      const playerCards = playerData.cards || [];
+      const playerCards = (playerData.cards as any[]) || [];
 
       console.log("Player has", playerCards.length, "cards");
       console.log("Selected card index:", cardToReveal);
@@ -519,12 +516,10 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
       // STEP 2: Aggressive update of the assignment status first
       try {
         console.log("🎮 CHALLENGE FLOW: Updating assignment status");
-        const gameRef = doc(db, "games", gameId);
-        const gameDoc = await getDoc(gameRef);
+        const gameData = await getDoc("games", gameId);
 
-        if (gameDoc.exists()) {
-          const gameData = gameDoc.data();
-          const currentAssignments = [...(gameData.drinkAssignments || [])];
+        if (gameData) {
+          const currentAssignments = [...((gameData.drinkAssignments as any[]) || [])];
 
           if (currentAssignments[assignmentIndex]) {
             // Update ONLY this assignment's status
@@ -538,7 +533,7 @@ const DrinkAssignmentPanel: React.FC<DrinkAssignmentPanelProps> = ({
             };
 
             // Update JUST the assignments first
-            await updateDoc(gameRef, {
+            await updateDoc("games", gameId, {
               drinkAssignments: currentAssignments,
             });
 

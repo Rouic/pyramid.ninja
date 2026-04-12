@@ -1,6 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "../lib/firebase/firebase";
 import { useConsent } from "../contexts/ConsentContext";
 
 interface PlayerContextType {

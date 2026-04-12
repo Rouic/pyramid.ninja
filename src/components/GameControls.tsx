@@ -1,7 +1,6 @@
 // src/components/GameControls.tsx
 import React, { useState, useEffect } from "react";
-import { doc, updateDoc, getDoc } from "firebase/firestore";
-import { db } from "../lib/firebase/firebase";
+import { updateDoc, getDoc } from "../lib/api/client";
 import { usePlayerReadiness } from "../hooks/usePlayerReadiness";
 import { useGamePlayers } from "../hooks/useGamePlayers";
 import { usePlayerContext } from "../context/PlayerContext";
@@ -81,9 +80,12 @@ export function GameControls({
     }
 
     // Update the player's memorizing status in Firebase
-    await updateDoc(doc(db, "games", gameId), {
-      [`playerMemorizing.${playerId}`]: true,
-    });
+    await import("../lib/api/client").then(({ modifyDoc }) =>
+      modifyDoc("games", gameId, (c) => ({
+        ...c,
+        playerMemorizing: { ...((c.playerMemorizing as any) || {}), [playerId]: true },
+      }))
+    );
 
     // Start countdown
     let timeLeft = initialTime;
@@ -115,8 +117,12 @@ export function GameControls({
         markAsReady();
 
         // Update the player's memorizing status
-        updateDoc(doc(db, "games", gameId), {
-          [`playerMemorizing.${playerId}`]: false,
+        import("../lib/api/client").then(({ modifyDoc }) =>
+          modifyDoc("games", gameId, (c) => ({
+            ...c,
+            playerMemorizing: { ...((c.playerMemorizing as any) || {}), [playerId]: false },
+          }))
+        ).catch(() => {});
         });
       }
     }, 1000);

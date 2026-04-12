@@ -1,13 +1,10 @@
 // src/contexts/AuthContext.tsx
 import React, { createContext, useContext, useEffect, useState } from "react";
 import {
-  signInAnonymously as firebaseSignInAnonymously,
-  signOut as firebaseSignOut,
-  onAuthStateChanged,
-  User,
-  getAuth,
-} from "firebase/auth";
-import { initializeFirebase, auth as firebaseAuth } from "../lib/firebase/firebase";
+  signInAnonymously as paasSignIn,
+  signOut as paasSignOut,
+  AuthUser,
+} from "../lib/api/auth";
 import { AuthContextType } from "../types";
 
 // Create the Auth Context
@@ -17,52 +14,21 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [userUid, setUserUid] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Initialize Firebase
-  useEffect(() => {
-    // Initialize Firebase with default consent settings
-    const { auth } = initializeFirebase(true, false);
-    console.log("Firebase initialized in AuthContext");
-  }, []);
-
-  // Listen for auth state changes
-  useEffect(() => {
-    // Use the auth instance from the initialized Firebase
-    // Fall back to getAuth() if firebaseAuth is not available
-    const auth = firebaseAuth || getAuth();
-    
-    if (!auth) {
-      console.error("Firebase auth is not initialized");
-      return;
-    }
-    
-    console.log("Setting up auth state listener");
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      console.log("Auth state changed:", user ? `User: ${user.uid}` : "No user");
-      setUser(user);
-      setUserUid(user ? user.uid : null);
-      setLoading(false);
-    });
-
-    // Cleanup subscription
-    return () => unsubscribe();
-  }, []);
-
-  // Sign in anonymously
+  // Sign in anonymously via PaaS managed auth
   const signInAnonymously = async () => {
     try {
-      // Use the auth instance from the initialized Firebase or get auth directly
-      const auth = firebaseAuth || getAuth();
-      if (!auth) {
-        console.error("Firebase auth is not initialized");
-        return;
+      console.log("Attempting anonymous sign in via PaaS");
+      const result = await paasSignIn();
+      if (result.user) {
+        setUser(result.user);
+        setUserUid(result.user.uid);
+      } else {
+        console.error("Auth failed:", result.error);
       }
-      
-      console.log("Attempting anonymous sign in");
-      await firebaseSignInAnonymously(auth);
     } catch (error) {
       console.error("Error signing in anonymously:", error);
     }
@@ -70,30 +36,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Sign out
   const signOut = async () => {
-    try {
-      // Use the auth instance from the initialized Firebase or get auth directly
-      const auth = firebaseAuth || getAuth();
-      if (!auth) {
-        console.error("Firebase auth is not initialized");
-        return;
-      }
-      
-      await firebaseSignOut(auth);
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
+    paasSignOut();
+    setUser(null);
+    setUserUid(null);
   };
 
-  // Auto sign in anonymously if not signed in
+  // Auto sign in on mount
   useEffect(() => {
-    if (!loading && !user) {
-      signInAnonymously();
-    }
-  }, [loading, user]);
+    signInAnonymously().finally(() => setLoading(false));
+  }, []);
 
   // Context value
   const value: AuthContextType = {
-    user,
+    user: user as any, // AuthUser is compatible with usage patterns (has .uid)
     userUid,
     loading,
     signInAnonymously,

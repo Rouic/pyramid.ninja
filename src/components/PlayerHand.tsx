@@ -5,15 +5,14 @@ import GameCard from "./GameCard";
 import {
   subscribeToPlayerCards,
   updatePlayerCard,
-} from "../lib/firebase/gameCards";
+} from "../lib/api/gameCards";
 import { usePlayerContext } from "../context/PlayerContext";
 import {
   replacePlayerCard,
   clearPlayerChallengeState,
-} from "../lib/firebase/gameState";
+} from "../lib/api/gameState";
 import NewCardTimer from "./NewCardTimer"; // Import the timer component
-import { doc, updateDoc, getDoc, onSnapshot } from "firebase/firestore";
-import { db } from "../lib/firebase/firebase";
+import { getDoc, updateDoc, modifyDoc, subscribeDoc } from "../lib/api/client";
 
 interface PlayerHandProps {
   gameId: string;
@@ -116,13 +115,11 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
 
     // Subscribe to player document to watch for needsCardReplacement flag
     // FIXED: Use a more controlled approach with debouncing to prevent infinite loops
-    const playerRef = doc(db, "games", gameId, "players", playerId);
+    const playerDocId = `${gameId}_${playerId}`;
     let lastProcessedTime = 0;
 
-    const playerUnsubscribe = onSnapshot(playerRef, (snapshot) => {
-      if (!snapshot.exists()) return;
-
-      const playerData = snapshot.data();
+    const playerUnsubscribe = subscribeDoc("players", playerDocId, (playerData) => {
+      if (!playerData) return;
 
       // FIX: Only process replacement requests if we're not already processing one
       // and if enough time has passed since the last one (debounce)
@@ -155,7 +152,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
               // Clear the flag to prevent multiple replacements, but do it after a delay
               // to prevent Firebase update race conditions
               setTimeout(() => {
-                updateDoc(playerRef, {
+                updateDoc("players", playerDocId, {
                   needsCardReplacement: false,
                   cardToReplace: null,
                 })
@@ -179,7 +176,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
     return () => {
       console.log(`Unsubscribing from player cards for ${playerId}`);
       unsubscribe();
-      playerUnsubscribe();
+      if (playerUnsubscribe) playerUnsubscribe();
     };
   }, [gameId, playerId]);
 
@@ -252,10 +249,10 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
         // Use default position
         const newPosition = { x: defaultX, y: defaultY };
         console.log(`Resetting card ${index} to default position: (${newPosition.x}, ${newPosition.y})`);
-        
-        // Update the card's position in Firebase
-        const playerRef = doc(db, "games", gameId, "players", playerId);
-        await updateDoc(playerRef, {
+
+        // Update the card's position
+        const playerDocId = `${gameId}_${playerId}`;
+        await updateDoc("players", playerDocId, {
           [`cards.${index}.position`]: newPosition
         });
         
@@ -299,12 +296,11 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
         `Saving new position for card ${index}: (${newPosition.x}, ${newPosition.y})`
       );
 
-      // Update the card's position in Firebase
-      const playerRef = doc(db, "games", gameId, "players", playerId);
-      const playerDoc = await getDoc(playerRef);
+      // Update the card's position
+      const playerDocId = `${gameId}_${playerId}`;
+      const playerData = await getDoc("players", playerDocId);
 
-      if (playerDoc.exists()) {
-        const playerData = playerDoc.data();
+      if (playerData) {
         const cards = [...(playerData.cards || [])];
 
         if (cards[index]) {
@@ -314,8 +310,8 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
             position: newPosition,
           };
 
-          // Update the Firebase document
-          await updateDoc(playerRef, {
+          // Update the document
+          await updateDoc("players", playerDocId, {
             cards: cards,
           });
         }
@@ -402,12 +398,11 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
       );
 
       try {
-        const playerRef = doc(db, "games", gameId, "players", playerId);
+        const playerDocId = `${gameId}_${playerId}`;
 
         // Get all player cards
-        const snapshot = await getDoc(playerRef);
-        if (snapshot.exists()) {
-          const playerData = snapshot.data();
+        const playerData = await getDoc("players", playerDocId);
+        if (playerData) {
           const cards = [...(playerData.cards || [])];
 
           // Create a completely fresh card object with only the needed properties
@@ -436,7 +431,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
             };
 
             // Aggressive update of the player document
-            await updateDoc(playerRef, {
+            await updateDoc("players", playerDocId, {
               cards,
               isInChallenge: false, // Ensure player is not in challenge mode
               challengeCardIndex: null, // Clear any selected card index
@@ -444,13 +439,15 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
             });
 
             // SIMPLIFIED: Just clear the specific timer for this card
-            const gameRef = doc(db, "games", gameId);
-            await updateDoc(gameRef, {
-              [`newCardTimers.${playerId}.${cardId}`]: null,
+            await modifyDoc("games", gameId, (doc) => {
+              if (doc.newCardTimers?.[playerId]) {
+                delete doc.newCardTimers[playerId][cardId];
+              }
+              return doc;
             });
           } else {
             // Just update player state if we can't find the card
-            await updateDoc(playerRef, {
+            await updateDoc("players", playerDocId, {
               isInChallenge: false,
               challengeCardIndex: null,
             });

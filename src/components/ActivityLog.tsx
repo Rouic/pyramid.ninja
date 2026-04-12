@@ -1,6 +1,6 @@
 // src/components/ActivityLog.tsx
 import React from "react";
-import { DrinkAssignment } from "../lib/firebase/gameState";
+import { DrinkAssignment } from "../lib/api/gameState";
 
 interface ActivityLogProps {
   assignments: DrinkAssignment[];

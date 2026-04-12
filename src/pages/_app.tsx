@@ -8,18 +8,12 @@ import { ConsentProvider } from "../contexts/ConsentContext";
 import { AuthProvider } from "../contexts/AuthContext";
 import CookieConsentBanner from "../components/CookieConsentBanner";
 import AnalyticsWrapper from "../components/AnalyticsWrapper";
-import { initializeFirebase } from "../lib/firebase/firebase";
 
 function MyApp({ Component, pageProps }: AppProps) {
   const router = useRouter();
   const canonicalUrl = `https://pyramid.ninja${router.asPath === "/" ? "" : router.asPath}`;
   
-  // Initialize Firebase
-  useEffect(() => {
-    // Initialize Firebase before anything else
-    initializeFirebase(true, false);
-    console.log("Firebase initialized in _app.tsx");
-  }, []);
+  // PaaS auth is handled by AuthProvider — no Firebase init needed
   
   // Load fonts
   useEffect(() => {

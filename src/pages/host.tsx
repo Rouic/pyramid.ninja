@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import { doc, setDoc, serverTimestamp, updateDoc } from "firebase/firestore";
-import { db } from "../lib/firebase/firebase";
+import { setDoc, updateDoc } from "../lib/api/client";
 import { usePlayerContext } from "../context/PlayerContext";
 import { v4 as uuidv4 } from "uuid";
 import { InformationCircleIcon } from "@heroicons/react/16/solid";
@@ -52,26 +51,26 @@ const HostPage = () => {
       
       const gameId = generateGameCode();
 
-      // Create game document in Firestore
-      await setDoc(doc(db, "games", gameId), {
+      // Create game document in datastore
+      await setDoc("games", gameId, {
         id: gameId,
         name: gameName,
         hostId: playerId,
-        createdAt: serverTimestamp(),
-        players: [], // For pyramid, host is not a player in the game
-        gameState: "waiting", // waiting, memorizing, playing, ended
-        gameType: gameType, // pyramid or yes
+        createdAt: new Date().toISOString(),
+        players: [],
+        gameState: "waiting",
+        gameType: gameType,
       });
-      
+
       // If it's a YES game and the host is a player, add the host to players
       if (gameType === "yes") {
-        await updateDoc(doc(db, "games", gameId), {
-          [`${playerId}`]: {
+        await updateDoc("games", gameId, {
+          [playerId]: {
             admin: true,
             uid: playerId,
-            name: "HOST", // Default name for host in YES game
+            name: "HOST",
             drinks: 0,
-            lives: 3, // Start with 3 lives in YES game
+            lives: 3,
           }
         });
       }

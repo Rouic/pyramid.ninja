@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { doc, onSnapshot } from "firebase/firestore";
-import { db } from "../lib/firebase/firebase";
+import { getDoc, subscribeDoc } from "../lib/api/client";
 
 type Player = {
   id: string;
@@ -22,41 +21,41 @@ export function useGamePlayers(gameId: string) {
 
     setLoading(true);
 
-    const gameRef = doc(db, "games", gameId);
-
-    const unsubscribe = onSnapshot(
-      gameRef,
-      (doc) => {
-        if (doc.exists()) {
-          const gameData = doc.data();
-          const playerMap: Record<string, Player> = {};
-
-          // Format players into a map for easy lookup
-          if (gameData.players && Array.isArray(gameData.players)) {
-            gameData.players.forEach((player: any) => {
-              if (player.id) {
-                playerMap[player.id] = {
-                  id: player.id,
-                  name: player.name || "Unknown",
-                  avatar: player.avatar,
-                  isHost: player.isHost || false,
-                };
-              }
-            });
-          }
-
-          setPlayers(playerMap);
-          setLoading(false);
-        } else {
-          setError(new Error("Game not found"));
-          setLoading(false);
-        }
-      },
-      (error) => {
-        setError(error);
+    function processGameData(gameData: Record<string, unknown> | null) {
+      if (!gameData) {
+        setError(new Error("Game not found"));
         setLoading(false);
+        return;
       }
-    );
+
+      const playerMap: Record<string, Player> = {};
+      const playerList = gameData.players as any[];
+
+      if (playerList && Array.isArray(playerList)) {
+        playerList.forEach((player: any) => {
+          if (player.id) {
+            playerMap[player.id] = {
+              id: player.id,
+              name: player.name || "Unknown",
+              avatar: player.avatar,
+              isHost: player.isHost || false,
+            };
+          }
+        });
+      }
+
+      setPlayers(playerMap);
+      setLoading(false);
+    }
+
+    // Initial fetch
+    getDoc("games", gameId).then(processGameData).catch((err) => {
+      setError(err);
+      setLoading(false);
+    });
+
+    // Real-time updates via SSE
+    const unsubscribe = subscribeDoc("games", gameId, processGameData);
 
     return () => unsubscribe();
   }, [gameId]);

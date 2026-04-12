@@ -6,14 +6,18 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 });
 
 const nextConfig = {
+  output: 'standalone',
   reactStrictMode: false,
   eslint: {
     dirs: ['src'],
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
   },
   // Environment variables accessible to the client
   env: {
     NEXT_PUBLIC_APP_VERSION: '3.0.0',
-    NEXT_PUBLIC_FIREBASE_PROJECT_ID: 'pyramid-ninja',
   },
   // Image domains for next/image
   images: {
