@@ -5,7 +5,9 @@
  * and SSE subscription endpoint for real-time updates.
  */
 
-const PAAS_KEY = process.env.NEXT_PUBLIC_PAAS_KEY || "";
+// These are public values (exposed in browser JS anyway) — hardcoded so they're
+// available at build time without Docker build args.
+const PAAS_KEY = process.env.NEXT_PUBLIC_PAAS_KEY || "pn_webhook_18ccd1504a3263fc2edc7bf8";
 const PAAS_SLUG = process.env.NEXT_PUBLIC_PAAS_SLUG || "pyramid-ninja";
 
 // Use same-origin proxy paths through the injector sidecar (/__rouic-db/)
