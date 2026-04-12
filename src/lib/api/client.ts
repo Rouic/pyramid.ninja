@@ -5,12 +5,19 @@
  * and SSE subscription endpoint for real-time updates.
  */
 
-const PAAS_URL = process.env.NEXT_PUBLIC_PAAS_URL || "https://system.rouic.com";
 const PAAS_KEY = process.env.NEXT_PUBLIC_PAAS_KEY || "";
 const PAAS_SLUG = process.env.NEXT_PUBLIC_PAAS_SLUG || "pyramid-ninja";
 
-const DB_URL = `${PAAS_URL}/api/v1/db/${PAAS_SLUG}`;
-const SUBSCRIBE_URL = `${PAAS_URL}/api/v1/db/${PAAS_SLUG}/subscribe`;
+// Use same-origin proxy paths through the injector sidecar (/__rouic-db/)
+// This avoids CORS issues and keeps API calls first-party.
+// Falls back to the full platform URL for SSR or if proxy isn't available.
+const isBrowser = typeof window !== "undefined";
+const DB_URL = isBrowser
+  ? `/__rouic-db/${PAAS_SLUG}`
+  : `${process.env.NEXT_PUBLIC_PAAS_URL || "https://system.rouic.com"}/api/v1/db/${PAAS_SLUG}`;
+const SUBSCRIBE_URL = isBrowser
+  ? `/__rouic-db/${PAAS_SLUG}/subscribe`
+  : `${process.env.NEXT_PUBLIC_PAAS_URL || "https://system.rouic.com"}/api/v1/db/${PAAS_SLUG}/subscribe`;
 
 export interface ChangeEvent {
   type: "set" | "delete";

@@ -8,9 +8,13 @@
 
 import { v4 as uuidv4 } from "uuid";
 
-const PAAS_URL = process.env.NEXT_PUBLIC_PAAS_URL || "https://system.rouic.com";
 const PAAS_SLUG = process.env.NEXT_PUBLIC_PAAS_SLUG || "pyramid-ninja";
-const AUTH_URL = `${PAAS_URL}/api/v1/auth/${PAAS_SLUG}`;
+
+// Use same-origin proxy through injector sidecar to avoid CORS
+const isBrowser = typeof window !== "undefined";
+const AUTH_URL = isBrowser
+  ? `/__rouic-auth/${PAAS_SLUG}`
+  : `${process.env.NEXT_PUBLIC_PAAS_URL || "https://system.rouic.com"}/api/v1/auth/${PAAS_SLUG}`;
 
 const STORAGE_KEYS = {
   jwt: "pyramid_jwt",
