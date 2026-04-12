@@ -140,6 +140,12 @@ const GamePage = () => {
        // Check if player is host
        setIsHost(isHostUser);
 
+       // Set initial game data from the fetch (SSE only fires on changes)
+       setGameData(data);
+       setGameState((data as any).gameState || "waiting");
+       setGameType((data as any).gameType || 'pyramid');
+       setIsLoading(false);
+
        // Subscribe to detailed game state updates
        const unsubscribe = subscribeToGameStateDetails(id, (data) => {
          setGameData(data);
