@@ -119,7 +119,6 @@ export function GameControls({
           ...c,
           playerMemorizing: { ...((c.playerMemorizing as any) || {}), [playerId]: false },
         })).catch(() => {});
-        });
       }
     }, 1000);
   };
