@@ -829,11 +829,16 @@ export async function replacePlayerCard(
   }
 }
 
-// Listen for game state changes
+// Listen for game state changes (with initial fetch — SSE only fires on changes)
 export function subscribeToGameStateDetails(
   gameId: string,
   callback: (gameData: any) => void
 ) {
+  // Fetch current state immediately (Firebase onSnapshot fires on connect, SSE doesn't)
+  getDoc("games", gameId).then((data) => {
+    if (data) callback(data);
+  });
+
   return subscribeDoc("games", gameId, (data) => {
     if (!data) return;
     callback(data);
